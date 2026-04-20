@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snake</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  canvas { display: block; margin: 0 auto; background: #0b0e14; border: 1px solid var(--border); border-radius: 10px; max-width: 100%; touch-action: none; }
+  .row { display:flex; justify-content:space-between; align-items:center; }
+  .score { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="topbar"><h1>🐍 Snake</h1><a class="back" href="../">← all games</a></div>
+  <div class="panel">
+    <div class="row"><p class="status" id="status">Arrow keys / WASD. Eat the apples.</p><p class="status score">Score: <span id="score">0</span> &nbsp; Best: <span id="best">0</span></p></div>
+    <canvas id="game" width="400" height="400"></canvas>
+    <div class="controls" style="justify-content:center">
+      <button class="primary" id="reset">New game</button>
+      <span class="kbd">↑ ← ↓ →</span> or <span class="kbd">WASD</span> · <span class="kbd">Space</span> pause
+    </div>
+  </div>
+</main>
+<script src="game.js"></script>
+</body>
+</html>

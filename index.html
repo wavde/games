@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Browser Games · Tejas Wavde</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Six classic games built with vanilla HTML, CSS, and JavaScript. Tic-Tac-Toe, Snake, 2048, Minesweeper, Memory Match, and Chess with AI.">
+<meta name="theme-color" content="#0f1115">
+<meta property="og:title" content="Browser Games">
+<meta property="og:description" content="Six classic games — vanilla HTML/CSS/JS, no build step. Tic-Tac-Toe, Snake, 2048, Minesweeper, Memory Match, Chess.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://wavde.github.io/games/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 10px; }
+  .card { display: block; padding: 18px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); text-decoration: none; transition: transform .08s ease, border-color .15s ease; }
+  .card:hover { transform: translateY(-2px); border-color: #3a4152; text-decoration: none; }
+  .card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  .emoji { font-size: 1.6rem; margin-bottom: 6px; display: block; }
+  header.hero { margin-bottom: 22px; }
+  header.hero p { color: var(--muted); margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <h1 style="margin:0">🎮 Browser Games</h1>
+    <p>Six classic games. Vanilla HTML, CSS, and JavaScript — no build step, no dependencies.</p>
+  </header>
+  <div class="grid">
+    <a class="card" href="tic-tac-toe/"><span class="emoji">❌⭕</span><h3>Tic-Tac-Toe</h3><p>vs. unbeatable AI (minimax).</p></a>
+    <a class="card" href="snake/"><span class="emoji">🐍</span><h3>Snake</h3><p>Arrow keys or WASD. Don't bite yourself.</p></a>
+    <a class="card" href="2048/"><span class="emoji">🔢</span><h3>2048</h3><p>Slide and merge. Get to 2048.</p></a>
+    <a class="card" href="minesweeper/"><span class="emoji">💣</span><h3>Minesweeper</h3><p>Classic. Flag with right-click.</p></a>
+    <a class="card" href="memory/"><span class="emoji">🧠</span><h3>Memory Match</h3><p>Flip pairs. Beat your best time.</p></a>
+    <a class="card" href="chess/"><span class="emoji">♞</span><h3>Chess</h3><p>vs. a simple minimax engine.</p></a>
+  </div>
+  <p class="footer-note">
+    Source on <a href="https://github.com/wavde/games">GitHub</a> ·
+    Built by <a href="https://wavde.github.io">Tejas Wavde</a> ·
+    MIT licensed
+  </p>
+</main>
+</body>
+</html>

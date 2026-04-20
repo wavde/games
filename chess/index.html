@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chess</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .board { display: grid; grid-template-columns: repeat(8, 1fr); width: min(560px, 94vw); aspect-ratio: 1; margin: 0 auto; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; touch-action: manipulation; }
+  .sq { display: flex; align-items: center; justify-content: center; font-size: clamp(1.4rem, 6vw, 2.6rem); cursor: pointer; user-select: none; position: relative; line-height: 1; }
+  .sq.light { background: #e9edf3; }
+  .sq.dark  { background: #6e7fa3; }
+  .sq.sel   { outline: 3px solid var(--warn); outline-offset: -3px; }
+  .sq.last  { box-shadow: inset 0 0 0 3px rgba(255,209,102,.55); }
+  .sq.hint::after { content: ""; position: absolute; width: 28%; height: 28%; background: rgba(0,0,0,.25); border-radius: 50%; }
+  .sq.cap::after  { content: ""; position: absolute; inset: 6%; border: 3px solid rgba(200,30,30,.55); border-radius: 50%; }
+  .sq.w { color: #fff; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
+  .sq.b { color: #111; text-shadow: 0 1px 0 #fff8, 0 0 2px #fff8; }
+  .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="topbar"><h1>♞ Chess</h1><a class="back" href="../">← all games</a></div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status">White to move.</p>
+      <p class="status" id="info"></p>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="controls" style="justify-content:center">
+      <button class="primary" id="reset">New game</button>
+      <button id="undo">Undo</button>
+      <button id="flip">Flip board</button>
+      <select id="level">
+        <option value="1">Easy (depth 1)</option>
+        <option value="2" selected>Normal (depth 2)</option>
+        <option value="3">Hard (depth 3)</option>
+      </select>
+      <select id="side">
+        <option value="w" selected>Play White</option>
+        <option value="b">Play Black</option>
+      </select>
+    </div>
+    <p class="footer-note">Tap a piece, then tap a destination. Pawn auto-promotes to queen.</p>
+  </div>
+</main>
+<script src="game.js"></script>
+</body>
+</html>

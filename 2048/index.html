@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>2048</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .board2048 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; background: #1b1f2b; padding: 10px; border-radius: 10px; width: min(420px, 92vw); margin: 0 auto; aspect-ratio:1; }
+  .tile { background: #222838; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-weight: 700; font-size: clamp(1.1rem, 5vw, 1.8rem); color: var(--text); user-select: none; transition: background .1s; }
+  .t2{background:#eee4da;color:#776e65} .t4{background:#ede0c8;color:#776e65}
+  .t8{background:#f2b179;color:#fff} .t16{background:#f59563;color:#fff}
+  .t32{background:#f67c5f;color:#fff} .t64{background:#f65e3b;color:#fff}
+  .t128{background:#edcf72;color:#fff} .t256{background:#edcc61;color:#fff}
+  .t512{background:#edc850;color:#fff} .t1024{background:#edc53f;color:#fff;font-size:clamp(.9rem,4vw,1.5rem)}
+  .t2048{background:#edc22e;color:#fff;font-size:clamp(.9rem,4vw,1.5rem)}
+  .t4096,.t8192{background:#3c3a32;color:#fff;font-size:clamp(.9rem,4vw,1.5rem)}
+  .row{display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="topbar"><h1>🔢 2048</h1><a class="back" href="../">← all games</a></div>
+  <div class="panel">
+    <div class="row"><p class="status">Slide tiles. Merge to 2048.</p><p class="status">Score: <span id="score">0</span> · Best: <span id="best">0</span></p></div>
+    <div class="board2048" id="board"></div>
+    <div class="controls" style="justify-content:center">
+      <button class="primary" id="reset">New game</button>
+      <span class="kbd">↑ ← ↓ →</span> or swipe
+    </div>
+  </div>
+</main>
+<script src="game.js"></script>
+</body>
+</html>

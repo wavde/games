@@ -1,0 +1,79 @@
+const EMOJI = ['🍎','🍌','🍇','🍓','🍒','🍑','🥝','🍍','🥥','🍉','🥭','🍋','🥑','🌽','🥕','🍆','🥦','🧄','🧅','🥔','🌶️','🫐','🍊','🍐','🍈','🍏','🫒','🥜','🌰','🍠','🥐','🥖'];
+let size, cards, flipped, matched, moves, startTime, timerId, locked;
+
+function reset() {
+  size = +document.getElementById('size').value;
+  const n = size*size;
+  const pairs = n/2;
+  const chosen = EMOJI.slice().sort(()=>Math.random()-0.5).slice(0, pairs);
+  cards = chosen.concat(chosen).sort(()=>Math.random()-0.5).map((e,i)=>({id:i, emoji:e, flipped:false, matched:false}));
+  flipped = []; matched = 0; moves = 0; locked = false;
+  document.getElementById('moves').textContent = 0;
+  document.getElementById('time').textContent = 0;
+  document.getElementById('status').textContent = 'Flip two. Match all pairs.';
+  const bestKey = `mem_best_${size}`;
+  const best = localStorage.getItem(bestKey);
+  document.getElementById('best').textContent = best ? best + 's' : '—';
+  clearInterval(timerId); startTime = null;
+  render();
+}
+
+function startTimer() {
+  startTime = Date.now();
+  timerId = setInterval(() => {
+    document.getElementById('time').textContent = Math.floor((Date.now()-startTime)/1000);
+  }, 250);
+}
+
+function render() {
+  const el = document.getElementById('board');
+  el.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+  el.innerHTML = '';
+  cards.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'card' + (c.flipped?' flip':'') + (c.matched?' match':'');
+    d.innerHTML = `<span class="face">${c.emoji}</span>`;
+    d.addEventListener('click', () => flip(c));
+    el.appendChild(d);
+  });
+}
+
+function flip(c) {
+  if (locked || c.flipped || c.matched) return;
+  if (!startTime) startTimer();
+  c.flipped = true;
+  flipped.push(c);
+  render();
+  if (flipped.length === 2) {
+    moves++;
+    document.getElementById('moves').textContent = moves;
+    const [a,b] = flipped;
+    if (a.emoji === b.emoji) {
+      a.matched = b.matched = true;
+      matched += 2;
+      flipped = [];
+      render();
+      if (matched === cards.length) finish();
+    } else {
+      locked = true;
+      setTimeout(() => {
+        a.flipped = b.flipped = false;
+        flipped = []; locked = false;
+        render();
+      }, 650);
+    }
+  }
+}
+
+function finish() {
+  clearInterval(timerId);
+  const secs = Math.floor((Date.now()-startTime)/1000);
+  const bestKey = `mem_best_${size}`;
+  const prev = +localStorage.getItem(bestKey) || Infinity;
+  if (secs < prev) localStorage.setItem(bestKey, secs);
+  document.getElementById('status').textContent = `Done in ${moves} moves, ${secs}s 🎉`;
+}
+
+document.getElementById('reset').addEventListener('click', reset);
+document.getElementById('size').addEventListener('change', reset);
+reset();

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memory Match</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .mem { display: grid; gap: 8px; width: min(460px, 92vw); margin: 0 auto; }
+  .card { aspect-ratio: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: clamp(1.4rem, 6vw, 2rem); cursor: pointer; user-select: none; transition: transform .15s, background .15s; }
+  .card.flip { background: #1d2b3b; }
+  .card.match { background: #1e3b2a; border-color: var(--accent-2); }
+  .card .face { opacity: 0; transition: opacity .15s; }
+  .card.flip .face, .card.match .face { opacity: 1; }
+  .row{display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="topbar"><h1>🧠 Memory Match</h1><a class="back" href="../">← all games</a></div>
+  <div class="panel">
+    <div class="row"><p class="status" id="status">Flip two. Match all pairs.</p><p class="status">Moves: <span id="moves">0</span> · Time: <span id="time">0</span>s · Best: <span id="best">—</span></p></div>
+    <div class="mem" id="board"></div>
+    <div class="controls" style="justify-content:center">
+      <button class="primary" id="reset">New game</button>
+      <select id="size">
+        <option value="4">4×4</option>
+        <option value="6" selected>6×6</option>
+        <option value="8">8×8</option>
+      </select>
+    </div>
+  </div>
+</main>
+<script src="game.js"></script>
+</body>
+</html>
