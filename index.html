@@ -2,47 +2,192 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Browser Games · Tejas Wavde</title>
+<title>Games · Tejas Wavde</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Six classic games built with vanilla HTML, CSS, and JavaScript. Tic-Tac-Toe, Snake, 2048, Minesweeper, Memory Match, and Chess with AI.">
-<meta name="theme-color" content="#0f1115">
-<meta property="og:title" content="Browser Games">
-<meta property="og:description" content="Six classic games — vanilla HTML/CSS/JS, no build step. Tic-Tac-Toe, Snake, 2048, Minesweeper, Memory Match, Chess.">
+<meta name="description" content="A small arcade of classic games — Tic-Tac-Toe, Snake, 2048, Minesweeper, Memory Match, and Chess.">
+<meta name="theme-color" content="#0a0a0a">
+<meta property="og:title" content="Games">
+<meta property="og:description" content="A small arcade of classic games.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://wavde.github.io/games/">
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
 <style>
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 10px; }
-  .card { display: block; padding: 18px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); text-decoration: none; transition: transform .08s ease, border-color .15s ease; }
-  .card:hover { transform: translateY(-2px); border-color: #3a4152; text-decoration: none; }
-  .card h3 { margin: 0 0 6px; font-size: 1.05rem; }
-  .card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
-  .emoji { font-size: 1.6rem; margin-bottom: 6px; display: block; }
-  header.hero { margin-bottom: 22px; }
-  header.hero p { color: var(--muted); margin: 6px 0 0; }
+  :root {
+    --bg: #0a0a0a;
+    --fg: #e8e8e6;
+    --muted: #8a8a85;
+    --dim: #555550;
+    --border: #1f1f1d;
+    --border-hi: #3a3a36;
+    --accent: #f5c542;
+    --accent-2: #8affc1;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--fg);
+    font-family: "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  a { color: var(--fg); text-decoration: none; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 56px 24px 80px; }
+
+  /* HERO */
+  .hero { display: grid; grid-template-columns: auto 1fr; gap: 48px; align-items: start; margin-bottom: 56px; }
+  @media (max-width: 720px) { .hero { grid-template-columns: 1fr; gap: 24px; } }
+  .ascii {
+    color: var(--dim);
+    font-size: 11px;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    white-space: pre;
+    user-select: none;
+    margin: 0;
+  }
+  @media (min-width: 720px) { .ascii { font-size: 14px; } }
+  .tag {
+    text-transform: uppercase;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    margin: 0 0 14px;
+  }
+  .tag .dot { color: var(--accent); }
+  .lede {
+    font-size: 20px;
+    line-height: 1.4;
+    color: var(--fg);
+    margin: 0 0 18px;
+    letter-spacing: -0.2px;
+  }
+  .lede .mute { color: var(--muted); }
+  .prompt {
+    display: inline-flex; align-items: center; gap: 10px;
+    color: var(--muted); font-size: 13px;
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 8px 12px;
+    background: #111110;
+  }
+  .prompt .$ { color: var(--accent); }
+  .prompt .cmd { color: var(--fg); }
+  .caret { display: inline-block; width: 7px; height: 14px; background: var(--accent); vertical-align: -2px; animation: blink 1.1s steps(1) infinite; margin-left: 2px; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* SECTION */
+  .section-head {
+    display: flex; align-items: center; gap: 14px;
+    color: var(--muted); text-transform: uppercase;
+    font-size: 12px; letter-spacing: 1px;
+    margin: 0 0 18px;
+  }
+  .section-head::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  /* GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0d0d0c;
+  }
+  .card {
+    display: block; padding: 22px 20px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: #0d0d0c;
+    transition: background 0.15s ease, transform 0.15s ease;
+    position: relative;
+  }
+  .card:hover { background: #131311; }
+  .card:hover .arrow { color: var(--accent); transform: translateX(2px); }
+  .card .num {
+    color: var(--dim); font-size: 11px; letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .card h3 {
+    margin: 0 0 6px;
+    font-size: 16px; font-weight: 500;
+    letter-spacing: -0.2px;
+    color: var(--fg);
+  }
+  .card p {
+    margin: 0;
+    color: var(--muted); font-size: 12px; line-height: 1.5;
+  }
+  .card .arrow {
+    position: absolute; top: 22px; right: 20px;
+    color: var(--dim); transition: color 0.15s, transform 0.15s;
+    font-size: 14px;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 40px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted); font-size: 12px;
+    display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between;
+  }
+  .footer a { color: var(--muted); }
+  .footer a:hover { color: var(--fg); }
+  .footer .links { display: flex; gap: 14px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <header class="hero">
-    <h1 style="margin:0">🎮 Browser Games</h1>
-    <p>Six classic games. Vanilla HTML, CSS, and JavaScript — no build step, no dependencies.</p>
+    <pre class="ascii" aria-hidden="true"> ██████╗  █████╗ ███╗   ███╗███████╗███████╗
+██╔════╝ ██╔══██╗████╗ ████║██╔════╝██╔════╝
+██║  ███╗███████║██╔████╔██║█████╗  ███████╗
+██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ╚════██║
+╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗███████║
+ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝</pre>
+    <div>
+      <p class="tag"><span class="dot">▍</span> A small, handcrafted arcade</p>
+      <p class="lede">Six classics, playable in your browser. <span class="mute">Keyboard-first, no logins, no ads — just pixels and problems to solve.</span></p>
+      <div class="prompt"><span class="$">$</span><span class="cmd">pick-a-game</span><span class="caret"></span></div>
+    </div>
   </header>
-  <div class="grid">
-    <a class="card" href="tic-tac-toe/"><span class="emoji">❌⭕</span><h3>Tic-Tac-Toe</h3><p>vs. unbeatable AI (minimax).</p></a>
-    <a class="card" href="snake/"><span class="emoji">🐍</span><h3>Snake</h3><p>Arrow keys or WASD. Don't bite yourself.</p></a>
-    <a class="card" href="2048/"><span class="emoji">🔢</span><h3>2048</h3><p>Slide and merge. Get to 2048.</p></a>
-    <a class="card" href="minesweeper/"><span class="emoji">💣</span><h3>Minesweeper</h3><p>Classic. Flag with right-click.</p></a>
-    <a class="card" href="memory/"><span class="emoji">🧠</span><h3>Memory Match</h3><p>Flip pairs. Beat your best time.</p></a>
-    <a class="card" href="chess/"><span class="emoji">♞</span><h3>Chess</h3><p>vs. a simple minimax engine.</p></a>
-  </div>
-  <p class="footer-note">
-    Source on <a href="https://github.com/wavde/games">GitHub</a> ·
-    Built by <a href="https://wavde.github.io">Tejas Wavde</a> ·
-    MIT licensed
-  </p>
+
+  <h2 class="section-head">The lineup</h2>
+  <nav class="grid">
+    <a class="card" href="tic-tac-toe/">
+      <div class="num">01</div><h3>Tic-Tac-Toe</h3><p>Unbeatable minimax. Try to draw.</p><span class="arrow">→</span>
+    </a>
+    <a class="card" href="snake/">
+      <div class="num">02</div><h3>Snake</h3><p>Arrows or WASD. Don't bite yourself.</p><span class="arrow">→</span>
+    </a>
+    <a class="card" href="2048/">
+      <div class="num">03</div><h3>2048</h3><p>Slide and merge. Reach the tile.</p><span class="arrow">→</span>
+    </a>
+    <a class="card" href="minesweeper/">
+      <div class="num">04</div><h3>Minesweeper</h3><p>Right-click to flag. Hold your breath.</p><span class="arrow">→</span>
+    </a>
+    <a class="card" href="memory/">
+      <div class="num">05</div><h3>Memory Match</h3><p>Flip pairs. Beat your best time.</p><span class="arrow">→</span>
+    </a>
+    <a class="card" href="chess/">
+      <div class="num">06</div><h3>Chess</h3><p>vs. a small minimax engine.</p><span class="arrow">→</span>
+    </a>
+  </nav>
+
+  <footer class="footer">
+    <div>&copy; Tejas Wavde · MIT</div>
+    <div class="links">
+      <a href="https://github.com/wavde/games">source</a>
+      <a href="https://wavde.github.io">home</a>
+    </div>
+  </footer>
 </main>
 </body>
 </html>
