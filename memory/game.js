@@ -28,12 +28,21 @@ function startTimer() {
 function render() {
   const el = document.getElementById('board');
   el.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-  el.innerHTML = '';
+  el.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+  el.replaceChildren();
   cards.forEach(c => {
     const d = document.createElement('div');
     d.className = 'card' + (c.flipped?' flip':'') + (c.matched?' match':'');
-    d.innerHTML = `<span class="face">${c.emoji}</span>`;
-    d.addEventListener('click', () => flip(c));
+    d.setAttribute('role', 'button');
+    d.setAttribute('tabindex', '0');
+    d.setAttribute('aria-label', c.matched || c.flipped ? c.emoji : 'Face-down card');
+    const face = document.createElement('span');
+    face.className = 'face';
+    face.textContent = c.emoji;
+    d.appendChild(face);
+    const handler = () => flip(c);
+    d.addEventListener('click', handler);
+    d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } });
     el.appendChild(d);
   });
 }

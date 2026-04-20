@@ -34,7 +34,10 @@ function step() {
   if (!alive || paused) return;
   dir = nextDir;
   const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
-  if (head.x<0||head.x>=N||head.y<0||head.y>=N||snake.some(s=>s.x===head.x&&s.y===head.y)) {
+  const willGrow = head.x === food.x && head.y === food.y;
+  // Tail pops if we don't grow, so it's not a collider for the new head.
+  const body = willGrow ? snake : snake.slice(0, -1);
+  if (head.x<0||head.x>=N||head.y<0||head.y>=N||body.some(s=>s.x===head.x&&s.y===head.y)) {
     alive = false;
     document.getElementById('status').textContent = 'Game over. Press New game.';
     const best = +(localStorage.getItem(BEST_KEY) || 0);
@@ -43,7 +46,7 @@ function step() {
     return;
   }
   snake.unshift(head);
-  if (head.x===food.x && head.y===food.y) {
+  if (willGrow) {
     score++;
     if (tickMs > 60) tickMs -= 2;
     placeFood();

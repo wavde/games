@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <title>2048</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1115">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="stylesheet" href="../shared.css">
 <style>
-  .board2048 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; background: #1b1f2b; padding: 10px; border-radius: 10px; width: min(420px, 92vw); margin: 0 auto; aspect-ratio:1; }
+  .board2048 { display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(4,1fr); gap: 10px; background: #1b1f2b; padding: 10px; border-radius: 10px; width: min(420px, 92vw); margin: 0 auto; aspect-ratio:1; touch-action: none; }
   .tile { background: #222838; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-weight: 700; font-size: clamp(1.1rem, 5vw, 1.8rem); color: var(--text); user-select: none; transition: background .1s; }
   .t2{background:#eee4da;color:#776e65} .t4{background:#ede0c8;color:#776e65}
   .t8{background:#f2b179;color:#fff} .t16{background:#f59563;color:#fff}
