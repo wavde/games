@@ -60,17 +60,69 @@ html[data-theme="light"] {
 }
 
 /* ------------------------------------------------------------
-   Panel: turn into warm "paper" card on game pages.
-   (Hub pages never add a `g-*` body class so this is scoped.)
+   PAGE CHROME on game pages: warm everything, kill scanlines.
+   Hub (no g-* class) stays retro. These overrides make the game
+   page feel like a cozy puzzle zine instead of a dark terminal
+   showing a cream document.
+   ------------------------------------------------------------ */
+body[class*="g-"] {
+  background:
+    radial-gradient(1200px 600px at 50% -200px, #fff7e1 0%, transparent 60%),
+    linear-gradient(180deg, #f1e4c3 0%, #ead9b0 100%);
+  color: var(--ink);
+}
+/* Kill the CRT scanline overlay on game pages */
+body[class*="g-"]::before { display: none !important; }
+
+/* Warm topbar: ink on cream, soft divider, gold sigil */
+body[class*="g-"] .topbar {
+  border-bottom: 1px solid rgba(120, 95, 50, 0.22);
+  margin-bottom: 20px;
+}
+body[class*="g-"] .topbar h1 {
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+body[class*="g-"] .topbar h1::before {
+  content: "◆ ";
+  color: var(--sun);
+  font-weight: 700;
+  font-size: 0.85em;
+  margin-right: 2px;
+}
+body[class*="g-"] .topbar .back {
+  color: var(--ink-soft);
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+body[class*="g-"] .topbar .back:hover,
+body[class*="g-"] .topbar .back:focus-visible {
+  color: var(--ink);
+  background: rgba(255, 250, 234, 0.6);
+}
+
+/* Footer notes on game pages */
+body[class*="g-"] .footer-note { color: var(--ink-soft); }
+
+/* ------------------------------------------------------------
+   Panel: warm "paper" card with real elevation
    ------------------------------------------------------------ */
 body[class*="g-"] .panel {
-  background: var(--paper);
+  background:
+    linear-gradient(180deg, #fffaea 0%, var(--paper) 100%);
   border: 1px solid var(--paper-edge);
+  border-radius: 22px;
+  padding: 22px 20px 24px;
   color: var(--ink);
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.6) inset,
-    0 2px 10px rgba(0,0,0,0.22);
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 2px 0 rgba(180, 155, 100, 0.10),
+    0 10px 28px rgba(80, 55, 10, 0.14),
+    0 20px 40px rgba(80, 55, 10, 0.06);
 }
+body[class*="g-"] .panel .row { gap: 10px; }
 body[class*="g-"] .panel .status { color: var(--ink-soft); }
 body[class*="g-"] .panel .status strong,
 body[class*="g-"] .panel .status b { color: var(--ink); }
@@ -509,3 +561,198 @@ body.g-minesweeper .panel .n5 { color: #a8553a; }
 body.g-minesweeper .panel .n6 { color: var(--teal); }
 body.g-minesweeper .panel .n7 { color: var(--ink); }
 body.g-minesweeper .panel .n8 { color: #8a3a32; }
+
+/* ============================================================
+   TACTILE FEEDBACK: press-down on buttons and cells
+   ============================================================ */
+body[class*="g-"] .panel button,
+body[class*="g-"] .panel .btn,
+body[class*="g-"] .panel .chip {
+  transition: background 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, transform 0.08s ease,
+              box-shadow 0.15s ease;
+  min-height: 40px;
+}
+body[class*="g-"] .panel button:active,
+body[class*="g-"] .panel .btn:active,
+body[class*="g-"] .panel .chip:active {
+  transform: translateY(1px) scale(0.98);
+}
+body[class*="g-"] .panel .chip[aria-selected="true"],
+body[class*="g-"] .panel .chip.active {
+  box-shadow: 0 2px 0 rgba(180, 120, 20, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Cells: subtle press response on every game board */
+body[class*="g-"] .panel .cell,
+body[class*="g-"] .panel .tg-cell,
+body[class*="g-"] .panel .qn-cell,
+body[class*="g-"] .panel .zp-cell,
+body[class*="g-"] .panel .pt-cell,
+body[class*="g-"] .panel .sk-cell,
+body[class*="g-"] .panel .lo-cell,
+body[class*="g-"] .panel .c4-cell,
+body[class*="g-"] .panel .mem .card,
+body[class*="g-"] .panel .tile,
+body[class*="g-"] .panel .sq,
+body[class*="g-"] .panel .c {
+  transition: background 0.12s ease, transform 0.08s ease,
+              box-shadow 0.15s ease, color 0.12s ease,
+              border-color 0.12s ease;
+}
+body[class*="g-"] .panel .cell:active:not(:disabled),
+body[class*="g-"] .panel .tg-cell:active,
+body[class*="g-"] .panel .qn-cell:active,
+body[class*="g-"] .panel .zp-cell:active,
+body[class*="g-"] .panel .pt-cell:active,
+body[class*="g-"] .panel .sk-cell:active,
+body[class*="g-"] .panel .lo-cell:active,
+body[class*="g-"] .panel .c4-cell:active,
+body[class*="g-"] .panel .mem .card:active,
+body[class*="g-"] .panel .c:active {
+  transform: scale(0.96);
+}
+@media (prefers-reduced-motion: reduce) {
+  body[class*="g-"] .panel button,
+  body[class*="g-"] .panel .btn,
+  body[class*="g-"] .panel .chip,
+  body[class*="g-"] .panel .cell,
+  body[class*="g-"] .panel .tg-cell,
+  body[class*="g-"] .panel .qn-cell,
+  body[class*="g-"] .panel .zp-cell,
+  body[class*="g-"] .panel .pt-cell,
+  body[class*="g-"] .panel .sk-cell,
+  body[class*="g-"] .panel .lo-cell,
+  body[class*="g-"] .panel .c4-cell,
+  body[class*="g-"] .panel .mem .card,
+  body[class*="g-"] .panel .tile,
+  body[class*="g-"] .panel .c { transition: none; }
+  body[class*="g-"] .panel button:active,
+  body[class*="g-"] .panel .btn:active,
+  body[class*="g-"] .panel .chip:active,
+  body[class*="g-"] .panel .cell:active,
+  body[class*="g-"] .panel .tg-cell:active,
+  body[class*="g-"] .panel .qn-cell:active,
+  body[class*="g-"] .panel .zp-cell:active,
+  body[class*="g-"] .panel .pt-cell:active,
+  body[class*="g-"] .panel .sk-cell:active,
+  body[class*="g-"] .panel .lo-cell:active,
+  body[class*="g-"] .panel .c4-cell:active,
+  body[class*="g-"] .panel .mem .card:active,
+  body[class*="g-"] .panel .c:active { transform: none; }
+}
+
+/* ============================================================
+   WIN / STATUS BANNERS on paper — warm, gentle, celebratory
+   ============================================================ */
+body[class*="g-"] .panel .banner {
+  border: 1px solid var(--sun);
+  background: linear-gradient(180deg, #fff4cf 0%, #fde9b0 100%);
+  color: #7a5418;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 4px 12px rgba(200, 150, 40, 0.18);
+}
+body[class*="g-"] .panel .banner.win {
+  border-color: #7aa867;
+  background: linear-gradient(180deg, #ecf7d4 0%, #d7ecb8 100%);
+  color: #3d5e2d;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 4px 12px rgba(120, 160, 80, 0.22);
+}
+body[class*="g-"] .panel .banner.bad,
+body[class*="g-"] .panel .banner.err {
+  border-color: var(--coral);
+  background: linear-gradient(180deg, #fde3dc 0%, #f6c8bd 100%);
+  color: #8b3a2a;
+}
+
+/* Board "lift" — wrap the board in a subtle shadow so it reads
+   as a physical tile tray sitting on the paper. */
+body[class*="g-"] .panel .board,
+body[class*="g-"] .panel .tg-grid,
+body[class*="g-"] .panel .qn-grid,
+body[class*="g-"] .panel .zp-grid,
+body[class*="g-"] .panel .pt-grid,
+body[class*="g-"] .panel .sk-grid,
+body[class*="g-"] .panel .lo-grid,
+body[class*="g-"] .panel .c4-grid,
+body[class*="g-"] .panel .mem,
+body[class*="g-"] .panel .board2048,
+body[class*="g-"] .panel .ms {
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.65),
+    0 6px 18px rgba(80, 55, 10, 0.12),
+    0 2px 4px rgba(80, 55, 10, 0.06);
+}
+
+/* ============================================================
+   MOBILE POLISH on game pages
+   ============================================================ */
+@media (max-width: 560px) {
+  body[class*="g-"] .wrap { padding: 16px 12px 28px; }
+  body[class*="g-"] .topbar { margin-bottom: 14px; padding-bottom: 10px; }
+  body[class*="g-"] .topbar h1 { font-size: 15px; }
+  body[class*="g-"] .panel {
+    padding: 16px 14px 18px;
+    border-radius: 18px;
+  }
+  body[class*="g-"] .panel .row { flex-wrap: wrap; gap: 8px; }
+  body[class*="g-"] .panel .toolbar { gap: 8px; flex-wrap: wrap; }
+  body[class*="g-"] .panel .toolbar .tool-btn { flex: 1 1 auto; min-width: 0; }
+  body[class*="g-"] .panel .chips { gap: 6px; }
+  body[class*="g-"] .panel .chip { padding: 8px 12px; }
+}
+
+/* Prevent iOS double-tap zoom on interactive surfaces */
+body[class*="g-"] .panel button,
+body[class*="g-"] .panel .chip,
+body[class*="g-"] .panel .cell,
+body[class*="g-"] .panel .tg-cell,
+body[class*="g-"] .panel .qn-cell,
+body[class*="g-"] .panel .zp-cell,
+body[class*="g-"] .panel .pt-cell,
+body[class*="g-"] .panel .sk-cell,
+body[class*="g-"] .panel .lo-cell,
+body[class*="g-"] .panel .c4-cell,
+body[class*="g-"] .panel .mem .card,
+body[class*="g-"] .panel .c {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================
+   MANPAGE overlay on game pages — warm paper modal
+   ============================================================ */
+body[class*="g-"] .man-backdrop {
+  background: rgba(60, 40, 10, 0.55);
+}
+body[class*="g-"] .man-window {
+  background: linear-gradient(180deg, #fffaea 0%, var(--paper) 100%);
+  border: 1px solid var(--paper-edge);
+  color: var(--ink);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(60, 40, 10, 0.4);
+}
+body[class*="g-"] .man-window h2,
+body[class*="g-"] .man-window h3 { color: var(--ink); }
+body[class*="g-"] .man-window code,
+body[class*="g-"] .man-window .kbd {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink);
+  border: 1px solid var(--paper-edge);
+}
+body[class*="g-"] .man-window .muted { color: var(--ink-soft); }
+body[class*="g-"] .man-window .man-close {
+  color: var(--ink-soft);
+}
+body[class*="g-"] .man-window .man-close:hover {
+  color: var(--ink);
+  background: rgba(255, 250, 234, 0.6);
+}
+
+
