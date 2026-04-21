@@ -1,0 +1,511 @@
+/* ============================================================
+   soft.css — easy-on-the-eye play surface for individual games
+   ------------------------------------------------------------
+   Loaded AFTER shared.css on each game page. Keeps the retro
+   topbar / page chrome, but turns the `.panel` into a warm
+   "paper" card with pastel accents — inspired by LinkedIn's
+   Tango / Queens / Zip.
+   Hub (index.html) does NOT include this file; it stays retro.
+   ============================================================ */
+
+:root {
+  /* Paper surface (used inside .panel on game pages) */
+  --paper:        #f4ead2;
+  --paper-2:      #fbf3e0;
+  --paper-edge:   #d9c9a3;
+  --paper-line:   #c9b888;
+  --ink:          #2a2318;
+  --ink-soft:     #6b5e44;
+  --ink-dim:      #9a8c6e;
+
+  /* Pastel accents (per-game region / piece colors) */
+  --soft-rose:    #f1b5b5;
+  --soft-peach:   #f4c89a;
+  --soft-butter:  #f1df90;
+  --soft-sage:    #c7d98d;
+  --soft-mint:    #a5dcba;
+  --soft-sky:     #a8cde8;
+  --soft-lilac:   #c8b4de;
+  --soft-blush:   #efb8cd;
+  --soft-clay:    #dba683;
+  --soft-stone:   #d6c9a7;
+
+  /* Pastel ink (piece/glyph fills that pop on paper) */
+  --sun:          #d89430;     /* warm gold */
+  --moon:         #5a4a9e;     /* deep indigo */
+  --coral:        #d46a5a;
+  --teal:         #3f8a94;
+  --grape:        #8958a8;
+  --forest:       #4a8050;
+}
+
+/* Light-mode tweak: paper gets even creamier, edges a touch darker for contrast */
+@media (prefers-color-scheme: light) {
+  :root {
+    --paper:      #faf1d8;
+    --paper-2:    #fffaea;
+    --paper-edge: #cbb98f;
+    --paper-line: #b8a572;
+    --ink:        #1f1a10;
+    --ink-soft:   #594d34;
+  }
+}
+html[data-theme="light"] {
+  --paper:      #faf1d8;
+  --paper-2:    #fffaea;
+  --paper-edge: #cbb98f;
+  --paper-line: #b8a572;
+  --ink:        #1f1a10;
+  --ink-soft:   #594d34;
+}
+
+/* ------------------------------------------------------------
+   Panel: turn into warm "paper" card on game pages.
+   (Hub pages never add a `g-*` body class so this is scoped.)
+   ------------------------------------------------------------ */
+body[class*="g-"] .panel {
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  color: var(--ink);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.6) inset,
+    0 2px 10px rgba(0,0,0,0.22);
+}
+body[class*="g-"] .panel .status { color: var(--ink-soft); }
+body[class*="g-"] .panel .status strong,
+body[class*="g-"] .panel .status b { color: var(--ink); }
+body[class*="g-"] .panel .status .ok  { color: var(--forest); }
+body[class*="g-"] .panel .status .hot { color: var(--sun); }
+body[class*="g-"] .panel .status .bad { color: var(--coral); }
+
+/* Buttons inside the paper panel — muted ink on cream */
+body[class*="g-"] .panel button,
+body[class*="g-"] .panel .btn {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--paper-edge);
+}
+body[class*="g-"] .panel button:hover,
+body[class*="g-"] .panel .btn:hover {
+  background: #fff;
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+body[class*="g-"] .panel button.primary,
+body[class*="g-"] .panel .btn.primary {
+  background: var(--sun);
+  color: #fffaea;
+  border-color: var(--sun);
+}
+body[class*="g-"] .panel button.primary:hover,
+body[class*="g-"] .panel .btn.primary:hover {
+  background: #c07f20;
+  border-color: #c07f20;
+  color: #fffaea;
+}
+body[class*="g-"] .panel button.ghost,
+body[class*="g-"] .panel .btn.ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--paper-edge);
+}
+body[class*="g-"] .panel button.ghost:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,0.5);
+  border-color: var(--ink-soft);
+}
+body[class*="g-"] .panel .tool-btn .glyph { color: var(--ink-dim); }
+body[class*="g-"] .panel .tool-btn:hover .glyph { color: var(--sun); }
+
+/* Difficulty chips on paper */
+body[class*="g-"] .panel .chip {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--paper-edge);
+}
+body[class*="g-"] .panel .chip:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+body[class*="g-"] .panel .chip[aria-selected="true"],
+body[class*="g-"] .panel .chip.active {
+  background: var(--sun);
+  color: #fffaea;
+  border-color: var(--sun);
+}
+
+/* Score line .kbd tokens */
+body[class*="g-"] .panel .kbd {
+  background: rgba(255,255,255,0.55);
+  color: var(--ink);
+  border: 1px solid var(--paper-edge);
+}
+
+/* Muted links + select inside panel */
+body[class*="g-"] .panel select {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--paper-edge);
+}
+
+/* Focus outline — use ink-soft so it doesn't clash with pastels */
+body[class*="g-"] .panel :focus-visible {
+  outline-color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------
+   Tic-Tac-Toe: peach grid, rose X, teal O
+   ------------------------------------------------------------ */
+body.g-tic-tac-toe .panel .board {
+  background: var(--paper-2);
+  border: 2px solid var(--paper-line);
+  border-radius: 14px;
+  padding: 10px;
+  gap: 10px;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.6);
+}
+body.g-tic-tac-toe .panel .cell {
+  background: var(--soft-peach);
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: clamp(2rem, 10vw, 3.6rem);
+  font-weight: 700;
+  transition: background 0.1s ease, transform 0.05s ease;
+}
+body.g-tic-tac-toe .panel .cell:hover:not(:disabled) { background: #f9d5b2; }
+body.g-tic-tac-toe .panel .cell.x { color: var(--coral); }
+body.g-tic-tac-toe .panel .cell.o { color: var(--teal); }
+body.g-tic-tac-toe .panel .cell.win { background: var(--soft-butter); }
+
+/* ------------------------------------------------------------
+   Tango: gold suns, indigo moons, cream board
+   ------------------------------------------------------------ */
+body.g-tango .panel .tg-grid {
+  background: var(--paper-2);
+  border: 2px solid var(--paper-line);
+  border-radius: 14px;
+  padding: 12px;
+  gap: 8px;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.6);
+}
+body.g-tango .panel .tg-cell {
+  background: #fff8e5;
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  color: var(--ink-dim);
+  font-weight: 700;
+}
+body.g-tango .panel .tg-cell.given {
+  background: var(--soft-stone);
+  border-color: var(--paper-edge);
+  color: var(--ink);
+}
+body.g-tango .panel .tg-cell.sun  { color: var(--sun);  text-shadow: 0 1px 0 rgba(255,255,255,0.6); }
+body.g-tango .panel .tg-cell.moon { color: var(--moon); text-shadow: 0 1px 0 rgba(255,255,255,0.6); }
+body.g-tango .panel .tg-cell.error {
+  border-color: var(--coral);
+  box-shadow: inset 0 0 0 2px var(--coral);
+}
+body.g-tango .panel .tg-edge {
+  background: var(--paper-2);
+  color: var(--ink);
+  border: 1px solid var(--ink-soft);
+  border-radius: 6px;
+  font-weight: 700;
+}
+body.g-tango .panel .tg-edge.eq  { color: var(--forest); border-color: var(--forest); }
+body.g-tango .panel .tg-edge.neq { color: var(--coral);  border-color: var(--coral); }
+
+/* ------------------------------------------------------------
+   Queens: pastel rainbow regions, ink queens / marks
+   ------------------------------------------------------------ */
+body.g-queens .panel .qn-grid {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper-2);
+}
+body.g-queens .panel .qn-cell {
+  color: var(--ink);
+  border: 1px solid rgba(0,0,0,0.18);
+}
+body.g-queens .panel .qn-cell.r0 { background: var(--soft-rose); }
+body.g-queens .panel .qn-cell.r1 { background: var(--soft-peach); }
+body.g-queens .panel .qn-cell.r2 { background: var(--soft-butter); }
+body.g-queens .panel .qn-cell.r3 { background: var(--soft-sage); }
+body.g-queens .panel .qn-cell.r4 { background: var(--soft-mint); }
+body.g-queens .panel .qn-cell.r5 { background: var(--soft-sky); }
+body.g-queens .panel .qn-cell.r6 { background: var(--soft-lilac); }
+body.g-queens .panel .qn-cell.r7 { background: var(--soft-blush); }
+body.g-queens .panel .qn-cell.r8 { background: var(--soft-clay); }
+body.g-queens .panel .qn-cell .mk { color: var(--ink); opacity: 0.55; }
+body.g-queens .panel .qn-cell .qq {
+  color: var(--ink);
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.7));
+}
+body.g-queens .panel .qn-cell.err .qq { color: var(--coral); }
+body.g-queens .panel .qn-cell.br-t { border-top:    2.5px solid var(--ink); }
+body.g-queens .panel .qn-cell.br-b { border-bottom: 2.5px solid var(--ink); }
+body.g-queens .panel .qn-cell.br-l { border-left:   2.5px solid var(--ink); }
+body.g-queens .panel .qn-cell.br-r { border-right:  2.5px solid var(--ink); }
+
+/* ------------------------------------------------------------
+   Zip: lavender board, warm path, teal waypoints
+   ------------------------------------------------------------ */
+body.g-zip .panel .zp-grid {
+  background: #ede3f2;
+  border: 2px solid var(--grape);
+  border-radius: 14px;
+}
+body.g-zip .panel .zp-cell {
+  border: 1px solid rgba(90, 74, 158, 0.18);
+  color: var(--ink);
+}
+body.g-zip .panel .zp-cell.on {
+  background: rgba(212, 106, 90, 0.22);
+}
+body.g-zip .panel .zp-cell .wp {
+  background: var(--grape);
+  color: #fffaea;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+body.g-zip .panel .zp-cell.start .wp { background: var(--forest); }
+body.g-zip .panel .zp-cell.end   .wp { background: var(--coral); }
+body.g-zip .panel .zp-wall-h,
+body.g-zip .panel .zp-wall-v { background: var(--ink); }
+
+/* ------------------------------------------------------------
+   Patches: cream board, pastel rectangle overlays
+   ------------------------------------------------------------ */
+body.g-patches .panel .pt-grid {
+  background: var(--paper-2);
+  border: 2px solid var(--ink-soft);
+  border-radius: 14px;
+}
+body.g-patches .panel .pt-cell {
+  border: 1px solid rgba(107, 94, 68, 0.2);
+  color: var(--ink);
+}
+body.g-patches .panel .pt-cell.clue {
+  color: var(--ink);
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.45);
+}
+body.g-patches .panel .pt-cell.drag { background: rgba(165, 220, 186, 0.45); }
+body.g-patches .panel .pt-rect-overlay {
+  border: 2.5px solid var(--forest);
+  background: rgba(165, 220, 186, 0.28);
+  border-radius: 4px;
+}
+body.g-patches .panel .pt-rect-overlay.bad {
+  border-color: var(--coral);
+  background: rgba(212, 106, 90, 0.22);
+}
+
+/* ------------------------------------------------------------
+   Mini-Sudoku: cream paper, navy givens, teal user entries
+   ------------------------------------------------------------ */
+body.g-mini-sudoku .panel .sk-grid {
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+}
+body.g-mini-sudoku .panel .sk-cell {
+  background: var(--paper-2);
+  border-color: rgba(42, 35, 24, 0.18);
+  color: var(--teal);
+  font-weight: 600;
+}
+body.g-mini-sudoku .panel .sk-cell.given {
+  background: #eadfc0;
+  color: var(--ink);
+  font-weight: 800;
+}
+body.g-mini-sudoku .panel .sk-cell.sel {
+  background: rgba(241, 181, 181, 0.55);
+  box-shadow: inset 0 0 0 2px var(--coral);
+}
+body.g-mini-sudoku .panel .sk-cell.peer {
+  background: rgba(232, 220, 180, 0.55);
+}
+body.g-mini-sudoku .panel .sk-cell.same {
+  background: rgba(168, 205, 232, 0.45);
+}
+body.g-mini-sudoku .panel .sk-cell.error { color: var(--coral); }
+body.g-mini-sudoku .panel .sk-note {
+  color: var(--ink-soft);
+}
+body.g-mini-sudoku .panel .sk-cell.box-b { border-right: 2px solid var(--ink); }
+body.g-mini-sudoku .panel .sk-cell.box-t { border-bottom: 2px solid var(--ink); }
+body.g-mini-sudoku .panel .pad-btn {
+  background: var(--paper-2);
+  border: 1px solid var(--paper-edge);
+  color: var(--ink);
+}
+body.g-mini-sudoku .panel .pad-btn:hover { background: #fff; }
+body.g-mini-sudoku .panel .pad-btn.active {
+  background: var(--sun); color: #fffaea; border-color: var(--sun);
+}
+
+/* ------------------------------------------------------------
+   Lights Out: cream cells, sunny glow when "on"
+   ------------------------------------------------------------ */
+body.g-lights-out .panel .lo-grid {
+  background: var(--paper-2);
+  border: 1px solid var(--paper-line);
+  border-radius: 14px;
+}
+body.g-lights-out .panel .lo-cell {
+  background: #ede2c4;
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+body.g-lights-out .panel .lo-cell:hover { border-color: var(--ink-soft); }
+body.g-lights-out .panel .lo-cell.on {
+  background: var(--sun);
+  border-color: #c07f20;
+  box-shadow: 0 0 18px rgba(216, 148, 48, 0.55);
+}
+
+/* ------------------------------------------------------------
+   Memory: pastel card backs, cream faces
+   ------------------------------------------------------------ */
+body.g-memory .panel .mem .card {
+  background: linear-gradient(135deg, var(--soft-sky), var(--soft-lilac));
+  border: 1px solid var(--paper-line);
+  border-radius: 12px;
+  color: transparent;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+body.g-memory .panel .mem .card.flip,
+body.g-memory .panel .mem .card.match {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--paper-line);
+}
+body.g-memory .panel .mem .card.match {
+  background: var(--soft-mint);
+  border-color: var(--forest);
+}
+
+/* ------------------------------------------------------------
+   Connect-Four: periwinkle board, coral vs sage pieces
+   ------------------------------------------------------------ */
+body.g-connect-four .panel .c4-grid,
+body.g-connect-four .panel .board {
+  background: #cbd7ef;
+  border: 2px solid #6a7fa8;
+  border-radius: 16px;
+}
+body.g-connect-four .panel .c4-cell {
+  background: var(--paper-2);
+  border: 2px solid #cbd7ef;
+  border-radius: 999px;
+}
+body.g-connect-four .panel .c4-cell.p1,
+body.g-connect-four .panel .c4-cell.red {
+  background: var(--coral);
+  box-shadow: inset 0 3px 0 rgba(255,255,255,0.25);
+}
+body.g-connect-four .panel .c4-cell.p2,
+body.g-connect-four .panel .c4-cell.yellow {
+  background: var(--soft-butter);
+  box-shadow: inset 0 3px 0 rgba(255,255,255,0.4);
+}
+body.g-connect-four .panel .c4-cell.win { outline: 3px solid var(--sun); outline-offset: -3px; }
+body.g-connect-four .panel .c4-col-btn {
+  background: transparent;
+  border: 1px dashed rgba(42,35,24,0.3);
+  color: var(--ink-soft);
+  border-radius: 10px;
+}
+body.g-connect-four .panel .c4-col-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.4);
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------
+   2048: warm cream board, amber tile ramp softened
+   ------------------------------------------------------------ */
+body.g-2048 .panel .board2048 {
+  background: var(--paper-edge);
+  border: 1px solid var(--paper-line);
+  border-radius: 14px;
+}
+body.g-2048 .panel .tile {
+  background: rgba(255, 250, 234, 0.55);
+  border: 1px solid var(--paper-line);
+  color: var(--ink);
+  border-radius: 10px;
+}
+body.g-2048 .panel .t2    { background: #efe5c9; color: var(--ink); }
+body.g-2048 .panel .t4    { background: #ecd9a8; color: var(--ink); }
+body.g-2048 .panel .t8    { background: var(--soft-peach); color: var(--ink); }
+body.g-2048 .panel .t16   { background: var(--soft-clay);  color: #fffaea; }
+body.g-2048 .panel .t32   { background: #d88a5a; color: #fffaea; }
+body.g-2048 .panel .t64   { background: var(--coral); color: #fffaea; }
+body.g-2048 .panel .t128  { background: var(--soft-butter); color: var(--ink); }
+body.g-2048 .panel .t256  { background: #e8c96a; color: var(--ink); }
+body.g-2048 .panel .t512  { background: var(--sun); color: #fffaea; }
+body.g-2048 .panel .t1024 { background: var(--forest); color: #fffaea; }
+body.g-2048 .panel .t2048 {
+  background: var(--grape); color: #fffaea;
+  box-shadow: 0 0 24px rgba(137, 88, 168, 0.45);
+}
+body.g-2048 .panel .t4096,
+body.g-2048 .panel .t8192 { background: var(--moon); color: #fffaea; }
+
+/* ------------------------------------------------------------
+   Chess: warm walnut board
+   ------------------------------------------------------------ */
+body.g-chess .panel .board {
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+body.g-chess .panel .sq.light { background: #ecd9a8; }
+body.g-chess .panel .sq.dark  { background: #a5774a; }
+body.g-chess .panel .sq.sel   { outline: 3px solid var(--sun); outline-offset: -3px; }
+body.g-chess .panel .sq.last  { box-shadow: inset 0 0 0 3px rgba(216, 148, 48, 0.55); }
+body.g-chess .panel .sq.hint::after { background: rgba(42, 35, 24, 0.35); }
+
+/* ------------------------------------------------------------
+   Minesweeper: cream paper, pastel number ramp
+   ------------------------------------------------------------ */
+body.g-minesweeper .panel .ms {
+  background: var(--paper-edge);
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+}
+body.g-minesweeper .panel .c {
+  background: #eadfc0;
+  border: 1px solid var(--paper-line);
+  color: var(--ink);
+  border-radius: 4px;
+}
+body.g-minesweeper .panel .c:hover { background: #f3e9cb; border-color: var(--ink-soft); }
+body.g-minesweeper .panel .c.open {
+  background: var(--paper-2);
+  border-color: rgba(42, 35, 24, 0.15);
+}
+body.g-minesweeper .panel .c.open:hover { background: var(--paper-2); }
+body.g-minesweeper .panel .c.flag {
+  background: rgba(216, 148, 48, 0.22); color: var(--sun);
+  border-color: var(--sun);
+}
+body.g-minesweeper .panel .c.mine {
+  background: rgba(212, 106, 90, 0.3); color: var(--coral);
+  border-color: var(--coral);
+}
+body.g-minesweeper .panel .n1 { color: #3b6bb0; }
+body.g-minesweeper .panel .n2 { color: var(--forest); }
+body.g-minesweeper .panel .n3 { color: var(--coral); }
+body.g-minesweeper .panel .n4 { color: var(--grape); }
+body.g-minesweeper .panel .n5 { color: #a8553a; }
+body.g-minesweeper .panel .n6 { color: var(--teal); }
+body.g-minesweeper .panel .n7 { color: var(--ink); }
+body.g-minesweeper .panel .n8 { color: #8a3a32; }
