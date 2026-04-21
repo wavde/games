@@ -372,11 +372,9 @@ body.g-patches .panel .pt-cell.clue {
   background: rgba(255,255,255,0.06);
 }
 body.g-patches .panel .pt-cell.drag {
-  background: rgba(109,213,140,0.2);
+  background: rgba(255,255,255,0.1);
 }
 body.g-patches .panel .pt-rect-overlay {
-  border: 2.5px solid var(--forest);
-  background: rgba(109,213,140,0.12);
   border-radius: 6px;
 }
 body.g-patches .panel .pt-rect-overlay.bad {

@@ -277,7 +277,7 @@
       const a = cellEls[r0 * N + c0].getBoundingClientRect();
       const b = cellEls[r1 * N + c1].getBoundingClientRect();
       const div = document.createElement("div");
-      div.className = "pt-rect-overlay";
+      div.className = "pt-rect-overlay pc" + (i % 12);
       // Validate: exactly one clue inside, area match
       const cluesInside = clues.filter(cl => cl.r >= r0 && cl.r <= r1 && cl.c >= c0 && cl.c <= c1);
       const area = (r1 - r0 + 1) * (c1 - c0 + 1);

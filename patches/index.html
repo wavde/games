@@ -40,19 +40,32 @@
     cursor: crosshair;
   }
   .pt-cell.clue { color: var(--accent); }
-  .pt-cell.drag { background: rgba(138,255,193,0.2); cursor: grabbing; }
+  .pt-cell.drag { background: rgba(255,255,255,0.1); cursor: grabbing; }
   .pt-rect-overlay {
     position: absolute;
     border: 2px solid var(--accent-2);
-    background: rgba(138,255,193,0.12);
     pointer-events: auto;
     cursor: pointer;
     box-sizing: border-box;
+    transition: opacity 0.15s;
   }
   .pt-rect-overlay.bad {
     border-color: var(--danger);
-    background: rgba(255,107,107,0.12);
+    background: rgba(255,107,107,0.12) !important;
   }
+  /* Patch region colour palette */
+  .pt-rect-overlay.pc0 { background: rgba(232,124,138,0.22); border-color: #e87c8a; }
+  .pt-rect-overlay.pc1 { background: rgba(232,165,90,0.22); border-color: #e8a55a; }
+  .pt-rect-overlay.pc2 { background: rgba(212,196,84,0.22); border-color: #d4c454; }
+  .pt-rect-overlay.pc3 { background: rgba(108,192,108,0.22); border-color: #6cc06c; }
+  .pt-rect-overlay.pc4 { background: rgba(76,202,160,0.22); border-color: #4ccaa0; }
+  .pt-rect-overlay.pc5 { background: rgba(90,158,232,0.22); border-color: #5a9ee8; }
+  .pt-rect-overlay.pc6 { background: rgba(160,124,232,0.22); border-color: #a07ce8; }
+  .pt-rect-overlay.pc7 { background: rgba(216,112,168,0.22); border-color: #d870a8; }
+  .pt-rect-overlay.pc8 { background: rgba(200,154,94,0.22); border-color: #c89a5e; }
+  .pt-rect-overlay.pc9 { background: rgba(139,156,247,0.22); border-color: #8b9cf7; }
+  .pt-rect-overlay.pc10 { background: rgba(77,217,172,0.22); border-color: #4dd9ac; }
+  .pt-rect-overlay.pc11 { background: rgba(245,184,0,0.22); border-color: #f5b800; }
   .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
