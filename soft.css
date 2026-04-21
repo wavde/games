@@ -252,7 +252,7 @@ body.g-tango .panel .tg-cell.sun {
   color: var(--sun);
   text-shadow: 0 0 12px rgba(245,184,0,0.45);
   background: rgba(245,184,0,0.08);
-  font-size: 2em;
+  font-size: clamp(1.8rem, 8vw, 2.6rem);
 }
 body.g-tango .panel .tg-cell.given.sun {
   background: rgba(245,184,0,0.14);
@@ -262,7 +262,7 @@ body.g-tango .panel .tg-cell.moon {
   color: var(--moon);
   text-shadow: 0 0 12px rgba(139,156,247,0.45);
   background: rgba(139,156,247,0.08);
-  font-size: 1.6em;
+  font-size: clamp(1.8rem, 8vw, 2.6rem);
 }
 body.g-tango .panel .tg-cell.given.moon {
   background: rgba(139,156,247,0.14);
