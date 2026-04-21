@@ -3,7 +3,7 @@
 
   const N = 6;
   const SUN = 1, MOON = 2, EMPTY = 0;
-  const SUN_CH = "●", MOON_CH = "●";
+  const SUN_CH = "●", MOON_CH = "☽";
 
   // Difficulty: [givens, edges] target
   const DIFFS = {
