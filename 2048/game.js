@@ -1,6 +1,6 @@
 const N = 4;
 const store = Gamekit.storage('2048:');
-let grid, score, over;
+let grid, score, over, mergedCells;
 
 function empty() { return Array.from({length: N}, () => Array(N).fill(0)); }
 
@@ -19,9 +19,11 @@ function render() {
     const v = grid[r][c];
     const d = document.createElement('div');
     d.className = 'tile' + (v ? ' t'+v : '');
+    if (mergedCells && mergedCells.has(r*N+c)) d.classList.add('merged');
     d.textContent = v || '';
     el.appendChild(d);
   }
+  mergedCells = null;
   document.getElementById('score').textContent = score;
   document.getElementById('best').textContent = store.getInt('best', 0);
 }
@@ -29,13 +31,14 @@ function render() {
 function slideRow(row) {
   const xs = row.filter(v => v);
   const out = [];
+  const merged = [];
   let gained = 0;
   for (let i=0;i<xs.length;i++) {
-    if (i+1<xs.length && xs[i]===xs[i+1]) { out.push(xs[i]*2); gained += xs[i]*2; i++; }
+    if (i+1<xs.length && xs[i]===xs[i+1]) { out.push(xs[i]*2); merged.push(out.length-1); gained += xs[i]*2; i++; }
     else out.push(xs[i]);
   }
   while (out.length < N) out.push(0);
-  return { row: out, gained };
+  return { row: out, gained, merged };
 }
 
 function move(dir) {
@@ -45,14 +48,23 @@ function move(dir) {
   const rotate = {left:0, up:1, right:2, down:3}[dir];
   let working = g;
   for (let k=0;k<rotate;k++) working = rot(working);
+  const mc = new Set();
   for (let r=0;r<N;r++) {
-    const { row, gained: gg } = slideRow(working[r]);
+    const { row, gained: gg, merged: mr } = slideRow(working[r]);
     if (row.some((v,i) => v !== working[r][i])) moved = true;
     working[r] = row;
     gained += gg;
+    mr.forEach(c => mc.add(r*N+c));
   }
+  // Reverse-rotate merged positions
+  mergedCells = new Set();
+  mc.forEach(idx => {
+    let r = Math.floor(idx/N), c = idx%N;
+    for (let k=0;k<(4-rotate)%4;k++) { const nr = N-1-c, nc = r; r = nr; c = nc; }
+    mergedCells.add(r*N+c);
+  });
   for (let k=0;k<(4-rotate)%4;k++) working = rot(working);
-  if (!moved) return;
+  if (!moved) { mergedCells = null; return; }
   grid = working;
   score += gained;
   const best = store.getInt('best', 0);
@@ -94,7 +106,7 @@ document.getElementById('board').addEventListener('touchstart', e=>{tStart=e.tou
 document.getElementById('board').addEventListener('touchend', e=>{
   if(!tStart)return;
   const t=e.changedTouches[0], dx=t.clientX-tStart.clientX, dy=t.clientY-tStart.clientY;
-  if (Math.max(Math.abs(dx),Math.abs(dy)) < 20) return;
+  if (Math.max(Math.abs(dx),Math.abs(dy)) < 35) return;
   if (Math.abs(dx)>Math.abs(dy)) move(dx>0?'right':'left'); else move(dy>0?'down':'up');
   tStart=null;
 });

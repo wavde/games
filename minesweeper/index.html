@@ -46,6 +46,12 @@
     color: var(--fg);
     transition: background 0.08s, border-color 0.08s;
   }
+  @media (max-width: 560px) {
+    .c { width: 24px; height: 24px; font-size: 0.75rem; }
+  }
+  @media (max-width: 420px) {
+    .c { width: 20px; height: 20px; font-size: 0.65rem; border-radius: 3px; }
+  }
   .c:hover { background: var(--panel); border-color: var(--border-hi); }
   .c.open {
     background: var(--bg);

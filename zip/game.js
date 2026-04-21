@@ -266,11 +266,21 @@
     return Number(cell.dataset.i);
   }
 
+  function flashInvalid(cellIdx) {
+    const el = boardEl.children[cellIdx];
+    if (!el) return;
+    el.classList.remove('invalid');
+    void el.offsetWidth;
+    el.classList.add('invalid');
+    el.addEventListener('animationend', () => el.classList.remove('invalid'), { once: true });
+  }
+
   function tryExtend(target) {
     if (target < 0 || won) return;
     // If path empty, must start at cell 1
     if (path.length === 0) {
       if (target === waypoints[0]) { path.push(target); onPath.add(target); renderPath(); }
+      else flashInvalid(target);
       return;
     }
     // If user taps current end, nothing
@@ -285,12 +295,12 @@
       return;
     }
     // Must be adjacent to last
-    if (!neighbors(last).includes(target)) return;
-    if (blocked(last, target)) return;
+    if (!neighbors(last).includes(target)) { flashInvalid(target); return; }
+    if (blocked(last, target)) { flashInvalid(target); return; }
     // Waypoint order check: may not place a non-next waypoint
-    const nextExpectedWp = path.filter(p => waypoints.includes(p)).length; // index of next waypoint (0-indexed)
+    const nextExpectedWp = path.filter(p => waypoints.includes(p)).length;
     const wpIndex = waypoints.indexOf(target);
-    if (wpIndex !== -1 && wpIndex !== nextExpectedWp) return;
+    if (wpIndex !== -1 && wpIndex !== nextExpectedWp) { flashInvalid(target); return; }
     path.push(target);
     onPath.add(target);
     renderPath();

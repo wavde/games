@@ -32,10 +32,14 @@
     padding: 6px 0;
     font-size: var(--fs-lg);
     cursor: pointer;
-    transition: color 0.12s;
-    min-height: 36px;
+    transition: color 0.12s, background 0.12s;
+    min-height: var(--tap);
+    border-radius: 8px;
   }
-  .c4-col-btn:hover:not(:disabled) { color: var(--accent); }
+  .c4-col-btn:hover:not(:disabled) {
+    color: var(--accent);
+    background: rgba(245,184,0,0.08);
+  }
   .c4-col-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
   .c4-board {

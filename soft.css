@@ -187,6 +187,16 @@ body[class*="g-"] .panel :focus-visible {
   outline-offset: 2px;
 }
 
+/* ── Interactive cell press feedback ─────────────────────────── */
+body[class*="g-"] .panel .lo-cell:active,
+body[class*="g-"] .panel .qn-cell:active,
+body[class*="g-"] .panel .tg-cell:active,
+body[class*="g-"] .panel .mem .card:active,
+body[class*="g-"] .panel .cell:active {
+  transform: scale(0.94);
+  transition: transform 0.06s ease-out;
+}
+
 /* ================================================================
    PER-GAME THEMES
    ================================================================ */
@@ -522,8 +532,8 @@ body.g-connect-four .panel .c4-col-btn {
   border-radius: 10px;
 }
 body.g-connect-four .panel .c4-col-btn:hover:not(:disabled) {
-  background: rgba(255,255,255,0.04);
-  color: var(--fg);
+  background: rgba(245,184,0,0.08);
+  color: var(--accent);
 }
 
 /* ── 2048 ───────────────────────────────────────────────────── */

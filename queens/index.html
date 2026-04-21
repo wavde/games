@@ -38,16 +38,15 @@
     min-width: 0;
     padding: 0;
     background: transparent;
-    color: #111;
+    color: var(--fg);
   }
-  html[data-theme="light"] .qn-cell, @media (prefers-color-scheme: light) { .qn-cell { color: #000; } }
   .qn-cell .mk {
     color: var(--fg);
     opacity: 0.5;
     font-weight: 700;
   }
   .qn-cell .qq {
-    color: #111;
+    color: var(--fg);
     font-size: 1.2em;
     filter: drop-shadow(0 0 2px rgba(255,255,255,0.4));
   }
@@ -65,10 +64,10 @@
   .qn-cell.r8 { background: #b0b0ae; }
 
   /* Thick region borders */
-  .qn-cell.br-t { border-top:    2px solid #111; }
-  .qn-cell.br-b { border-bottom: 2px solid #111; }
-  .qn-cell.br-l { border-left:   2px solid #111; }
-  .qn-cell.br-r { border-right:  2px solid #111; }
+  .qn-cell.br-t { border-top:    2px solid rgba(0,0,0,0.5); }
+  .qn-cell.br-b { border-bottom: 2px solid rgba(0,0,0,0.5); }
+  .qn-cell.br-l { border-left:   2px solid rgba(0,0,0,0.5); }
+  .qn-cell.br-r { border-right:  2px solid rgba(0,0,0,0.5); }
 
   .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>

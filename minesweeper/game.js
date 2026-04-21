@@ -71,11 +71,18 @@ function updateHud() {
   if (over) document.getElementById('status').textContent = won ? 'You won! 🎉' : 'Boom. 💥';
 }
 
+function cellSize() {
+  const vw = Math.min(document.documentElement.clientWidth * 0.94 - 16, 600);
+  return Math.min(28, Math.floor(vw / Math.max(W, H)));
+}
+
 function render() {
   const el = document.getElementById('board');
-  el.style.gridTemplateColumns = `repeat(${W}, 28px)`;
-  el.style.gridTemplateRows = `repeat(${H}, 28px)`;
+  const sz = cellSize();
+  el.style.gridTemplateColumns = `repeat(${W}, ${sz}px)`;
+  el.style.gridTemplateRows = `repeat(${H}, ${sz}px)`;
   el.replaceChildren();
+  el.style.fontSize = sz < 22 ? '0.65rem' : sz < 26 ? '0.75rem' : '0.9rem';
   for (let r=0;r<H;r++) for (let c=0;c<W;c++) {
     const i = idx(r,c);
     const d = document.createElement('div');
@@ -141,4 +148,5 @@ boardEl.addEventListener('touchmove', cancelPress, { passive: true });
 
 document.getElementById('reset').addEventListener('click', reset);
 document.getElementById('diff').addEventListener('change', reset);
+window.addEventListener('resize', () => { if (!over) render(); });
 reset();

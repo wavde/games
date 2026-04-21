@@ -225,7 +225,7 @@ function makeMove(s, m) {
   // EP target
   s.ep = null;
   if (m.double) {
-    s.ep = { r: (m.from[0]+m.to[0])/2, c: m.from[1] };
+    s.ep = { r: (m.from[0]+m.to[0])>>1, c: m.from[1] };
   }
   if (p.type === 'p' || captured || m.enpassant) s.halfmove = 0;
   else s.halfmove++;
