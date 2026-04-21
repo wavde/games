@@ -252,7 +252,7 @@ body.g-tango .panel .tg-cell.sun {
   color: var(--sun);
   text-shadow: 0 0 12px rgba(245,184,0,0.45);
   background: rgba(245,184,0,0.08);
-  font-size: 1.6em;
+  font-size: 2em;
 }
 body.g-tango .panel .tg-cell.given.sun {
   background: rgba(245,184,0,0.14);
