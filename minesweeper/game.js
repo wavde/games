@@ -1,9 +1,22 @@
 const DIFFS = { easy:[9,9,10], medium:[16,16,40], hard:[20,20,80] };
 let W,H,M, cells, mines, revealed, flags, over, won, firstClick;
+let timerStart = 0, timerId = null, elapsed = 0;
 
 function idx(r,c){ return r*W+c; }
 function inb(r,c){ return r>=0&&c>=0&&r<H&&c<W; }
 function neigh(r,c){ const a=[]; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) if((dr||dc)&&inb(r+dr,c+dc)) a.push([r+dr,c+dc]); return a; }
+
+function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
+function startTimer() {
+  stopTimer();
+  timerStart = Date.now();
+  elapsed = 0;
+  document.getElementById('time').textContent = '0s';
+  timerId = setInterval(() => {
+    elapsed = Math.floor((Date.now() - timerStart) / 1000);
+    document.getElementById('time').textContent = elapsed + 's';
+  }, 500);
+}
 
 function reset() {
   const d = document.getElementById('diff').value;
@@ -13,6 +26,9 @@ function reset() {
   revealed = new Uint8Array(H*W);
   flags = new Uint8Array(H*W);
   over = false; won = false; firstClick = true;
+  stopTimer();
+  elapsed = 0;
+  document.getElementById('time').textContent = '0s';
   document.getElementById('status').textContent = 'Click to reveal.';
   render();
   updateHud();
@@ -81,9 +97,10 @@ function click(r,c) {
   if (over) return;
   const i = idx(r,c);
   if (flags[i]) return;
-  if (firstClick) { placeMines(r,c); firstClick = false; }
+  if (firstClick) { placeMines(r,c); firstClick = false; startTimer(); }
   reveal(r,c);
   checkWin();
+  if (over) stopTimer();
   render(); updateHud();
 }
 

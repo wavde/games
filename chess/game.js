@@ -50,6 +50,8 @@ function cloneState(s) {
     turn: s.turn,
     castling: {...s.castling},
     ep: s.ep ? {...s.ep} : null,
+    halfmove: s.halfmove || 0,
+    positions: s.positions ? s.positions.slice() : [],
     history: s.history.slice(),
   };
 }
@@ -60,8 +62,23 @@ function initialState() {
     turn: 'w',
     castling: { wK:true, wQ:true, bK:true, bQ:true },
     ep: null,
+    halfmove: 0,       // 50-move rule (half-moves since last capture/pawn)
+    positions: [],     // stack of position keys for threefold
     history: [],
   };
+}
+
+function positionKey(s) {
+  let k = '';
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    const p = s.board[r][c];
+    k += p ? (p.color + p.type) : '.';
+  }
+  k += '|' + s.turn + '|' +
+    (s.castling.wK?'K':'') + (s.castling.wQ?'Q':'') +
+    (s.castling.bK?'k':'') + (s.castling.bQ?'q':'') + '|' +
+    (s.ep ? (s.ep.r + ',' + s.ep.c) : '-');
+  return k;
 }
 
 const inb = (r,c) => r>=0&&c>=0&&r<8&&c<8;
@@ -168,6 +185,7 @@ function makeMove(s, m) {
     castling: {...s.castling}, ep: s.ep ? {...s.ep} : null,
     promotion: m.promotion || null, enpassant: !!m.enpassant, castle: m.castle || null,
     epCaptured: null, rookMove: null,
+    halfmove: s.halfmove,
   };
   s.board[m.to[0]][m.to[1]] = p;
   s.board[m.from[0]][m.from[1]] = null;
@@ -209,16 +227,21 @@ function makeMove(s, m) {
   if (m.double) {
     s.ep = { r: (m.from[0]+m.to[0])/2, c: m.from[1] };
   }
+  if (p.type === 'p' || captured || m.enpassant) s.halfmove = 0;
+  else s.halfmove++;
   s.turn = opp(s.turn);
   s.history.push(prev);
+  s.positions.push(positionKey(s));
   return prev;
 }
 
 function undoMove(s) {
   const h = s.history.pop(); if (!h) return;
+  s.positions.pop();
   s.turn = opp(s.turn);
   s.castling = {...h.castling};
   s.ep = h.ep ? {...h.ep} : null;
+  s.halfmove = h.halfmove || 0;
   s.board[h.from[0]][h.from[1]] = h.piece;
   s.board[h.to[0]][h.to[1]] = h.captured;
   if (h.enpassant && h.epCaptured) {
@@ -383,12 +406,17 @@ function onSquare(r,c) {
   }
 }
 
+let aiTimer = null;
+function cancelAI() { if (aiTimer !== null) { clearTimeout(aiTimer); aiTimer = null; } thinking = false; }
+
 function aiTurn() {
   if (state.turn === humanColor) return;
   if (checkEnd()) return;
   thinking = true;
   renderBoard();
-  setTimeout(() => {
+  aiTimer = setTimeout(() => {
+    aiTimer = null;
+    if (state.turn === humanColor) { thinking = false; renderBoard(); return; }
     const depth = +document.getElementById('level').value;
     const m = bestMove(state, depth);
     if (m) { makeMove(state, m); lastMove = m; }
@@ -396,6 +424,34 @@ function aiTurn() {
     renderBoard();
     checkEnd();
   }, 20);
+}
+
+function insufficientMaterial(s) {
+  const pieces = { w: [], b: [] };
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    const p = s.board[r][c];
+    if (!p) continue;
+    if (p.type === 'p' || p.type === 'r' || p.type === 'q') return false;
+    pieces[p.color].push({ t: p.type, sq: (r + c) % 2 });
+  }
+  const w = pieces.w.filter(p => p.t !== 'k');
+  const b = pieces.b.filter(p => p.t !== 'k');
+  // K v K
+  if (w.length === 0 && b.length === 0) return true;
+  // K+minor v K
+  if (w.length === 1 && b.length === 0 && (w[0].t === 'n' || w[0].t === 'b')) return true;
+  if (b.length === 1 && w.length === 0 && (b[0].t === 'n' || b[0].t === 'b')) return true;
+  // K+B v K+B with same-color bishops
+  if (w.length === 1 && b.length === 1 && w[0].t === 'b' && b[0].t === 'b' && w[0].sq === b[0].sq) return true;
+  return false;
+}
+
+function threefold(s) {
+  const key = s.positions[s.positions.length - 1];
+  if (!key) return false;
+  let c = 0;
+  for (const k of s.positions) if (k === key) c++;
+  return c >= 3;
 }
 
 function checkEnd() {
@@ -408,25 +464,40 @@ function checkEnd() {
     thinking = true; // freeze interaction
     return true;
   }
+  if (state.halfmove >= 100) {
+    document.getElementById('status').textContent = 'Draw — 50-move rule.';
+    thinking = true; return true;
+  }
+  if (threefold(state)) {
+    document.getElementById('status').textContent = 'Draw — threefold repetition.';
+    thinking = true; return true;
+  }
+  if (insufficientMaterial(state)) {
+    document.getElementById('status').textContent = 'Draw — insufficient material.';
+    thinking = true; return true;
+  }
   return false;
 }
 
 document.getElementById('reset').addEventListener('click', () => {
+  cancelAI();
   state = initialState();
-  selected = null; legalFromSel = []; lastMove = null; thinking = false;
+  selected = null; legalFromSel = []; lastMove = null;
   humanColor = document.getElementById('side').value;
   flipped = humanColor === 'b';
   renderBoard();
-  if (humanColor === 'b') setTimeout(aiTurn, 200);
+  document.getElementById('status').textContent = humanColor === 'b' ? 'AI is thinking…' : 'Your move.';
+  if (humanColor === 'b') aiTimer = setTimeout(() => { aiTimer = null; aiTurn(); }, 200);
 });
 
 document.getElementById('undo').addEventListener('click', () => {
-  if (state.history.length === 0 || thinking) return;
+  if (state.history.length === 0) return;
+  cancelAI();
   undoMove(state);
   if (state.turn !== humanColor && state.history.length > 0) undoMove(state);
   lastMove = null; selected = null; legalFromSel = [];
-  thinking = false;
   renderBoard();
+  document.getElementById('status').textContent = 'Your move.';
 });
 
 document.getElementById('flip').addEventListener('click', () => { flipped = !flipped; renderBoard(); });

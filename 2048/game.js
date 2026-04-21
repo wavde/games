@@ -1,5 +1,5 @@
 const N = 4;
-const BEST_KEY = 'g2048_best';
+const store = Gamekit.storage('2048:');
 let grid, score, over;
 
 function empty() { return Array.from({length: N}, () => Array(N).fill(0)); }
@@ -23,7 +23,7 @@ function render() {
     el.appendChild(d);
   }
   document.getElementById('score').textContent = score;
-  document.getElementById('best').textContent = localStorage.getItem(BEST_KEY) || 0;
+  document.getElementById('best').textContent = store.getInt('best', 0);
 }
 
 function slideRow(row) {
@@ -55,11 +55,11 @@ function move(dir) {
   if (!moved) return;
   grid = working;
   score += gained;
-  const best = +(localStorage.getItem(BEST_KEY)||0);
-  if (score > best) localStorage.setItem(BEST_KEY, score);
+  const best = store.getInt('best', 0);
+  if (score > best) store.set('best', score);
   addTile();
   render();
-  if (!canMove()) { over = true; document.querySelector('.status').textContent = 'Game over.'; }
+  if (!canMove()) { over = true; document.getElementById('over-msg').textContent = '· Game over.'; }
 }
 
 function rot(m) {
@@ -80,6 +80,7 @@ function canMove() {
 
 function reset() {
   grid = empty(); score = 0; over = false;
+  const om = document.getElementById('over-msg'); if (om) om.textContent = '';
   addTile(); addTile(); render();
 }
 

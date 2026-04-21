@@ -1,33 +1,49 @@
 # 🎮 Browser Games
 
-[![Pages](https://img.shields.io/badge/play-wavde.github.io%2Fgames-6ea8ff?style=flat)](https://wavde.github.io/games/)
+[![Pages](https://img.shields.io/badge/play-wavde.github.io%2Fgames-f5c542?style=flat)](https://wavde.github.io/games/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-8affc1?style=flat)](LICENSE)
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 
-Six classic games built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no dependencies — open one file and play.
+Twelve classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
 ---
 
-## Games
+## The lineup
+
+### Classics
 
 | | Game | Highlights |
 |---|---|---|
-| ❌⭕ | **[Tic-Tac-Toe](tic-tac-toe/)** | Unbeatable AI via minimax. Play as X or O. |
-| 🐍 | **[Snake](snake/)** | Keyboard, WASD, and swipe controls. Speed ramps with score. |
-| 🔢 | **[2048](2048/)** | Slide & merge. Local-storage best score. |
-| 💣 | **[Minesweeper](minesweeper/)** | 3 difficulties. First-click always safe. Right-click or long-press to flag. |
-| 🧠 | **[Memory Match](memory/)** | 4×4, 6×6, 8×8 boards. Timer and best time per size. |
-| ♞ | **[Chess](chess/)** | Full rules (castling, en passant, promotion). Minimax + alpha-beta engine with piece-square tables. Three difficulty levels. |
+| ❌⭕ | **[tic-tac-toe](tic-tac-toe/)** | Unbeatable AI via full minimax. |
+| 🔢 | **[2048](2048/)** | Slide & merge. Per-session best score. |
+| 💣 | **[minesweeper](minesweeper/)** | 3 sizes. First-click safe. Long-press to flag. |
+| 🧠 | **[memory](memory/)** | 4×4 / 6×6 / 8×8. Timer and per-size best. |
+| ♞ | **[chess](chess/)** | Full rules. Alpha-beta + piece-square-table engine, 3 levels. |
+| 🔴 | **[connect-four](connect-four/)** | Local 2P or alpha-beta AI (depths 2/4/6). |
+| 💡 | **[lights-out](lights-out/)** | 5×5 toggle grid. Turn every light off. |
 
-## Highlights
+### Logic puzzles
 
-- **Zero dependencies.** No npm, no bundler, no transpiler. ~60KB total.
-- **Mobile-friendly.** Touch / swipe support on Snake, 2048, Minesweeper.
-- **Persistent best scores** via `localStorage`.
-- **Accessible.** High-contrast palette, keyboard-navigable, respects reduced-motion preferences.
-- **Real AI on two games.** Tic-Tac-Toe uses exhaustive minimax (unbeatable). Chess uses minimax with alpha-beta pruning and piece-square-table evaluation.
+Every logic puzzle ships with an in-browser generator + solver and three difficulty tiers. A **daily puzzle** seed (hash of the UTC date + difficulty + game) means everyone sees the same board each day; **↻ new** rolls a fresh one.
+
+| | Game | Highlights |
+|---|---|---|
+| ﹟ | **[mini-sudoku](mini-sudoku/)** | 6×6 with 2×3 boxes. Pencil marks, keyboard support. |
+| ☀ | **[tango](tango/)** | Suns & moons. No 3-in-a-row, balanced counts, `=` / `×` edge constraints. |
+| ♛ | **[queens](queens/)** | Non-attacking queens across colored regions. |
+| 🧵 | **[zip](zip/)** | Draw one Hamiltonian path through numbered waypoints in order. |
+| ▦ | **[patches](patches/)** | Partition the grid into rectangles — clue number = rectangle area. |
+
+---
+
+## Design system
+
+- **Retro terminal**: Fira Mono, amber + mint on near-black, 1px hairline borders, ASCII banners, subtle scanline overlay.
+- **Light mode**: follows `prefers-color-scheme`, plus a footer toggle that cycles **dark → light → system**. Preference persists in `localStorage`.
+- **Manpage help**: every game has a `? man` button that opens a Unix-style manpage overlay (NAME · RULES · CONTROLS · STRATEGY). Auto-opens on first visit per game; quick to dismiss with ESC / `q` / tap-outside.
+- **Mobile-first**: 44px minimum tap targets, `dvh` viewport units, `touch-action: manipulation`, no hover-only UI.
 
 ## Run locally
 
@@ -37,7 +53,7 @@ cd games
 # open index.html in any modern browser
 ```
 
-No server required. If you prefer one:
+Or serve it:
 
 ```bash
 python -m http.server 8000
@@ -48,39 +64,54 @@ python -m http.server 8000
 
 ```
 games/
-├── index.html          hub page linking to each game
-├── shared.css          design tokens, buttons, panels
+├── index.html          hub page
+├── shared.css          design tokens, buttons, panels, light mode
+├── manpage.css         shared help-overlay styles
+├── manpage.js          shared help-overlay controller
+├── gamekit.js          shared helpers (PRNG, daily seed, storage, chips, etc.)
+├── manifest.json       PWA manifest (iOS/Android home screen)
 ├── favicon.svg
-├── tic-tac-toe/
-│   ├── index.html
-│   └── game.js
-├── snake/
-├── 2048/
-├── minesweeper/
-├── memory/
-└── chess/
-    ├── index.html
-    └── game.js         ~500 lines; board, move gen, minimax, UI
+├── tic-tac-toe/     ├── index.html, game.js   (5 classics)
+├── 2048/            │
+├── minesweeper/     │
+├── memory/          │
+├── chess/           │
+├── connect-four/    │
+├── lights-out/      │   (new — generator-backed)
+├── mini-sudoku/     │   (new — generator + solver)
+├── tango/           │
+├── queens/          │
+├── zip/             │
+└── patches/         │
 ```
 
-Each game folder is fully self-contained: `index.html` + `game.js`. Styling inherits from `shared.css` plus a small per-game `<style>` block.
+Each game folder is self-contained: `index.html` + `game.js`. Styling inherits from `shared.css` and `manpage.css`.
+
+## Generators & difficulty
+
+Every logic puzzle generates uniquely-solvable boards in the browser:
+
+| Game | Easy | Medium | Hard |
+|---|---|---|---|
+| lights-out | 3 random taps | 6 taps | 10 taps |
+| connect-four (AI) | depth 2 | depth 4 | depth 6 |
+| mini-sudoku | 22 clues | 18 clues | 14 clues |
+| tango | 16 givens, 10 edges | 10 givens, 8 edges | 6 givens, 7 edges |
+| queens | 6×6 | 7×7 | 8×8 |
+| zip | 5×5, 4 waypoints | 6×6, 5 wp, 3 walls | 7×7, 6 wp, 5 walls |
+| patches | 5×5 partition | 6×6 partition | 7×7 partition |
+
+All generators validate uniqueness against a solver before returning.
 
 ## Tech
 
-- **Rendering:** HTML + CSS Grid. Snake is the only canvas game.
-- **State:** plain JS modules, no framework.
-- **AI:**
-  - *Tic-Tac-Toe:* minimax over the full game tree. Unbeatable.
-  - *Chess:* minimax with alpha-beta pruning, move ordering (MVV-LVA + promotions), and piece-square tables for positional evaluation. Depth 1–3 selectable.
-
-## Contributing
-
-Issues and PRs welcome. Good first tasks:
-
-- Add new games (Connect Four, Wordle clone, Tetris, Flappy Bird)
-- Improve chess engine (iterative deepening, quiescence search, opening book)
-- Add a global high-score page
-- Add a dark/light mode toggle
+- **Rendering**: HTML + CSS Grid. No `<canvas>`.
+- **State**: plain JS, no framework.
+- **AI**:
+  - *tic-tac-toe*: full-tree minimax (unbeatable).
+  - *chess*: alpha-beta + MVV-LVA move ordering + piece-square tables.
+  - *connect-four*: alpha-beta with center-first column ordering.
+- **PRNG**: mulberry32 seeded by FNV-1a hash of date+difficulty+game — deterministic dailies across devices.
 
 ## License
 

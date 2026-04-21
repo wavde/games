@@ -1,4 +1,5 @@
 const EMOJI = ['🍎','🍌','🍇','🍓','🍒','🍑','🥝','🍍','🥥','🍉','🥭','🍋','🥑','🌽','🥕','🍆','🥦','🧄','🧅','🥔','🌶️','🫐','🍊','🍐','🍈','🍏','🫒','🥜','🌰','🍠','🥐','🥖'];
+const store = Gamekit.storage('memory:');
 let size, cards, flipped, matched, moves, startTime, timerId, locked;
 
 function reset() {
@@ -11,10 +12,9 @@ function reset() {
   document.getElementById('moves').textContent = 0;
   document.getElementById('time').textContent = 0;
   document.getElementById('status').textContent = 'Flip two. Match all pairs.';
-  const bestKey = `mem_best_${size}`;
-  const best = localStorage.getItem(bestKey);
-  document.getElementById('best').textContent = best ? best + 's' : '—';
-  clearInterval(timerId); startTime = null;
+  const best = store.getInt('best:' + size, null);
+  document.getElementById('best').textContent = best !== null ? best + 's' : '—';
+  clearInterval(timerId); timerId = null; startTime = null;
   render();
 }
 
@@ -76,10 +76,12 @@ function flip(c) {
 
 function finish() {
   clearInterval(timerId);
+  timerId = null;
   const secs = Math.floor((Date.now()-startTime)/1000);
-  const bestKey = `mem_best_${size}`;
-  const prev = +localStorage.getItem(bestKey) || Infinity;
-  if (secs < prev) localStorage.setItem(bestKey, secs);
+  const prev = store.getInt('best:' + size, null);
+  if (prev === null || secs < prev) store.set('best:' + size, secs);
+  const newBest = store.getInt('best:' + size, null);
+  document.getElementById('best').textContent = newBest !== null ? newBest + 's' : '—';
   document.getElementById('status').textContent = `Done in ${moves} moves, ${secs}s 🎉`;
 }
 
