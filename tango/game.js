@@ -3,7 +3,7 @@
 
   const N = 6;
   const SUN = 1, MOON = 2, EMPTY = 0;
-  const SUN_CH = "☀", MOON_CH = "🌙";
+  const SUN_CH = "●", MOON_CH = "●";
 
   // Difficulty: [givens, edges] target
   const DIFFS = {
@@ -350,7 +350,7 @@
     const h = history.pop();
     if (!h) return;
     grid[h.i] = h.v;
-    statusEl.textContent = "Fill with suns ☀ and moons 🌙.";
+    statusEl.textContent = "Fill with suns and moons.";
     renderAll();
   });
   resetBtn.addEventListener("click", () => {
@@ -359,7 +359,7 @@
     won = false;
     timerStart = Date.now();
     startTimer();
-    statusEl.textContent = "Fill with suns ☀ and moons 🌙.";
+    statusEl.textContent = "Fill with suns and moons.";
     renderAll();
   });
   hintBtn.addEventListener("click", () => {
