@@ -13,15 +13,15 @@
 /* ── Design tokens ──────────────────────────────────────────── */
 :root {
   /* Rich region palette (queens, accents) */
-  --q-rose:    #e87c8a;
-  --q-peach:   #e8a55a;
-  --q-gold:    #d4c454;
-  --q-sage:    #6cc06c;
-  --q-mint:    #4ccaa0;
-  --q-sky:     #5a9ee8;
-  --q-lilac:   #a07ce8;
-  --q-blush:   #d870a8;
-  --q-clay:    #c89a5e;
+  --q-rose:    #b5706e;
+  --q-peach:   #c49464;
+  --q-gold:    #b3a458;
+  --q-sage:    #6a9e5e;
+  --q-mint:    #5a9e88;
+  --q-sky:     #5c84ab;
+  --q-lilac:   #8a72a8;
+  --q-blush:   #a8687e;
+  --q-clay:    #a88a58;
 
   /* Semantic game colours */
   --sun:    #f5b800;
