@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>akari · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Akari (Light Up) — place bulbs so every cell is lit, no bulb shines on another, and numbered walls get their count.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .ak-board {
+    --n: 7;
+    display: grid;
+    grid-template-columns: repeat(var(--n), 1fr);
+    grid-template-rows: repeat(var(--n), 1fr);
+    gap: 2px;
+    width: min(440px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    padding: 2px;
+    box-sizing: border-box;
+    background: #17150f;
+    border-radius: var(--r-md);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body.g-akari .panel .ak-cell {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: #3d382f;
+    cursor: pointer;
+  }
+  body.g-akari .panel .ak-cell:hover { background: #47413a; }
+  body.g-akari .panel .ak-cell.lit { background: #6e5b22; }
+  body.g-akari .panel .ak-cell.lit:hover { background: #786428; }
+  .ak-cell.bulb::after {
+    content: "";
+    position: absolute;
+    inset: 22%;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(245, 184, 0, 0.75);
+  }
+  .ak-cell.bulb.clash::after { background: var(--danger); box-shadow: 0 0 10px rgba(255, 107, 107, 0.75); }
+  .ak-cell.mark::after {
+    content: "";
+    position: absolute;
+    inset: 43%;
+    border-radius: 50%;
+    background: var(--fg);
+    opacity: 0.6;
+  }
+  .ak-wall {
+    display: grid;
+    place-items: center;
+    border-radius: 2px;
+    background: #0c0b09;
+    color: var(--fg);
+    font: 700 clamp(11px, calc(min(440px, 92vw) / var(--n) * 0.45), 20px) var(--font-mono);
+  }
+  .ak-wall.ok { color: var(--dim); }
+  .ak-wall.over { color: var(--danger); }
+  .ak-board.solved .ak-cell { cursor: default; }
+  .ak-board.solved .ak-cell.lit { background: #3f5f3a; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
+</style>
+</head>
+<body class="g-akari">
+<main class="wrap">
+  <div class="topbar">
+    <h1>akari</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Light every white cell.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="akari" data-man-title="AKARI(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="tablist" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
+        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
+        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="ak-board" id="board" role="grid" aria-label="Akari board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-akari">
+  <h2>Name</h2>
+  <p>akari — light up the grid (also called <em>Light Up</em>).</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Place bulbs in white cells. A bulb lights its own cell and every cell in its row and column until a wall blocks it.</li>
+    <li>Every white cell must be lit.</li>
+    <li>No bulb may shine on another bulb.</li>
+    <li>A numbered wall must have exactly that many bulbs directly next to it (up, down, left, right). Unnumbered walls can have any.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a white cell to cycle: empty → bulb → dot (marked empty) → empty.</li>
+    <li><strong>Right-click</strong> toggles a dot directly.</li>
+    <li>Lit cells glow; bulbs that see each other turn red; a number dims once it has exactly its bulbs.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears the board. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 7×7, solvable with direct rules alone. <strong>Medium</strong> — 9×9, needs some look-ahead ("if a bulb went here…"). <strong>Hard</strong> — 11×11, fewer clues, deeper look-ahead.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Start with 4s and 0s: a 4 is surrounded by bulbs, a 0 by dots. A 3 against an edge or another wall is full too. Dot every cell next to a 0 or a satisfied number. A cell that only one empty cell can light forces a bulb there.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
