@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dots-and-boxes · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Dots and Boxes — draw lines, close boxes, and take another turn. Play a chain-aware AI or a friend.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .db-board {
+    --dot: 12px;
+    display: grid;
+    width: min(420px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    padding: 12px;
+    box-sizing: border-box;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .db-dot { background: var(--fg); border-radius: 50%; position: relative; z-index: 3; pointer-events: none; }
+  body.g-dots-and-boxes .panel .db-line {
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    z-index: 2;
+    cursor: default;
+  }
+  body.g-dots-and-boxes .panel .db-line:hover,
+  body.g-dots-and-boxes .panel .db-line:active { background: transparent; transform: none; }
+  .db-line::before {
+    content: "";
+    position: absolute;
+    border-radius: 3px;
+    background: transparent;
+    transition: background .12s;
+  }
+  .db-line::after { content: ""; position: absolute; }
+  .db-h::before { left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%); }
+  .db-v::before { top: 0; bottom: 0; left: 50%; width: 4px; transform: translateX(-50%); }
+  .db-h::after { left: 0; right: 0; top: -14px; bottom: -14px; }
+  .db-v::after { top: 0; bottom: 0; left: -14px; right: -14px; }
+  body.g-dots-and-boxes .panel .db-line.avail { cursor: pointer; }
+  .db-line.avail:hover::before { background: var(--border-hi); }
+  .db-line.p1::before { background: var(--accent); }
+  .db-line.p2::before { background: var(--accent-2); }
+  .db-h.last::before { height: 6px; }
+  .db-v.last::before { width: 6px; }
+  .db-line.last::before { box-shadow: 0 0 8px rgba(255, 255, 255, 0.35); }
+  .db-box { display: grid; place-items: center; font-weight: 700; font-size: clamp(10px, 3.4vw, 15px); color: rgba(0,0,0,0.55); transition: background .2s; }
+  .db-box.p1 { background: rgba(245, 184, 0, 0.55); }
+  .db-box.p2 { background: rgba(77, 217, 172, 0.55); }
+  .db-score .dot { display: inline-block; width: 0.75em; height: 0.75em; border-radius: 50%; vertical-align: -0.05em; }
+  .db-score .dot.p1 { background: var(--accent); }
+  .db-score .dot.p2 { background: var(--accent-2); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
+  select {
+    background: var(--panel-2);
+    color: var(--fg);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--r-md);
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    min-height: var(--tap);
+  }
+</style>
+</head>
+<body class="g-dots-and-boxes">
+<main class="wrap">
+  <div class="topbar">
+    <h1>dots-and-boxes</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Your move.</p>
+      <p class="status db-score"><span class="dot p1"></span> <span id="name1">You</span> <span id="score1">0</span> · <span class="dot p2"></span> <span id="name2">AI</span> <span id="score2">0</span> · <span id="record">W–L–D 0–0–0</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="dots-and-boxes" data-man-title="DOTS-AND-BOXES(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="tablist" aria-label="AI difficulty">
+        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
+        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
+        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      </div>
+      <select id="size" aria-label="Board size">
+        <option value="3">3×3 boxes</option>
+        <option value="4" selected>4×4 boxes</option>
+        <option value="5">5×5 boxes</option>
+      </select>
+      <select id="mode" aria-label="Mode">
+        <option value="human-first" selected>You first vs AI</option>
+        <option value="ai-first">AI first</option>
+        <option value="local">2 players local</option>
+      </select>
+    </div>
+    <div class="db-board" id="board" role="grid" aria-label="Dots and boxes board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new game</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-dots-and-boxes">
+  <h2>Name</h2>
+  <p>dots-and-boxes — draw lines, close boxes, take another turn.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Players take turns drawing one line between two neighboring dots.</li>
+    <li>Draw the fourth side of a box and you claim it — <strong>and you must move again</strong>.</li>
+    <li>When every line is drawn, whoever owns more boxes wins.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> between two dots to draw a line. Lines and boxes take the color of the player who drew or claimed them.</li>
+    <li>The most recent line glows. <code>↶ undo</code> takes back your last turn (and the AI's reply).</li>
+    <li>Choose a board size, an AI level and who goes first, or play <strong>2 players local</strong>.</li>
+    <li>Your win–loss–draw record is kept per AI level and board size.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — grabs free boxes, otherwise plays anywhere.</li>
+    <li><strong>Medium</strong> — never gives a box away while a safe line exists, and sacrifices as few boxes as possible when forced.</li>
+    <li><strong>Hard</strong> — also plans the endgame: it steers who has to open the first chain, opens the cheapest chain when forced, and <em>double-deals</em> (hands back the last two boxes of a long chain) when keeping control pays.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Don't draw a box's third side unless you must. Late in the game the board splits into chains; when you're forced to open one, open the shortest. If you're given a long chain, consider taking all but two boxes and leaving that pair, so your opponent has to open the next chain.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
