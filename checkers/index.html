@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>checkers · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Checkers — English draughts with forced captures, multi-jumps, and kings. Play an alpha-beta AI or a friend.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .ck-board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: min(440px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    border: 6px solid #4a2e1c;
+    border-radius: var(--r-md);
+    box-sizing: border-box;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .ck-light { background: #e6d5b8; }
+  body.g-checkers .panel .ck-cell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #8b5a3c;
+    cursor: default;
+  }
+  body.g-checkers .panel .ck-cell:hover { background: #8b5a3c; }
+  body.g-checkers .panel .ck-cell.last,
+  body.g-checkers .panel .ck-cell.last:hover { background: #a0703f; }
+  body.g-checkers .panel .ck-cell.can,
+  body.g-checkers .panel .ck-cell.dest { cursor: pointer; }
+  body.g-checkers .panel .ck-cell.dest:hover { background: #9c6a48; }
+  .ck-cell.dest::after {
+    content: "";
+    position: absolute;
+    inset: 36%;
+    border-radius: 50%;
+    background: rgba(245, 197, 66, 0.75);
+  }
+  .ck-piece {
+    position: absolute;
+    inset: 11%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.9rem, 4.5vw, 1.4rem);
+    line-height: 1;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.5), inset 0 0 0 3px rgba(255,255,255,0.08);
+  }
+  .ck-piece.b { background: #141210; border: 1px solid #3a352c; color: #f5c542; }
+  .ck-piece.w { background: #ede8e1; border: 1px solid #c9c2b4; color: #6b4e00; }
+  .ck-cell.can .ck-piece { outline: 2px solid rgba(245, 197, 66, 0.6); outline-offset: 1px; }
+  .ck-cell.sel .ck-piece { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .ck-cell.cap .ck-piece { opacity: 0.35; }
+  .ck-score .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; vertical-align: -0.05em; }
+  .ck-score .dot.b { background: #141210; border: 1px solid var(--muted); }
+  .ck-score .dot.w { background: #ede8e1; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
+  select {
+    background: var(--panel-2);
+    color: var(--fg);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--r-md);
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    min-height: var(--tap);
+  }
+</style>
+</head>
+<body class="g-checkers">
+<main class="wrap">
+  <div class="topbar">
+    <h1>checkers</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Your move.</p>
+      <p class="status ck-score"><span class="dot b"></span> <span id="count-b">12</span> · <span class="dot w"></span> <span id="count-w">12</span> · <span id="record">W–L–D 0–0–0</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="checkers" data-man-title="CHECKERS(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="AI difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <select id="mode" aria-label="Mode">
+        <option value="human-black" selected>You first (black) vs AI</option>
+        <option value="human-white">AI first (you white)</option>
+        <option value="local">2 players local</option>
+      </select>
+    </div>
+    <div class="ck-board" id="board" role="group" aria-label="Checkers board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new game</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-checkers">
+  <h2>Name</h2>
+  <p>checkers — English draughts on an 8×8 board.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Black moves first. Pieces move one square <strong>diagonally forward</strong> on the dark squares.</li>
+    <li>Capture by <strong>jumping</strong> over an adjacent enemy piece to the empty square beyond. Captures are <strong>compulsory</strong> — if any jump is available, you must take one (any one, not necessarily the longest).</li>
+    <li>After a jump, keep jumping with the same piece while you can — a <strong>multi-jump</strong> is a single move.</li>
+    <li>A piece reaching the far row becomes a <strong>king</strong> (♛) and may move and jump backwards too. Being crowned ends the move.</li>
+    <li>You lose when you have no legal move — no pieces left, or all of them blocked. Forty moves each with no capture and no plain piece moving forward is a draw.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> one of your outlined pieces, then a highlighted square. For a multi-jump, tap each landing square in turn.</li>
+    <li>Tap the selected piece again (or press Esc) to choose a different one. The last move's squares are shaded.</li>
+    <li><code>↶ undo</code> takes back your last move (and the AI's reply). Pick an AI level and who goes first, or play <strong>2 players local</strong> on one device.</li>
+    <li>Your win–loss–draw record against each AI level is kept on this device.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move between dark squares, Enter or Space selects and moves, Esc cancels.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — looks 2 moves ahead. <strong>Medium</strong> — 4 moves. <strong>Hard</strong> — 8 moves.</li>
+    <li>Every level follows capture sequences to the end, so the AI won't blunder into a simple jump.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Keep your back row filled as long as you can — it stops the opponent from crowning. Trade pieces when you're ahead, and try to offer one piece to win two.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

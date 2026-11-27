@@ -4,12 +4,12 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 
 ## Current inventory
 
-- **20 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
-  - Classics: tic-tac-toe, 2048, minesweeper, memory, chess, connect-four, lights-out, code-breaker, slide-15, reversi, dots-and-boxes, gomoku.
+- **21 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
+  - Classics: tic-tac-toe, 2048, minesweeper, memory, chess, connect-four, lights-out, code-breaker, slide-15, reversi, dots-and-boxes, gomoku, checkers.
   - Logic puzzles: mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari.
-- **Shared layer** (all 20 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
+- **Shared layer** (all 21 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
   - `gamekit.js` (`window.Gamekit`): mulberry32 PRNG, `dailySeed`, `storage(prefix)`, `wireDifficultyChips`, `fmtTime`, `onLongPress`, `shuffle`. Loaded by 17 games; not by tic-tac-toe, minesweeper, chess.
-  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari. connect-four, reversi, dots-and-boxes, and gomoku use chips for AI level.
+  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari. connect-four, reversi, dots-and-boxes, gomoku, and checkers use chips for AI level.
   - Help: a `<template id="man-<game>">` + `.man-trigger` button per game.
   - Game pages (`body.g-<name>`) always use soft.css's warm-dark palette; the dark/light toggle only affects the hub.
 - **No build, no dependencies, no automated tests.**
@@ -17,7 +17,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 ## Proposed improvements
 
 1. **Cheap syntax check** — run `node --check` over all JS before committing (see commands below). No tooling added; a portable Node works fine.
-2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently hashi, akari, gomoku).
+2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently akari, gomoku, checkers).
 3. **zip uniqueness** ✅ — every board is unique. A pruned path solver (degree, connectivity, colour-parity, and forced-move checks) lists alternative paths; the generator greedily adds whichever number or wall rules out the most, within per-tier caps. ~5 ms easy, ~20 ms medium, ~170 ms hard (worst ~0.6 s); 120/120 boards confirmed unique by an independent solver.
 
 4. **Keyboard play** ✅ — every game is playable by keyboard: shared `Gamekit.gridKeys` gives each board one Tab stop, arrow-key movement (by on-screen position, so sparse boards like hashi work; dots-and-boxes walks its line lattice), Enter/Space to play, and F/X for flag/mark. Board buttons use `aria-disabled` instead of `disabled` so focus survives AI turns.
@@ -42,7 +42,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 | ✅ | **hashi** (bridges) | 7×7/9×9/11×11; grows a connected island network, keeps it only if unique. Graded: easy = counting rules alone, medium = needs look-ahead deduction, hard = larger and not solvable by counting alone. Tap-tap, drag, or tap the gap; crossings blocked. |
 | ✅ | **akari** (light up) | 7×7/9×9/11×11, symmetric walls; starts fully clued and hides numbers while the grade holds. Easy = direct rules alone, medium/hard = need look-ahead. Tap cycles bulb/dot; clashes and satisfied clues shown. |
 | ✅ | **gomoku** | 15×15 freestyle five-in-a-row; vs. AI or local 2P. Window-count heuristic (attack + defence), always wins/blocks fives; hard = 4-ply alpha-beta over 8 candidates (beat medium 5–1–2; ≤110 ms/move). W–L–D per level. |
-| Proposal | **checkers** | Classic vs. AI (8×8 English draughts, forced captures, kings); alpha-beta AI. Medium. |
+| ✅ | **checkers** | 8×8 English draughts: compulsory captures, multi-jumps, crowning ends the move, 40-move no-progress draw; vs. AI or local 2P (board flips when you play white). Negamax alpha-beta at depth 2/4/8 with capture quiescence (medium beat easy 16–0–4, hard beat medium 20–0–0; ≤0.7 s/move). Move generator matches published perft to depth 9 and an independent generator on 20k random positions. W–L–D per level. |
 | Proposal | **slitherlink** | Logic puzzle: draw one loop around numbered cells. Generator + uniqueness solver. Medium–large. |
 
 ## Next build
