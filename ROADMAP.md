@@ -4,12 +4,12 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 
 ## Current inventory
 
-- **21 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
+- **22 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
   - Classics: tic-tac-toe, 2048, minesweeper, memory, chess, connect-four, lights-out, code-breaker, slide-15, reversi, dots-and-boxes, gomoku, checkers.
-  - Logic puzzles: mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari.
-- **Shared layer** (all 21 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
+  - Logic puzzles: mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink.
+- **Shared layer** (all 22 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
   - `gamekit.js` (`window.Gamekit`): mulberry32 PRNG, `dailySeed`, `storage(prefix)`, `wireDifficultyChips`, `fmtTime`, `onLongPress`, `shuffle`. Loaded by 17 games; not by tic-tac-toe, minesweeper, chess.
-  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari. connect-four, reversi, dots-and-boxes, gomoku, and checkers use chips for AI level.
+  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink. connect-four, reversi, dots-and-boxes, gomoku, and checkers use chips for AI level.
   - Help: a `<template id="man-<game>">` + `.man-trigger` button per game.
   - Game pages (`body.g-<name>`) always use soft.css's warm-dark palette; the dark/light toggle only affects the hub.
 - **No build, no dependencies, no automated tests.**
@@ -17,7 +17,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 ## Proposed improvements
 
 1. **Cheap syntax check** — run `node --check` over all JS before committing (see commands below). No tooling added; a portable Node works fine.
-2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently akari, gomoku, checkers).
+2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently gomoku, checkers, slitherlink).
 3. **zip uniqueness** ✅ — every board is unique. A pruned path solver (degree, connectivity, colour-parity, and forced-move checks) lists alternative paths; the generator greedily adds whichever number or wall rules out the most, within per-tier caps. ~5 ms easy, ~20 ms medium, ~170 ms hard (worst ~0.6 s); 120/120 boards confirmed unique by an independent solver.
 
 4. **Keyboard play** ✅ — every game is playable by keyboard: shared `Gamekit.gridKeys` gives each board one Tab stop, arrow-key movement (by on-screen position, so sparse boards like hashi work; dots-and-boxes walks its line lattice), Enter/Space to play, and F/X for flag/mark. Board buttons use `aria-disabled` instead of `disabled` so focus survives AI turns.
@@ -26,7 +26,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 ## Code-quality audit (latest)
 
 - **ESLint** (`recommended` + `eqeqeq`, `no-var`, `prefer-const`, `no-unused-vars`, `no-implicit-globals`, `no-use-before-define`): 0 errors, 0 warnings across all JS. Every script is an IIFE in strict mode; no globals leak besides `Gamekit` and `Manpage`.
-- **html-validate** (`recommended`): 0 messages on all 21 pages.
+- **html-validate** (`recommended`): 0 messages on all 23 pages (hub + 22 games).
 - **axe-core** (WCAG 2.0/2.1 A+AA + best practices): 0 violations on every page freshly loaded, after random play, with the manpage open, and on the hub in light mode.
 - No `console`/`debugger`/TODO leftovers; `innerHTML` only ever receives fixed strings and numbers (no user input).
 
@@ -43,7 +43,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 | ✅ | **akari** (light up) | 7×7/9×9/11×11, symmetric walls; starts fully clued and hides numbers while the grade holds. Easy = direct rules alone, medium/hard = need look-ahead. Tap cycles bulb/dot; clashes and satisfied clues shown. |
 | ✅ | **gomoku** | 15×15 freestyle five-in-a-row; vs. AI or local 2P. Window-count heuristic (attack + defence), always wins/blocks fives; hard = 4-ply alpha-beta over 8 candidates (beat medium 5–1–2; ≤110 ms/move). W–L–D per level. |
 | ✅ | **checkers** | 8×8 English draughts: compulsory captures, multi-jumps, crowning ends the move, 40-move no-progress draw; vs. AI or local 2P (board flips when you play white). Negamax alpha-beta at depth 2/4/8 with capture quiescence (medium beat easy 16–0–4, hard beat medium 20–0–0; ≤0.7 s/move). Move generator matches published perft to depth 9 and an independent generator on 20k random positions. W–L–D per level. |
-| Proposal | **slitherlink** | Logic puzzle: draw one loop around numbered cells. Generator + uniqueness solver. Medium–large. |
+| ✅ | **slitherlink** | 6×6/7×7/8×8 loop puzzle. Random hole-free region → its outline is the loop; starts fully clued and blanks numbers while the grade holds (easy = direct rules, medium = single-edge look-ahead, hard = unique by search, never direct-rules-solvable). 120/120 sampled boards confirmed unique by an independent OR-Tools CP-SAT model; hard generates in ~150 ms median. Tap cycles line/×; over-full numbers and branching lines turn red. |
 
 ## Next build
 

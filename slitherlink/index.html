@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>slitherlink · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Slitherlink — draw one closed loop so each number counts its sides. Daily puzzle, three difficulties, every puzzle has a unique answer.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .sl-board {
+    --dot: 8px;
+    display: grid;
+    width: min(440px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    padding: 14px;
+    box-sizing: border-box;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    user-select: none;
+  }
+  .sl-dot { background: var(--fg); border-radius: 50%; position: relative; z-index: 3; pointer-events: none; }
+  .sl-cell { display: grid; place-items: center; font-weight: 700; font-size: clamp(14px, 4.4vw, 21px); color: var(--fg); }
+  .sl-cell.ok { color: var(--dim); }
+  .sl-cell.over { color: var(--danger); }
+  body.g-slitherlink .panel .sl-line {
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    z-index: 2;
+    cursor: pointer;
+  }
+  body.g-slitherlink .panel .sl-line:hover,
+  body.g-slitherlink .panel .sl-line:active { background: transparent; transform: none; }
+  .sl-line::before {
+    content: "";
+    position: absolute;
+    border-radius: 3px;
+    background: transparent;
+    transition: background .12s;
+  }
+  .sl-line::after { content: ""; position: absolute; }
+  .sl-h::before { left: -2px; right: -2px; top: 50%; height: 5px; transform: translateY(-50%); }
+  .sl-v::before { top: -2px; bottom: -2px; left: 50%; width: 5px; transform: translateX(-50%); }
+  .sl-h::after { left: 0; right: 0; top: -14px; bottom: -14px; }
+  .sl-v::after { top: 0; bottom: 0; left: -14px; right: -14px; }
+  .sl-line:not(.on):not(.x):hover::before { background: var(--border-hi); }
+  .sl-line.on::before { background: var(--accent); }
+  .sl-line.bad::before { background: var(--danger); }
+  .sl-line.x::before {
+    left: 50%; right: auto; top: 50%; bottom: auto;
+    width: 10px; height: 10px;
+    transform: translate(-50%, -50%);
+    border-radius: 0;
+    background:
+      linear-gradient(45deg, transparent 42%, var(--muted) 42%, var(--muted) 58%, transparent 58%),
+      linear-gradient(-45deg, transparent 42%, var(--muted) 42%, var(--muted) 58%, transparent 58%);
+  }
+  .sl-board.solved .sl-line.on::before { background: var(--accent-2); }
+  .sl-board.solved .sl-line { cursor: default; }
+  @media (prefers-reduced-motion: reduce) { .sl-line::before { transition: none; } }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-slitherlink">
+<main class="wrap">
+  <div class="topbar">
+    <h1>slitherlink</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Draw one closed loop.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="slitherlink" data-man-title="SLITHERLINK(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="sl-board" id="board" role="group" aria-label="Slitherlink board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-slitherlink">
+  <h2>Name</h2>
+  <p>slitherlink — draw a single loop through the dots (also called <em>Loop the Loop</em>).</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Connect neighbouring dots with lines to make <strong>one closed loop</strong>. It may not cross itself or branch.</li>
+    <li>A number tells how many of that cell's four sides the loop uses. Blank cells can have any number.</li>
+    <li>The loop doesn't have to visit every dot.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> between two dots to cycle: empty → line → × (marked unused) → empty.</li>
+    <li><strong>Right-click</strong> toggles an × directly.</li>
+    <li>A number dims once it has exactly its lines and turns red with too many; lines meeting three or more at a dot turn red.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears the board. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move between lines, Enter or Space cycles line/×, <span class="kbd">X</span> toggles an ×.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 6×6, solvable with direct rules alone. <strong>Medium</strong> — 7×7, needs some look-ahead ("if a line went here…"). <strong>Hard</strong> — 8×8, fewer clues, deeper look-ahead.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Start with 0s: × all four sides. Every dot has 0 or 2 lines — a dot with one line and one free side must continue there. Two 3s side by side share the line between them plus their outer sides. A 3 in a corner uses both corner sides. Never close a small loop while other numbers still need lines.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
