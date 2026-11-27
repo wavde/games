@@ -20,7 +20,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently hashi, akari, gomoku).
 3. **zip uniqueness** (proposal) — boards are always solvable but almost never unique with the current waypoint/wall counts; uniqueness would need more waypoints or walls per tier plus a stronger solver. Generation is now bounded (≤ ~0.4 s on hard) after fixing an odd-board hang.
 
-4. **Keyboard play** — most boards are pointer/touch only (mini-sudoku, code-breaker, slide-15, 2048 have keys). Roving-tabindex arrow-key navigation per board would close the biggest remaining accessibility gap.
+4. **Keyboard play** ✅ — every game is playable by keyboard: shared `Gamekit.gridKeys` gives each board one Tab stop, arrow-key movement (by on-screen position, so sparse boards like hashi work; dots-and-boxes walks its line lattice), Enter/Space to play, and F/X for flag/mark. Board buttons use `aria-disabled` instead of `disabled` so focus survives AI turns.
 5. **CI checks** ✅ — `.github/workflows/checks.yml` runs `node --check`, ESLint, html-validate, and a headless-Chrome pass (page errors, manpage auto-open, axe-core) on every push and PR. Tools install only in CI; the site stays dependency-free.
 
 ## Code-quality audit (latest)

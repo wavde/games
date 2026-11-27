@@ -393,12 +393,20 @@
       sel = -1;
       cycle(edgeBetween(from, to));
     } else if (to === from) {
-      if (sel >= 0 && sel !== from && edgeBetween(sel, from) >= 0) { const s = sel; sel = -1; cycle(edgeBetween(s, from)); }
-      else sel = sel === from ? -1 : from;
+      tapIsland(from);
     }
     render();
   });
   window.addEventListener("pointercancel", () => { dragFrom = -1; });
+
+  // Tap an island to select it; tap a neighbour of the selection to cycle their bridge.
+  function tapIsland(i) {
+    if (won) return;
+    if (sel >= 0 && sel !== i && edgeBetween(sel, i) >= 0) { const s = sel; sel = -1; cycle(edgeBetween(s, i)); }
+    else sel = sel === i ? -1 : i;
+    render();
+  }
+  Gamekit.gridKeys(boardEl, { selector: ".hs-island", onActivate: (el) => tapIsland(parseInt(el.dataset.i, 10)) });
 
   undoBtn.addEventListener("click", () => {
     if (won || !history.length) return;

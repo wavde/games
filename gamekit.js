@@ -171,6 +171,95 @@
     };
   }
 
+  // Keyboard play for a board: the board is a single Tab stop (roving tabindex), arrow keys
+  // move to the nearest cell in that direction by on-screen position (so sparse layouts work
+  // too), Home/End jump to the first/last cell, Enter/Space activates, and F or X runs the
+  // optional secondary action (flag / mark). Survives games re-rendering their cells.
+  // opts = { selector, onActivate(el, i)?, onSecondary(el, i)?, cross?, next(el, key)? }
+  //   cross: weight of sideways offset when choosing a neighbour (higher = stay in line).
+  //   next:  custom arrow-key move; return the element to focus (or null to stay).
+  function gridKeys(boardEl, opts) {
+    const cross = opts.cross === undefined ? 2 : opts.cross;
+    let active = 0, inside = false;
+
+    const cells = () => Array.prototype.filter.call(boardEl.querySelectorAll(opts.selector), el => el.getClientRects().length > 0);
+
+    function sync() {
+      const list = cells();
+      if (!list.length) return list;
+      if (active >= list.length) active = list.length - 1;
+      list.forEach((el, i) => el.setAttribute("tabindex", i === active ? "0" : "-1"));
+      return list;
+    }
+
+    function focusCell(list, i) {
+      active = i;
+      sync();
+      list[i].focus({ preventScroll: false });
+    }
+
+    function step(list, key) {
+      const r0 = list[active].getBoundingClientRect();
+      const cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2;
+      let best = -1, bestScore = Infinity, bestSide = Infinity;
+      list.forEach((el, i) => {
+        if (i === active) return;
+        const r = el.getBoundingClientRect();
+        const dx = r.left + r.width / 2 - cx, dy = r.top + r.height / 2 - cy;
+        const main = key === "ArrowRight" ? dx : key === "ArrowLeft" ? -dx : key === "ArrowDown" ? dy : -dy;
+        const side = Math.abs(key === "ArrowRight" || key === "ArrowLeft" ? dy : dx);
+        if (main < 1) return;
+        const score = main + cross * side;
+        if (score < bestScore - 0.5 || (Math.abs(score - bestScore) <= 0.5 && side < bestSide)) {
+          best = i; bestScore = score; bestSide = side;
+        }
+      });
+      return best;
+    }
+
+    function own(el) { return opts.onActivate ? true : !(el instanceof HTMLButtonElement); }
+
+    boardEl.addEventListener("keydown", (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const list = cells();
+      const i = list.indexOf(e.target);
+      if (i < 0) return;
+      active = i;
+      const k = e.key;
+      if (k.indexOf("Arrow") === 0 || k === "Home" || k === "End") {
+        e.preventDefault();
+        const next = k === "Home" ? 0 : k === "End" ? list.length - 1 : opts.next ? list.indexOf(opts.next(e.target, k)) : step(list, k);
+        if (next >= 0) focusCell(list, next);
+      } else if ((k === "Enter" || k === " ") && own(e.target)) {
+        e.preventDefault();
+        (opts.onActivate || (el => el.click()))(e.target, i);
+      } else if ((k === "f" || k === "F" || k === "x" || k === "X") && opts.onSecondary) {
+        e.preventDefault();
+        opts.onSecondary(e.target, i);
+      }
+    });
+    // Space activates native buttons on keyup; suppress that when we handled keydown ourselves.
+    boardEl.addEventListener("keyup", (e) => { if (e.key === " " && opts.onActivate && cells().indexOf(e.target) >= 0) e.preventDefault(); });
+
+    boardEl.addEventListener("focusin", (e) => {
+      const i = cells().indexOf(e.target);
+      if (i >= 0) { active = i; inside = true; sync(); }
+    });
+    boardEl.addEventListener("focusout", (e) => {
+      if (e.relatedTarget && !boardEl.contains(e.relatedTarget)) inside = false;
+    });
+    document.addEventListener("pointerdown", (e) => { if (!boardEl.contains(e.target)) inside = false; }, true);
+
+    // Games often rebuild their cells; keep exactly one tab stop and keep keyboard focus on the board.
+    new MutationObserver(() => {
+      const list = sync();
+      if (inside && list.length && !boardEl.contains(document.activeElement)) list[active].focus({ preventScroll: true });
+    }).observe(boardEl, { childList: true, subtree: true });
+
+    sync();
+    return { refresh: sync };
+  }
+
   global.Gamekit = {
     mulberry32,
     hashStr,
@@ -182,5 +271,6 @@
     fmtTime,
     wireDifficultyChips,
     onLongPress,
+    gridKeys,
   };
 })(window);

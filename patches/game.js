@@ -195,8 +195,10 @@
         const el = document.createElement("div");
         el.className = "pt-cell fade-in";
         el.dataset.r = String(r); el.dataset.c = String(c);
+        el.setAttribute("role", "button");
         el.style.animationDelay = ((r * N + c) * 6) + "ms";
         const key = r * N + c;
+        el.setAttribute("aria-label", "Row " + (r + 1) + " column " + (c + 1) + (cluemap[key] !== undefined ? ", clue " + cluemap[key] : ""));
         if (cluemap[key] !== undefined) {
           el.classList.add("clue");
           el.textContent = String(cluemap[key]);
@@ -365,6 +367,37 @@
   if (!DIFFS[diff]) diff = "medium";
 
   window.addEventListener("resize", () => renderRects());
+  // Keyboard: Enter/Space marks one corner, move, Enter/Space again places the rectangle.
+  // Escape cancels; F/X removes the rectangle covering the focused cell.
+  let kbStart = null;
+  const posOf = (el) => [Number(el.dataset.r), Number(el.dataset.c)];
+  Gamekit.gridKeys(boardEl, {
+    selector: ".pt-cell",
+    onActivate: (el) => {
+      if (won) return;
+      if (!kbStart) { kbStart = posOf(el); dragStart = kbStart; dragEnd = kbStart; updateDragHighlight(); return; }
+      dragStart = kbStart; dragEnd = posOf(el); kbStart = null;
+      onPointerUp({ pointerId: -1 });
+    },
+    onSecondary: (el) => {
+      if (won) return;
+      const [r, c] = posOf(el);
+      const ix = userRects.findIndex(q => r >= q.r0 && r <= q.r1 && c >= q.c0 && c <= q.c1);
+      if (ix < 0) return;
+      userRects.splice(ix, 1);
+      renderRects();
+      checkWin();
+    },
+  });
+  boardEl.addEventListener("focusin", (e) => {
+    if (!kbStart || !e.target.classList.contains("pt-cell")) return;
+    dragEnd = posOf(e.target);
+    updateDragHighlight();
+  });
+  boardEl.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && kbStart) { kbStart = null; dragStart = dragEnd = null; clearDragHighlight(); }
+  });
+
   newPuzzle();
   updateStatus();
   window.addEventListener("load", () => Manpage.autoOpen("patches"));

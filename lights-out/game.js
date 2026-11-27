@@ -153,4 +153,6 @@
   // First render + manpage auto-open
   newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("lights-out"));
+
+  Gamekit.gridKeys(boardEl, { selector: ".lo-cell" });
 })();

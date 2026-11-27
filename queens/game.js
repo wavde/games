@@ -343,4 +343,6 @@
   newPuzzle();
   updateStatus();
   window.addEventListener("load", () => Manpage.autoOpen("queens"));
+
+  Gamekit.gridKeys(boardEl, { selector: ".qn-cell" });
 })();

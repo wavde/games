@@ -36,11 +36,11 @@
     min-height: var(--tap);
     border-radius: 8px;
   }
-  .c4-col-btn:hover:not(:disabled) {
+  .c4-col-btn:hover:not([aria-disabled="true"]) {
     color: var(--accent);
     background: rgba(245,184,0,0.08);
   }
-  .c4-col-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .c4-col-btn[aria-disabled="true"] { opacity: 0.2; cursor: not-allowed; }
 
   .c4-board {
     display: grid;
@@ -157,6 +157,7 @@
     <li><code>↶ undo</code> takes back both the AI's and your last move.</li>
     <li><code>↻ new game</code> resets the board.</li>
     <li>Switch sides or play locally with the <code>Mode</code> selector.</li>
+    <li><strong>Keyboard</strong>: Tab to the column buttons, ←/→ choose a column, Enter or Space drops.</li>
   </ul>
 
   <h2>Difficulty</h2>

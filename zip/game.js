@@ -206,6 +206,8 @@
       el.className = "zp-cell fade-in";
       el.style.animationDelay = (i * 5) + "ms";
       el.dataset.i = String(i);
+      el.setAttribute("role", "button");
+      el.setAttribute("aria-label", "Row " + (Math.floor(i / N) + 1) + " column " + (i % N + 1) + (wpIdx[i] !== undefined ? ", number " + wpIdx[i] : ""));
       if (wpIdx[i] !== undefined) {
         const k = wpIdx[i];
         if (k === 1) el.classList.add("start");
@@ -403,6 +405,9 @@
   if (!DIFFS[diff]) diff = "medium";
 
   window.addEventListener("resize", () => { renderWalls(); renderPath(); });
+  // Keyboard: Enter/Space on a cell extends (or truncates) the path to it.
+  Gamekit.gridKeys(boardEl, { selector: ".zp-cell", onActivate: (el) => tryExtend(Number(el.dataset.i)) });
+
   newPuzzle();
   updateStatus();
   window.addEventListener("load", () => Manpage.autoOpen("zip"));

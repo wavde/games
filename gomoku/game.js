@@ -285,4 +285,6 @@
   buildBoard();
   newGame();
   window.addEventListener("load", () => Manpage.autoOpen("gomoku"));
+
+  Gamekit.gridKeys(boardEl, { selector: ".gm-cell" });
 })();

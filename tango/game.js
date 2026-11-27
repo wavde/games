@@ -383,4 +383,6 @@
   newPuzzle();
   updateStatus();
   window.addEventListener("load", () => Manpage.autoOpen("tango"));
+
+  Gamekit.gridKeys(boardEl, { selector: ".tg-cell" });
 })();

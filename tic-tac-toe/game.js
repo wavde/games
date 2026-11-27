@@ -71,7 +71,7 @@
       el.classList.toggle("x", v === "X");
       el.classList.toggle("o", v === "O");
       el.classList.toggle("win", !!(winInfo && winInfo.line.includes(i)));
-      el.disabled = !!v || !!winInfo || turn !== human;
+      el.setAttribute("aria-disabled", v || winInfo || turn !== human ? "true" : "false");
     }
   }
 
@@ -145,4 +145,6 @@
   buildBoard();
   updateToggleLabel();
   reset();
+
+  Gamekit.gridKeys(document.getElementById("board"), { selector: ".cell" });
 })();

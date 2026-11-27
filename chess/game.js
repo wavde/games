@@ -348,7 +348,10 @@
     for (const r of rowsOrder) for (const c of colsOrder) {
       const d = document.createElement('div');
       d.className = 'sq ' + ((r+c)%2===0 ? 'light':'dark');
+      d.setAttribute('role', 'button');
       const p = state.board[r][c];
+      const NAMES = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' };
+      d.setAttribute('aria-label', 'abcdefgh'[c] + (8 - r) + (p ? ', ' + (p.color === 'w' ? 'white ' : 'black ') + NAMES[p.type] : ''));
       if (p) {
         d.textContent = GLYPH[p.color][p.type];
         d.classList.add(p.color);
@@ -495,4 +498,6 @@
   document.getElementById('side').addEventListener('change', () => document.getElementById('reset').click());
 
   renderBoard();
+
+  Gamekit.gridKeys(document.getElementById('board'), { selector: '.sq' });
 })();

@@ -55,6 +55,7 @@ Every logic puzzle ships with an in-browser generator + solver and three difficu
 - **Light mode** (hub): follows `prefers-color-scheme`, plus a footer toggle that cycles **dark → light → system**. Preference persists in `localStorage`. Game pages use `soft.css`'s warm-dark palette.
 - **Manpage help**: every game has a `? man` button that opens a Unix-style manpage overlay (NAME · RULES · CONTROLS · STRATEGY). Auto-opens on first visit per game; quick to dismiss with ESC / `q` / tap-outside.
 - **Accessibility**: every control has an accessible name, toggles expose `aria-pressed`, long help text is keyboard-scrollable; axe-core automated checks pass on every page.
+- **Keyboard play**: every board is one Tab stop; arrow keys move, Enter/Space plays, and F/X flags or marks where a game has a second action (shared `Gamekit.gridKeys`).
 - **Mobile-first**: 44px minimum tap targets, `dvh` viewport units, `touch-action: manipulation`, no hover-only UI.
 
 ## Run locally

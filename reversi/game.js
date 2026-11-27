@@ -273,4 +273,6 @@
   buildBoard();
   newGame();
   window.addEventListener("load", () => Manpage.autoOpen("reversi"));
+
+  Gamekit.gridKeys(boardEl, { selector: ".rv-cell" });
 })();

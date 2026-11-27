@@ -217,7 +217,7 @@ body.g-tic-tac-toe .panel .cell {
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
-body.g-tic-tac-toe .panel .cell:hover:not(:disabled):not(.taken) {
+body.g-tic-tac-toe .panel .cell:hover:not([aria-disabled="true"]):not(.taken) {
   background: var(--border);
   border-color: var(--border-hi);
 }
@@ -531,7 +531,7 @@ body.g-connect-four .panel .c4-col-btn {
   color: var(--muted);
   border-radius: 10px;
 }
-body.g-connect-four .panel .c4-col-btn:hover:not(:disabled) {
+body.g-connect-four .panel .c4-col-btn:hover:not([aria-disabled="true"]) {
   background: rgba(245,184,0,0.08);
   color: var(--accent);
 }
@@ -735,7 +735,7 @@ body[class*="g-"] .panel .c {
               box-shadow .15s, color .12s,
               border-color .12s;
 }
-body[class*="g-"] .panel .cell:active:not(:disabled),
+body[class*="g-"] .panel .cell:active:not(:disabled):not([aria-disabled="true"]),
 body[class*="g-"] .panel .tg-cell:active,
 body[class*="g-"] .panel .qn-cell:active,
 body[class*="g-"] .panel .zp-cell:active,

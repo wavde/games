@@ -43,8 +43,8 @@
     padding: 0;
     transition: background 0.12s, border-color 0.12s;
   }
-  .cell:hover:not(.taken):not(:disabled) { background: var(--panel); border-color: var(--border-hi); }
-  .cell:disabled { cursor: default; }
+  .cell:hover:not(.taken):not([aria-disabled="true"]) { background: var(--panel); border-color: var(--border-hi); }
+  .cell[aria-disabled="true"] { cursor: default; opacity: 0.45; }
   .cell.taken { cursor: default; }
   .cell.x { color: var(--accent); }
   .cell.o { color: var(--accent-2); }
@@ -90,6 +90,7 @@
   <ul>
     <li><strong>Tap / click</strong> any empty cell to place your mark.</li>
     <li><code>New game</code> resets the board.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space plays the square.</li>
   </ul>
 
   <h2>Notes</h2>
@@ -97,6 +98,7 @@
 </template>
 
 <script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
 <script defer src="game.js"></script>
 <script>window.addEventListener("load", () => Manpage.autoOpen("tic-tac-toe"));</script>
 </body>

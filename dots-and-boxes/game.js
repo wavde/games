@@ -348,6 +348,7 @@
           el.type = "button";
           el.className = "db-line " + (horiz ? "db-h" : "db-v");
           el.dataset.x = x;
+          el.dataset.rc = R + "," + C;
           lineEls[x] = el;
         }
         boardEl.appendChild(el);
@@ -449,4 +450,23 @@
 
   newGame();
   window.addEventListener("load", () => Manpage.autoOpen("dots-and-boxes"));
+
+  // Lines sit on a (2N+1)² lattice where row+col is odd. Left/Right walk the row;
+  // Up/Down step to the adjacent row, zig-zagging so they undo each other.
+  Gamekit.gridKeys(boardEl, {
+    selector: ".db-line",
+    next: (el, key) => {
+      const [R, C] = el.dataset.rc.split(",").map(Number), S = 2 * N;
+      let r = R, c = C;
+      if (key === "ArrowRight") c += 2;
+      else if (key === "ArrowLeft") c -= 2;
+      else {
+        r += key === "ArrowDown" ? 1 : -1;
+        c = R % 2 === 0 ? C + 1 : C - 1;
+        if (c < 0) c = C + 1;
+        if (c > S) c = C - 1;
+      }
+      return boardEl.querySelector('.db-line[data-rc="' + r + "," + c + '"]');
+    },
+  });
 })();

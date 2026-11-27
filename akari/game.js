@@ -348,4 +348,6 @@
 
   newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("akari"));
+
+  Gamekit.gridKeys(boardEl, { selector: ".ak-cell", onSecondary: (el) => el.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })) });
 })();

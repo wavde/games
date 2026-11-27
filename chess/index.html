@@ -132,12 +132,14 @@
     <li><code>Undo</code> takes back one full pair of moves (yours + the engine's).</li>
     <li><code>Flip board</code> rotates the view.</li>
     <li>Choose AI strength via the <code>Easy / Normal / Hard</code> selector — deeper search is stronger but slower.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space selects a piece, then its destination.</li>
   </ul>
 
   <h2>Notes</h2>
   <p class="muted">The engine uses minimax with alpha-beta pruning and piece-square tables. At depth 3 it plays a decent casual game.</p>
 </template>
 
+<script src="../gamekit.js"></script>
 <script src="game.js"></script>
 <script defer src="../manpage.js"></script>
 <script>window.addEventListener("load", () => Manpage.autoOpen("chess"));</script>

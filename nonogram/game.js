@@ -327,6 +327,19 @@
   window.addEventListener("pointercancel", endStroke);
   boardEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
+  // Keyboard: Enter/Space applies the current tool to one cell, F/X marks it.
+  function keyPaint(i, kind) {
+    if (won) return;
+    stroke = { start: i, axis: null, kind, value: grid[i] === kind ? EMPTY : kind, snapshot: grid.slice(), changed: false };
+    paint(i);
+    endStroke();
+  }
+  Gamekit.gridKeys(boardEl, {
+    selector: ".ng-cell",
+    onActivate: (el) => keyPaint(parseInt(el.dataset.i, 10), mode === "mark" ? MARK : FILL),
+    onSecondary: (el) => keyPaint(parseInt(el.dataset.i, 10), MARK),
+  });
+
   modeEl.addEventListener("click", (e) => {
     const b = e.target.closest(".chip");
     if (!b) return;

@@ -155,4 +155,6 @@
   document.getElementById('diff').addEventListener('change', reset);
   window.addEventListener('resize', () => { if (!over) render(); });
   reset();
+
+  Gamekit.gridKeys(boardEl, { selector: '.c', onSecondary: (el) => el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })) });
 })();

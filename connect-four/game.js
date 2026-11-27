@@ -77,7 +77,7 @@
     // Disable full columns
     for (let c = 0; c < COLS; c++) {
       const btn = colsEl.children[c];
-      btn.disabled = gameOver || thinking || grid[0][c] !== EMPTY;
+      btn.setAttribute("aria-disabled", gameOver || thinking || grid[0][c] !== EMPTY ? "true" : "false");
     }
   }
 
@@ -345,4 +345,6 @@
   // Init
   applyMode();
   window.addEventListener("load", () => Manpage.autoOpen("connect-four"));
+
+  Gamekit.gridKeys(document.getElementById("cols"), { selector: ".c4-col-btn" });
 })();

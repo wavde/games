@@ -45,7 +45,6 @@
       d.className = 'card' + (c.flipped?' flip':'') + (c.matched?' match':'');
       if (c.flipped || c.matched) d.style.background = c.color + '22';
       d.setAttribute('role', 'button');
-      d.setAttribute('tabindex', '0');
       d.setAttribute('aria-label', c.matched || c.flipped ? c.emoji : 'Face-down card');
       const face = document.createElement('span');
       face.className = 'face';
@@ -53,7 +52,6 @@
       d.appendChild(face);
       const handler = () => flip(c);
       d.addEventListener('click', handler);
-      d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } });
       el.appendChild(d);
     });
   }
@@ -99,4 +97,6 @@
   document.getElementById('reset').addEventListener('click', reset);
   document.getElementById('size').addEventListener('change', reset);
   reset();
+
+  Gamekit.gridKeys(document.getElementById('board'), { selector: '.card' });
 })();

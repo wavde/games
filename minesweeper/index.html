@@ -96,7 +96,7 @@
         <span class="q">?</span> man
       </button>
     </div>
-    <div id="board" class="ms" role="group" aria-label="Minefield" tabindex="0"></div>
+    <div id="board" class="ms" role="group" aria-label="Minefield"></div>
     <div class="controls" style="justify-content:center">
       <button type="button" class="primary" id="reset">New game</button>
       <select id="diff" aria-label="Difficulty">
@@ -128,12 +128,14 @@
     <li><strong>Tap / left-click</strong> a cell to reveal it.</li>
     <li><strong>Long-press (500ms)</strong> or <strong>right-click</strong> to place / remove a flag.</li>
     <li><code>New game</code> re-deals. Difficulty dropdown changes board size and mine count.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space reveals, <span class="kbd">F</span> flags.</li>
   </ul>
 
   <h2>Strategy</h2>
   <p class="muted">If a number equals the count of flagged neighbors, all remaining neighbors are safe. If a number equals the count of unknown neighbors, they're all mines.</p>
 </template>
 
+<script src="../gamekit.js"></script>
 <script src="game.js"></script>
 <script defer src="../manpage.js"></script>
 <script>window.addEventListener("load", () => Manpage.autoOpen("minesweeper"));</script>
