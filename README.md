@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-8affc1?style=flat)](LICENSE)
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 
-Nineteen classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Twenty classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -29,6 +29,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 | 🧩 | **[slide-15](slide-15/)** | Sliding tiles, 3×3 / 4×4 / 5×5. Daily scramble, undo, best moves. |
 | ⚫ | **[reversi](reversi/)** | Othello rules. Local 2P or alpha-beta AI (depths 1/3/5), W–L–D record. |
 | ▢ | **[dots-and-boxes](dots-and-boxes/)** | 3×3 / 4×4 / 5×5 boxes. Local 2P or chain-aware AI, W–L–D record. |
+| ⚪ | **[gomoku](gomoku/)** | Five in a row on 15×15. Local 2P or look-ahead AI, W–L–D record. |
 
 ### Logic puzzles
 
@@ -91,6 +92,7 @@ games/
 ├── slide-15/
 ├── reversi/
 ├── dots-and-boxes/
+├── gomoku/
 ├── mini-sudoku/
 ├── tango/
 ├── queens/
@@ -113,6 +115,7 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | connect-four (AI) | depth 2 | depth 4 | depth 6 |
 | reversi (AI) | depth 1 | depth 3 | depth 5 |
 | dots-and-boxes (AI) | greedy + random | + safe lines, fewest-box sacrifice | + endgame search, chain analysis, double-dealing |
+| gomoku (AI) | random among top 4 | best heuristic move | 4-ply alpha-beta, 8 candidates |
 | mini-sudoku | 22 clues | 18 clues | 14 clues |
 | tango | 16 givens, 10 edges | 10 givens, 8 edges | 6 givens, 7 edges |
 | queens | 6×6 | 7×7 | 8×8 |
@@ -135,6 +138,7 @@ Logic-puzzle generators check uniqueness against a solver before returning (nono
   - *chess*: alpha-beta + MVV-LVA move ordering + piece-square tables.
   - *connect-four*: alpha-beta with center-first column ordering.
   - *reversi*: negamax alpha-beta, corner-first ordering, positional weights + mobility.
+  - *gomoku*: scores every 5-cell window for attack and defence; always takes a win or blocks an immediate five; hard adds 4-ply alpha-beta over the best 8 candidates.
   - *dots-and-boxes*: takes free boxes and avoids third sides; hard searches the last safe moves, values the chain/loop endgame exactly, and double-deals when keeping control pays.
 - **PRNG**: mulberry32 seeded by FNV-1a hash of date+difficulty+game — deterministic dailies across devices.
 

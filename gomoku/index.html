@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>gomoku · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Gomoku — get five in a row on a 15×15 board. Play a look-ahead AI or a friend.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .gm-board {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    width: min(480px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    padding: 2%;
+    box-sizing: border-box;
+    background: #d2a560;
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 4px 18px rgba(0,0,0,0.35);
+  }
+  body.g-gomoku .panel .gm-cell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    cursor: default;
+  }
+  body.g-gomoku .panel .gm-cell:hover,
+  body.g-gomoku .panel .gm-cell:active { background: transparent; transform: none; }
+  .gm-cell::before, .gm-cell::after { content: ""; position: absolute; background: #5b3c16; pointer-events: none; }
+  .gm-cell::before { left: 0; right: 0; top: 50%; height: 1px; }
+  .gm-cell::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+  .gm-cell.l::before { left: 50%; }
+  .gm-cell.r::before { right: 50%; }
+  .gm-cell.t::after { top: 50%; }
+  .gm-cell.b::after { bottom: 50%; }
+  body.g-gomoku .panel .gm-cell.star { background: radial-gradient(circle, #5b3c16 0 12%, transparent 14%); }
+  body.g-gomoku .panel .gm-cell.avail { cursor: pointer; }
+  body.g-gomoku .panel .gm-cell.avail:hover { background: radial-gradient(circle, rgba(20, 18, 16, 0.35) 0 40%, transparent 42%); }
+  body.g-gomoku .panel .gm-cell.avail.ghost-w:hover { background: radial-gradient(circle, rgba(250, 248, 240, 0.55) 0 40%, transparent 42%); }
+  .gm-stone {
+    position: absolute;
+    inset: 7%;
+    border-radius: 50%;
+    z-index: 1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .gm-stone.b { background: radial-gradient(circle at 35% 30%, #4a4642, #0d0c0b 65%); }
+  .gm-stone.w { background: radial-gradient(circle at 35% 30%, #ffffff, #d8d2c6 70%); }
+  .gm-stone.last::after {
+    content: "";
+    position: absolute;
+    inset: 36%;
+    border-radius: 50%;
+    background: var(--danger);
+  }
+  .gm-stone.win { box-shadow: 0 0 0 2px var(--accent-2), 0 0 10px var(--accent-2); }
+  .gm-score .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; vertical-align: -0.05em; }
+  .gm-score .dot.b { background: #141210; border: 1px solid var(--muted); }
+  .gm-score .dot.w { background: #ede8e1; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
+  select {
+    background: var(--panel-2);
+    color: var(--fg);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--r-md);
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    min-height: var(--tap);
+  }
+</style>
+</head>
+<body class="g-gomoku">
+<main class="wrap">
+  <div class="topbar">
+    <h1>gomoku</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Your move (black).</p>
+      <p class="status gm-score"><span class="dot b"></span> black first · <span class="dot w"></span> white · <span id="record">W–L–D 0–0–0</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="gomoku" data-man-title="GOMOKU(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="tablist" aria-label="AI difficulty">
+        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
+        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
+        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      </div>
+      <select id="mode" aria-label="Mode">
+        <option value="human-black" selected>You first (black) vs AI</option>
+        <option value="human-white">AI first (you white)</option>
+        <option value="local">2 players local</option>
+      </select>
+    </div>
+    <div class="gm-board" id="board" role="grid" aria-label="Gomoku board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new game</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-gomoku">
+  <h2>Name</h2>
+  <p>gomoku — five in a row.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Black and white take turns placing one stone on an empty point of the 15×15 board. Black moves first.</li>
+    <li>The first player to make an unbroken line of <strong>five or more</strong> — across, down, or diagonal — wins.</li>
+    <li>If the board fills up with no line of five, it's a draw.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> any empty point. The last stone has a red dot; a winning line glows.</li>
+    <li><code>↶ undo</code> takes back your last move (and the AI's reply).</li>
+    <li>Pick an AI level and who goes first, or play <strong>2 players local</strong>. Your win–loss–draw record is kept per level.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li>Every level takes a winning move and blocks an immediate five.</li>
+    <li><strong>Easy</strong> — picks among its few best-looking moves. <strong>Medium</strong> — always the best-looking move. <strong>Hard</strong> — searches four moves ahead.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">An open four (four in a row with both ends free) can't be stopped, so an open three must be answered at once. Win by making two threats with one stone — a double three or a four-three — so your opponent can only block one.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
