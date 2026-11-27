@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-8affc1?style=flat)](LICENSE)
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 
-Fourteen classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Fifteen classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -39,13 +39,14 @@ Every logic puzzle ships with an in-browser generator + solver and three difficu
 | ♛ | **[queens](queens/)** | Non-attacking queens across colored regions. |
 | 🧵 | **[zip](zip/)** | Draw one Hamiltonian path through numbered waypoints in order. |
 | ▦ | **[patches](patches/)** | Partition the grid into rectangles — clue number = rectangle area. |
+| ▩ | **[nonogram](nonogram/)** | Paint the picture from run-length clues. Drag to fill or mark a line. |
 
 ---
 
 ## Design system
 
 - **Retro terminal**: Fira Mono, amber + mint on near-black, 1px hairline borders, ASCII banners, subtle scanline overlay.
-- **Light mode**: follows `prefers-color-scheme`, plus a footer toggle that cycles **dark → light → system**. Preference persists in `localStorage`.
+- **Light mode** (hub): follows `prefers-color-scheme`, plus a footer toggle that cycles **dark → light → system**. Preference persists in `localStorage`. Game pages use `soft.css`'s warm-dark palette.
 - **Manpage help**: every game has a `? man` button that opens a Unix-style manpage overlay (NAME · RULES · CONTROLS · STRATEGY). Auto-opens on first visit per game; quick to dismiss with ESC / `q` / tap-outside.
 - **Mobile-first**: 44px minimum tap targets, `dvh` viewport units, `touch-action: manipulation`, no hover-only UI.
 
@@ -75,23 +76,24 @@ games/
 ├── gamekit.js          shared helpers (PRNG, daily seed, storage, chips, etc.)
 ├── manifest.json       PWA manifest (iOS/Android home screen)
 ├── favicon.svg
-├── tic-tac-toe/     ├── index.html, game.js   (5 classics)
-├── 2048/            │
-├── minesweeper/     │
-├── memory/          │
-├── chess/           │
-├── connect-four/    │
-├── lights-out/      │   (new — generator-backed)
-├── code-breaker/    │   (new — daily seed)
-├── slide-15/        │   (new — daily scramble)
-├── mini-sudoku/     │   (new — generator + solver)
-├── tango/           │
-├── queens/          │
-├── zip/             │
-└── patches/         │
+├── tic-tac-toe/        each game: index.html + game.js
+├── 2048/
+├── minesweeper/
+├── memory/
+├── chess/
+├── connect-four/
+├── lights-out/
+├── code-breaker/
+├── slide-15/
+├── mini-sudoku/
+├── tango/
+├── queens/
+├── zip/
+├── patches/
+└── nonogram/
 ```
 
-Each game folder is self-contained: `index.html` + `game.js`. Styling inherits from `shared.css` and `manpage.css`.
+Each game folder is self-contained: `index.html` + `game.js`. Styling inherits from `shared.css`, `soft.css`, and `manpage.css`.
 
 ## Generators & difficulty
 
@@ -106,8 +108,11 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | queens | 6×6 | 7×7 | 8×8 |
 | zip | 5×5, 4 waypoints | 6×6, 5 wp, 3 walls | 7×7, 6 wp, 5 walls |
 | patches | 5×5 partition | 6×6 partition | 7×7 partition |
+| nonogram | 5×5 | 8×8 | 10×10 |
+| code-breaker | 4 pegs, 6 colors, 10 guesses | 4 / 6 / 8 | 5 / 8 / 10 |
+| slide-15 | 3×3 | 4×4 | 5×5 |
 
-All generators validate uniqueness against a solver before returning.
+All logic-puzzle generators validate uniqueness against a solver before returning (nonogram requires a full line-by-line solve). slide-15 scrambles by legal moves, so it is always solvable.
 
 ## Tech
 

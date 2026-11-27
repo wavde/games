@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>nonogram · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Nonogram — fill the grid so every row and column matches its number clues.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .ng-board {
+    --cell: 28px;
+    --n: 5;
+    display: grid;
+    grid-template-columns: auto repeat(var(--n), var(--cell));
+    grid-template-rows: auto repeat(var(--n), var(--cell));
+    width: max-content;
+    margin: 8px auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .ng-colclue, .ng-rowclue {
+    font-size: clamp(9px, calc(var(--cell) * 0.48), 14px);
+    font-weight: 500;
+    color: var(--fg);
+    line-height: 1.15;
+  }
+  .ng-colclue {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 4px;
+  }
+  .ng-rowclue {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.45em;
+    padding-right: 6px;
+    white-space: nowrap;
+  }
+  .ng-colclue.done, .ng-rowclue.done { color: var(--dim); }
+  .ng-cell {
+    box-sizing: border-box;
+    width: var(--cell);
+    height: var(--cell);
+    background: var(--bg-2);
+    border-right: 1px solid var(--border-hi);
+    border-bottom: 1px solid var(--border-hi);
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-size: calc(var(--cell) * 0.6);
+    line-height: 1;
+    cursor: pointer;
+  }
+  .ng-cell.top  { border-top: 1px solid var(--border-hi); }
+  .ng-cell.left { border-left: 1px solid var(--border-hi); }
+  .ng-cell.t5r  { border-right: 2px solid var(--muted); }
+  .ng-cell.t5b  { border-bottom: 2px solid var(--muted); }
+  .ng-cell.fill { background: var(--fg); }
+  .ng-cell.mark::after { content: "×"; }
+  .ng-cell.hl:not(.fill) { background: #2c2922; }
+  .ng-board.solved .ng-cell { cursor: default; }
+  .ng-board.solved .ng-cell.fill { background: var(--accent-2); }
+  .ng-board.solved .ng-cell.mark::after { content: none; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
+</style>
+</head>
+<body class="g-nonogram">
+<main class="wrap">
+  <div class="topbar">
+    <h1>nonogram</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Fill cells to match the clues.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="nonogram" data-man-title="NONOGRAM(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="tablist" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
+        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
+        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="ng-board" id="board" role="grid" aria-label="Nonogram grid"></div>
+    <div class="toolbar">
+      <div class="chips" id="mode" aria-label="Tool">
+        <button class="chip active" data-mode="fill" type="button" aria-pressed="true">■ fill</button>
+        <button class="chip" data-mode="mark" type="button" aria-pressed="false">× mark</button>
+      </div>
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-nonogram">
+  <h2>Name</h2>
+  <p>nonogram — paint the hidden picture from number clues.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Each number lists the lengths of the runs of filled cells in that row (left to right) or column (top to bottom).</li>
+    <li>Runs appear in clue order and are separated by at least one empty cell. <code>0</code> means the line is empty.</li>
+    <li>Win when the filled cells match every clue. Marks (×) are just notes and don't count.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li>Pick <code>■ fill</code> or <code>× mark</code>, then <strong>tap</strong> a cell. Tap again to clear it.</li>
+    <li><strong>Drag</strong> to paint a straight line of cells in the same row or column.</li>
+    <li><strong>Right-click</strong> marks with a mouse, whatever tool is selected.</li>
+    <li>A clue dims once its line matches it. <code>↶ undo</code> takes back one stroke; <code>↻ reset</code> clears the grid.</li>
+    <li><code>↻ new</code> generates a fresh puzzle. The daily puzzle loads by default.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 5×5. <strong>Medium</strong> — 8×8. <strong>Hard</strong> — 10×10.</li>
+    <li>Every puzzle has one solution and can be solved line by line — no guessing needed.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Start with big clues: in a line of 10, a run of 7 must cover the middle 4 cells no matter where it sits. Mark cells you know are empty — they constrain the crossing lines. Keep alternating between rows and columns.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

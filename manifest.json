@@ -1,7 +1,7 @@
 {
   "name": "Games · Tejas Wavde",
   "short_name": "Games",
-  "description": "A handcrafted arcade of fourteen classic and logic-puzzle games.",
+  "description": "A handcrafted arcade of fifteen classic and logic-puzzle games.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
