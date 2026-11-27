@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>slide-15 · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Slide 15 — the classic sliding-tile puzzle. Put the numbers back in order.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .sl-grid {
+    --n: 4;
+    --size: min(380px, 88vw);
+    display: grid;
+    grid-template-columns: repeat(var(--n), 1fr);
+    grid-template-rows: repeat(var(--n), 1fr);
+    gap: 6px;
+    width: min(var(--size), 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  body.g-slide-15 .panel .sl-tile {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+    background: #3a342b;
+    border: 1px solid var(--border-hi);
+    border-radius: var(--r-sm);
+    color: var(--fg);
+    font: 700 calc(var(--size) / var(--n) * 0.36) var(--font-mono);
+    cursor: pointer;
+    user-select: none;
+  }
+  body.g-slide-15 .panel .sl-tile:hover { background: #453e33; border-color: var(--muted); }
+  body.g-slide-15 .panel .sl-tile.home { color: var(--accent-2); border-color: rgba(77, 217, 172, 0.45); }
+  body.g-slide-15 .panel .sl-grid.solved .sl-tile { color: var(--accent-2); border-color: var(--accent-2); cursor: default; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
+</style>
+</head>
+<body class="g-slide-15">
+<main class="wrap">
+  <div class="topbar">
+    <h1>slide-15</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Put the tiles in order.</p>
+      <p class="status">Moves: <span id="moves">0</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="slide-15" data-man-title="SLIDE-15(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="tablist" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
+        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
+        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="sl-grid" id="board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-slide-15">
+  <h2>Name</h2>
+  <p>slide-15 — the classic sliding-tile puzzle.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Numbered tiles sit in a square frame with one empty space.</li>
+    <li>A tile next to the space can slide into it.</li>
+    <li>Win by ordering the tiles <strong>1, 2, 3…</strong> left to right, top to bottom, with the space in the bottom-right corner.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap a tile</strong> in the same row or column as the space to slide it — and every tile between — toward the space.</li>
+    <li><strong>Arrow keys</strong> slide the tile next to the space in that direction.</li>
+    <li>Tiles already in their home spot are tinted green.</li>
+    <li><code>↶ undo</code> takes back your last slide. <code>↻ reset</code> restores the starting scramble.</li>
+    <li><code>↻ new</code> rolls a fresh scramble. The daily puzzle loads by default.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 3×3. <strong>Medium</strong> — 4×4. <strong>Hard</strong> — 5×5.</li>
+    <li>Every scramble is made of legal slides from the solved board, so it is always solvable.</li>
+    <li>Moves count each tile that slides.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Solve the top row, then the left column, and repeat on the smaller square that remains. Place the last two tiles of a row together: park the final tile below its spot, then rotate both in.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
