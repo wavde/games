@@ -116,13 +116,11 @@
   function generate(seed) {
     const { n, density } = DIFFS[diff];
     const rng = Gamekit.mulberry32(seed);
-    let last = null;
     for (let attempt = 0; attempt < 2000; attempt++) {
       const s = [];
       for (let i = 0; i < n * n; i++) s.push(rng() < density ? 1 : 0);
       const { rows, cols } = cluesFor(s, n);
-      last = { s, rows, cols };
-      if (lineSolvable(rows, cols, n)) return last;
+      if (lineSolvable(rows, cols, n)) return { s, rows, cols };
     }
     // Practically unreachable; a full grid is always line-solvable.
     const s = new Array(n * n).fill(1);
@@ -162,6 +160,7 @@
     for (let c = 0; c < N; c++) {
       const el = document.createElement("div");
       el.className = "ng-colclue";
+      el.setAttribute("role", "img");
       el.setAttribute("aria-label", "Column " + (c + 1) + " clue: " + (colClues[c].join(" ") || "0"));
       clueSpans(el, colClues[c]);
       boardEl.appendChild(el);
@@ -170,6 +169,7 @@
     for (let r = 0; r < N; r++) {
       const rc = document.createElement("div");
       rc.className = "ng-rowclue";
+      rc.setAttribute("role", "img");
       rc.setAttribute("aria-label", "Row " + (r + 1) + " clue: " + (rowClues[r].join(" ") || "0"));
       clueSpans(rc, rowClues[r]);
       boardEl.appendChild(rc);
@@ -183,7 +183,7 @@
         if (N > 5 && (r + 1) % 5 === 0 && r < N - 1) cls += " t5b";
         el.className = cls;
         el.dataset.i = r * N + c;
-        el.setAttribute("role", "gridcell");
+        el.setAttribute("role", "button");
         el.setAttribute("aria-label", "Row " + (r + 1) + " column " + (c + 1));
         boardEl.appendChild(el);
         cellEls.push(el);
@@ -216,6 +216,7 @@
     for (let i = 0; i < N * N; i++) {
       cellEls[i].classList.toggle("fill", grid[i] === FILL);
       cellEls[i].classList.toggle("mark", grid[i] === MARK);
+      cellEls[i].setAttribute("aria-label", "Row " + (Math.floor(i / N) + 1) + " column " + (i % N + 1) + (grid[i] === FILL ? ", filled" : grid[i] === MARK ? ", marked" : ""));
     }
     for (let r = 0; r < N; r++) {
       rowClueEls[r].classList.toggle("done", lineMatches(grid.slice(r * N, r * N + N).map(v => v === FILL ? 1 : 0), rowClues[r]));

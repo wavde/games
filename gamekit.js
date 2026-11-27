@@ -62,7 +62,7 @@
         catch (e) { return fallback; }
       },
       set: function (key, value) {
-        try { localStorage.setItem(prefix + key, String(value)); } catch (e) {}
+        try { localStorage.setItem(prefix + key, String(value)); } catch (e) { /* storage unavailable or full */ }
       },
       getInt: function (key, fallback) {
         const v = this.get(key, null);
@@ -76,10 +76,10 @@
         try { return JSON.parse(v); } catch (e) { return fallback; }
       },
       setJSON: function (key, obj) {
-        try { this.set(key, JSON.stringify(obj)); } catch (e) {}
+        try { this.set(key, JSON.stringify(obj)); } catch (e) { /* unserialisable value */ }
       },
       remove: function (key) {
-        try { localStorage.removeItem(prefix + key); } catch (e) {}
+        try { localStorage.removeItem(prefix + key); } catch (e) { /* storage unavailable */ }
       },
     };
   }

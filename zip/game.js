@@ -24,7 +24,6 @@
   let N, K;
   let waypoints = [];    // length K, each is cell index; waypoints[0]=start, sorted by number 1..K
   let walls = new Set(); // set of "a-b" with a<b representing blocked edge
-  let solutionPath = []; // full reference Hamiltonian path, length N*N
 
   let path = [];         // user's current path (array of cell indices)
   let onPath = new Set();
@@ -171,7 +170,6 @@
 
       waypoints = wps;
       walls = ws;
-      solutionPath = hp;
 
       const count = countSolutions(2);
       if (count === 1) return true;
@@ -335,7 +333,7 @@
     const t = cellFromEvent(e);
     if (t < 0) return;
     dragging = true;
-    boardEl.setPointerCapture(e.pointerId);
+    try { boardEl.setPointerCapture(e.pointerId); } catch (_) { /* pointer already released */ }
     tryExtend(t);
   }
   function onPointerMove(e) {
@@ -346,7 +344,7 @@
   }
   function onPointerUp(e) {
     dragging = false;
-    try { boardEl.releasePointerCapture(e.pointerId); } catch (_) {}
+    try { boardEl.releasePointerCapture(e.pointerId); } catch (_) { /* capture already gone */ }
   }
 
   function checkWin() {

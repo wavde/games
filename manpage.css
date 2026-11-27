@@ -140,7 +140,7 @@
 .man-footer {
   padding: 10px 14px;
   border-top: 1px solid var(--border);
-  color: var(--dim);
+  color: var(--muted);
   font-size: var(--fs-xs);
   letter-spacing: 0.5px;
   text-align: right;

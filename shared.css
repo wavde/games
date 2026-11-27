@@ -47,21 +47,21 @@
     --panel:     #ebe6d6;
     --panel-2:   #e0dac6;
     --fg:        #141412;
-    --muted:     #6a6a62;
+    --muted:     #5c5c55;
     --dim:       #a39e8c;
     --border:    #c9c2ac;
     --border-hi: #a39e8c;
     --accent:    #9a6a00;
-    --accent-2:  #2a7a55;
+    --accent-2:  #236a4a;
     --danger:    #b83232;
     --warn:      #8a6a14;
   }
 }
 html[data-theme="light"] {
   --bg: #f4f1e8; --bg-2: #ece8dc; --panel: #ebe6d6; --panel-2: #e0dac6;
-  --fg: #141412; --muted: #6a6a62; --dim: #a39e8c;
+  --fg: #141412; --muted: #5c5c55; --dim: #a39e8c;
   --border: #c9c2ac; --border-hi: #a39e8c;
-  --accent: #9a6a00; --accent-2: #2a7a55; --danger: #b83232; --warn: #8a6a14;
+  --accent: #9a6a00; --accent-2: #236a4a; --danger: #b83232; --warn: #8a6a14;
 }
 html[data-theme="dark"] {
   --bg: #0a0a0a; --bg-2: #0d0d0c; --panel: #111110; --panel-2: #161614;
@@ -427,4 +427,17 @@ button:focus-visible, .btn:focus-visible, select:focus-visible, input:focus-visi
   .topbar h1 { font-size: var(--fs-md); }
   .panel { padding: 14px; }
   .ascii { font-size: 9px; }
+}
+
+/* Visually hidden but available to screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

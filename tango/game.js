@@ -34,7 +34,7 @@
   let edges = [];
   let history = [];
   let won = false;
-  let elapsed = 0;
+
   let timerStart = 0;
   let timerInterval = null;
   let cellEls = [];
@@ -93,14 +93,6 @@
   function isFeasible(g, i, v, edges) {
     g[i] = v;
     const r = rof(i), c = cof(i);
-    // Row run of 3 including i?
-    function run(getter) {
-      let runLen = 1, runVal = v;
-      let cnt = (v === SUN) ? 1 : (v === MOON ? 1 : 0);
-      // Only need to check locally — full check in solver via violations on completion
-      // We'll do a simple check: no triple anywhere in this row/col containing i
-      return true;
-    }
     // Simple approach: check row for any triple / count overflow
     function rowOK(rr) {
       let s = 0, m = 0;
@@ -299,6 +291,7 @@
       if (v === SUN) { el.classList.add("sun"); el.textContent = SUN_CH; }
       else if (v === MOON) { el.classList.add("moon"); el.textContent = MOON_CH; }
       else el.textContent = "";
+      el.setAttribute("aria-label", "Row " + (Math.floor(i / N) + 1) + " column " + (i % N + 1) + ": " + (v === SUN ? "sun" : v === MOON ? "moon" : "empty") + (givens[i] ? " (given)" : ""));
     }
     const bad = violations(grid, edges);
     bad.forEach(i => cellEls[i].classList.add("error"));

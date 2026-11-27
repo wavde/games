@@ -31,8 +31,6 @@
   let currentBackdrop = null;
   let lastFocus = null;
 
-  function $(sel, root) { return (root || document).querySelector(sel); }
-
   function close() {
     if (!currentBackdrop) return;
     const node = currentBackdrop;
@@ -42,7 +40,7 @@
     setTimeout(() => node.remove(), 150);
     document.removeEventListener("keydown", onKey, true);
     if (lastFocus && typeof lastFocus.focus === "function") {
-      try { lastFocus.focus(); } catch (e) {}
+      try { lastFocus.focus(); } catch (e) { /* element may have been removed */ }
     }
   }
 
@@ -83,6 +81,7 @@
 
     const body = document.createElement("div");
     body.className = "man-body";
+    body.tabIndex = 0; // long pages scroll; keep them keyboard-scrollable
     if (typeof content === "string") {
       body.innerHTML = content;
     } else if (content instanceof HTMLTemplateElement) {
@@ -112,7 +111,7 @@
     // Focus the close button for keyboard users
     setTimeout(() => {
       const btn = bar.querySelector(".man-close");
-      if (btn) try { btn.focus(); } catch (e) {}
+      if (btn) try { btn.focus(); } catch (e) { /* focus is best-effort */ }
     }, 0);
 
     return backdrop;

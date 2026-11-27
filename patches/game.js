@@ -70,7 +70,6 @@
     // Pick a random cell in the rectangle
     const cellCount = area;
     const pick = Math.floor(rng() * cellCount);
-    const rowsInRect = rect.r1 - rect.r0 + 1;
     const colsInRect = rect.c1 - rect.c0 + 1;
     const dr = Math.floor(pick / colsInRect);
     const dc = pick % colsInRect;
@@ -228,7 +227,7 @@
     if (!pos) return;
     dragStart = pos;
     dragEnd = pos;
-    try { boardEl.setPointerCapture(e.pointerId); } catch (_) {}
+    try { boardEl.setPointerCapture(e.pointerId); } catch (_) { /* pointer already released */ }
     updateDragHighlight();
   }
   function onPointerMove(e) {
@@ -245,7 +244,7 @@
     const c0 = Math.min(dragStart[1], dragEnd[1]);
     const c1 = Math.max(dragStart[1], dragEnd[1]);
     dragStart = null; dragEnd = null;
-    try { boardEl.releasePointerCapture(e.pointerId); } catch (_) {}
+    try { boardEl.releasePointerCapture(e.pointerId); } catch (_) { /* capture already gone */ }
     clearDragHighlight();
     userRects.push({ r0, c0, r1, c1 });
     renderRects();

@@ -214,6 +214,7 @@
       } else if (grid[i] === QUEEN) {
         const q = document.createElement("span"); q.className = "qq"; q.textContent = "♛"; el.appendChild(q);
       }
+      el.setAttribute("aria-label", "Row " + (Math.floor(i / N) + 1) + " column " + (i % N + 1) + ", region " + (regions[i] + 1) + ": " + (grid[i] === QUEEN ? "queen" : grid[i] === MARK ? "marked" : "empty"));
     }
     // Conflict highlights for queens
     const conflicts = findQueenConflicts();

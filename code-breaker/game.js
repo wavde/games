@@ -66,6 +66,7 @@
     el.className = "cb-peg" + (color ? " c" + color : " empty");
     el.textContent = color ? String(color) : "·";
     if (tag === "button") el.type = "button";
+    else el.setAttribute("role", "img");
     el.setAttribute("aria-label", label);
     return el;
   }
@@ -73,6 +74,7 @@
   function feedbackEl(exact, partial) {
     const fb = document.createElement("div");
     fb.className = "cb-fb";
+    fb.setAttribute("role", "img");
     fb.setAttribute("aria-label", exact + " exact, " + partial + " partial");
     for (let i = 0; i < cfg.pegs; i++) {
       const d = document.createElement("i");
@@ -122,7 +124,7 @@
     if (!over) {
       const el = rowEl(String(rows.length + 1), "active");
       current.forEach((c, i) => {
-        const b = pegEl("button", c, "Slot " + (i + 1) + ": " + (c ? COLOR_NAMES[c - 1] + ", tap to clear" : "empty"));
+        const b = pegEl("button", c, "Slot " + (i + 1) + ": " + (c ? c + " " + COLOR_NAMES[c - 1] + ", tap to clear" : "empty"));
         b.addEventListener("click", () => { if (!over && current[i]) { current[i] = 0; render(); } });
         el.pegs.appendChild(b);
       });
@@ -138,7 +140,7 @@
   function renderPalette() {
     paletteEl.innerHTML = "";
     for (let c = 1; c <= cfg.colors; c++) {
-      const b = pegEl("button", c, "Add " + COLOR_NAMES[c - 1]);
+      const b = pegEl("button", c, c + " " + COLOR_NAMES[c - 1]);
       b.addEventListener("click", () => addPeg(c));
       paletteEl.appendChild(b);
     }

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -96,10 +96,10 @@
       </button>
     </div>
     <div class="game-controls">
-      <div class="chips" id="chips" role="tablist" aria-label="AI difficulty">
-        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
-        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
-        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      <div class="chips" id="chips" role="group" aria-label="AI difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
       </div>
       <select id="mode" aria-label="Mode">
         <option value="human-black" selected>You first (black) vs AI</option>
@@ -107,7 +107,7 @@
         <option value="local">2 players local</option>
       </select>
     </div>
-    <div class="rv-board" id="board" role="grid" aria-label="Reversi board"></div>
+    <div class="rv-board" id="board" role="group" aria-label="Reversi board"></div>
     <div class="toolbar">
       <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
       <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new game</button>

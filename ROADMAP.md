@@ -20,6 +20,16 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently hashi, akari, gomoku).
 3. **zip uniqueness** (proposal) — boards are always solvable but almost never unique with the current waypoint/wall counts; uniqueness would need more waypoints or walls per tier plus a stronger solver. Generation is now bounded (≤ ~0.4 s on hard) after fixing an odd-board hang.
 
+4. **Keyboard play** — most boards are pointer/touch only (mini-sudoku, code-breaker, slide-15, 2048 have keys). Roving-tabindex arrow-key navigation per board would close the biggest remaining accessibility gap.
+5. **CI checks** (proposal) — a GitHub Actions workflow that installs ESLint, html-validate, and axe-core in CI only (repo stays dependency-free) and runs the audit below on every push.
+
+## Code-quality audit (latest)
+
+- **ESLint** (`recommended` + `eqeqeq`, `no-var`, `prefer-const`, `no-unused-vars`, `no-implicit-globals`, `no-use-before-define`): 0 errors, 0 warnings across all JS. Every script is an IIFE in strict mode; no globals leak besides `Gamekit` and `Manpage`.
+- **html-validate** (`recommended`): 0 messages on all 21 pages.
+- **axe-core** (WCAG 2.0/2.1 A+AA + best practices): 0 violations on every page freshly loaded, after random play, with the manpage open, and on the hub in light mode.
+- No `console`/`debugger`/TODO leftovers; `innerHTML` only ever receives fixed strings and numbers (no user input).
+
 ## Games
 
 | Status | Game | Notes |

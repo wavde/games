@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -79,7 +79,7 @@
   .card:hover { background: var(--panel); color: var(--fg); }
   .card:hover .arrow { color: var(--accent); transform: translateX(2px); }
   .card .num {
-    color: var(--dim);
+    color: var(--muted);
     font-size: 11px;
     letter-spacing: 1px;
     margin-bottom: 10px;
@@ -149,6 +149,7 @@
 <body>
 <main class="wrap">
   <header class="hero">
+    <h1 class="sr-only">Games — a small, handcrafted arcade</h1>
     <pre class="ascii" aria-hidden="true"> ██████╗  █████╗ ███╗   ███╗███████╗███████╗
 ██╔════╝ ██╔══██╗████╗ ████║██╔════╝██╔════╝
 ██║  ███╗███████║██╔████╔██║█████╗  ███████╗
@@ -233,7 +234,7 @@
   <footer class="footer">
     <div>&copy; Tejas Wavde · MIT</div>
     <div class="links">
-      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">theme</button>
+      <button class="theme-toggle" id="theme-toggle" type="button">theme</button>
       <a href="https://github.com/wavde/games">source</a>
       <a href="https://wavde.github.io">home</a>
     </div>

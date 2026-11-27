@@ -54,7 +54,6 @@
       const c = document.createElement("button");
       c.type = "button";
       c.className = "cell";
-      c.setAttribute("role", "gridcell");
       c.setAttribute("aria-label", "cell " + (i + 1));
       c.dataset.i = String(i);
       c.addEventListener("click", () => play(i));

@@ -30,7 +30,7 @@
   let won = false;
   let timerStart = 0;
   let timerInterval = null;
-  let elapsed = 0;
+
   let cellEls = [];
 
   function idx(r, c) { return r * N + c; }
@@ -126,7 +126,6 @@
     sel = -1;
     pencil = false;
     won = false;
-    elapsed = 0;
     timerStart = Date.now();
     startTimer();
     renderShell();
@@ -300,7 +299,6 @@
     }
     won = true;
     const s = Math.floor((Date.now() - timerStart) / 1000);
-    elapsed = s;
     const best = store.getInt("best:" + diff, null);
     if (best === null || s < best) {
       store.set("best:" + diff, s);

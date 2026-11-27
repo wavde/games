@@ -53,6 +53,7 @@ Every logic puzzle ships with an in-browser generator + solver and three difficu
 - **Retro terminal**: Fira Mono, amber + mint on near-black, 1px hairline borders, ASCII banners, subtle scanline overlay.
 - **Light mode** (hub): follows `prefers-color-scheme`, plus a footer toggle that cycles **dark → light → system**. Preference persists in `localStorage`. Game pages use `soft.css`'s warm-dark palette.
 - **Manpage help**: every game has a `? man` button that opens a Unix-style manpage overlay (NAME · RULES · CONTROLS · STRATEGY). Auto-opens on first visit per game; quick to dismiss with ESC / `q` / tap-outside.
+- **Accessibility**: every control has an accessible name, toggles expose `aria-pressed`, long help text is keyboard-scrollable; axe-core automated checks pass on every page.
 - **Mobile-first**: 44px minimum tap targets, `dvh` viewport units, `touch-action: manipulation`, no hover-only UI.
 
 ## Run locally
