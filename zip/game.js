@@ -53,8 +53,16 @@
     const total = N * N;
     const visited = new Uint8Array(total);
     const path = [];
-    const start = Math.floor(rng() * total);
+    let start = Math.floor(rng() * total);
+    // On odd-sized boards a Hamiltonian path must start on the majority colour; any other
+    // start forces an exhaustive (effectively endless on 7×7) search before failing.
+    if (total % 2 === 1) {
+      const [r, c] = rcOf(start);
+      if ((r + c) % 2 === 1) start += 1;
+    }
+    let budget = 200000;
     function step(i) {
+      if (--budget < 0) return false;
       path.push(i);
       visited[i] = 1;
       if (path.length === total) return true;
@@ -78,6 +86,8 @@
   }
 
   // Count Hamiltonian paths from waypoints[0] visiting waypoints in order, obeying walls. Cap at `limit`.
+  // Bounded: if the search budget runs out, report `limit` (treated as not provably unique).
+  // Sparse boards rarely prove unique; generate() then keeps a valid board (any valid path wins).
   function countSolutions(limit) {
     const total = N * N;
     const visited = new Uint8Array(total);
@@ -85,8 +95,20 @@
     for (let k = 0; k < K; k++) order[waypoints[k]] = k;
     let count = 0;
     let nextWp = 1;
+    let budget = 20000;
+    // A cell we just walked past with no open neighbours left can never be reached.
+    function stranded(cur, head) {
+      for (const m of neighbors(cur)) {
+        if (visited[m] || m === head) continue;
+        let open = 0;
+        for (const q of neighbors(m)) if ((!visited[q] || q === head) && !blocked(m, q)) open++;
+        if (open === 0) return true;
+      }
+      return false;
+    }
     function step(cur, len) {
       if (count >= limit) return;
+      if (--budget < 0) { count = limit; return; }
       if (len === total) {
         if (cur === waypoints[K - 1]) count++;
         return;
@@ -94,6 +116,7 @@
       for (const n of neighbors(cur)) {
         if (visited[n]) continue;
         if (blocked(cur, n)) continue;
+        if (stranded(cur, n)) continue;
         const wp = order[n];
         if (wp !== undefined) {
           if (wp !== nextWp) continue;
