@@ -1,10 +1,11 @@
 (function () {
   "use strict";
 
+  // maxK / maxWalls: most numbers / walls a board may show; more clues make it easier.
   const DIFFS = {
-    easy:   { N: 5, K: 4, walls: 0 },
-    medium: { N: 6, K: 5, walls: 3 },
-    hard:   { N: 7, K: 6, walls: 5 },
+    easy:   { N: 5, K: 4, walls: 0, maxK: 8, maxWalls: 2 },
+    medium: { N: 6, K: 6, walls: 1, maxK: 10, maxWalls: 4 },
+    hard:   { N: 7, K: 8, walls: 2, maxK: 12, maxWalls: 6 },
   };
 
   const boardEl = document.getElementById("board");
@@ -84,97 +85,164 @@
     return null;
   }
 
-  // Count Hamiltonian paths from waypoints[0] visiting waypoints in order, obeying walls. Cap at `limit`.
-  // Bounded: if the search budget runs out, report `limit` (treated as not provably unique).
-  // Sparse boards rarely prove unique; generate() then keeps a valid board (any valid path wins).
-  function countSolutions(limit) {
+  // Searches for up to `limit` solutions (start on 1, visit the numbers in order, fill every
+  // cell, finish on the last number, never cross a wall) within a node budget. Returns
+  // { sols, complete } where complete means the search finished, so sols is the full list
+  // (up to limit). `avoid` (the intended path) is tried last, so alternatives surface fast.
+  // Prunes when some unvisited cell can no longer be entered and left, or the unvisited
+  // cells have split into separate pieces.
+  function findSolutions(limit, budget, avoid) {
     const total = N * N;
     const visited = new Uint8Array(total);
-    const order = new Array(K);
-    for (let k = 0; k < K; k++) order[waypoints[k]] = k;
-    let count = 0;
+    const order = new Int16Array(total).fill(-1);
+    waypoints.forEach((w, k) => { order[w] = k; });
+    const end = waypoints[K - 1];
+    const path = [waypoints[0]];
+    const sols = [];
     let nextWp = 1;
-    let budget = 20000;
-    // A cell we just walked past with no open neighbours left can never be reached.
-    function stranded(cur, head) {
-      for (const m of neighbors(cur)) {
-        if (visited[m] || m === head) continue;
-        let open = 0;
-        for (const q of neighbors(m)) if ((!visited[q] || q === head) && !blocked(m, q)) open++;
-        if (open === 0) return true;
-      }
-      return false;
-    }
-    function step(cur, len) {
-      if (count >= limit) return;
-      if (--budget < 0) { count = limit; return; }
-      if (len === total) {
-        if (cur === waypoints[K - 1]) count++;
-        return;
-      }
-      for (const n of neighbors(cur)) {
-        if (visited[n]) continue;
-        if (blocked(cur, n)) continue;
-        if (stranded(cur, n)) continue;
-        const wp = order[n];
-        if (wp !== undefined) {
-          if (wp !== nextWp) continue;
-          nextWp++;
-          visited[n] = 1;
-          step(n, len + 1);
-          visited[n] = 0;
-          nextWp--;
-        } else {
-          visited[n] = 1;
-          step(n, len + 1);
-          visited[n] = 0;
+
+    // Returns false if the position is dead, -1 if any move may work, or the one cell the
+    // path is forced to enter next.
+    function viable(head) {
+      let first = -1, free = 0, same = 0, forced = -1, endViaHeadOnly = false;
+      const hc = (Math.floor(head / N) + head % N) & 1;
+      for (let c = 0; c < total; c++) {
+        if (visited[c]) continue;
+        free++;
+        if (first < 0) first = c;
+        if (((Math.floor(c / N) + c % N) & 1) === hc) same++;
+        let d = 0, touchesHead = false;
+        for (const m of neighbors(c)) {
+          if (blocked(c, m)) continue;
+          if (m === head) { d++; touchesHead = true; } else if (!visited[m]) d++;
         }
-        if (count >= limit) return;
+        if (d < (c === end ? 1 : 2)) return false;
+        if (c === end && d === 1 && touchesHead) endViaHeadOnly = true;
+        // A cell with only two ways in/out, one being the head, must be entered right now.
+        if (touchesHead && c !== end && d === 2) {
+          if (forced >= 0) return false;
+          forced = c;
+        }
+      }
+      if (!free) return -1;
+      // The last number can't be reached only through the head while other cells remain.
+      if (endViaHeadOnly && free > 1) return false;
+      // The rest of the path alternates colours starting with the colour opposite the head.
+      if (same !== Math.floor(free / 2)) return false;
+      const seen = new Uint8Array(total), stack = [first];
+      seen[first] = 1;
+      let reached = 1;
+      while (stack.length) {
+        const c = stack.pop();
+        for (const m of neighbors(c)) {
+          if (visited[m] || seen[m] || blocked(c, m)) continue;
+          seen[m] = 1; reached++; stack.push(m);
+        }
+      }
+      if (reached !== free) return false;
+      return forced;
+    }
+
+    function step(cur, len) {
+      if (sols.length >= limit || budget < 0) return;
+      if (len === total) { sols.push(path.slice()); return; }
+      const v = viable(cur);
+      if (v === false) return;
+      let moves = v >= 0 ? [v] : neighbors(cur);
+      if (avoid && v < 0) moves = moves.slice().sort((a, b) => (a === avoid[len]) - (b === avoid[len]));
+      for (const n of moves) {
+        if (visited[n] || blocked(cur, n)) continue;
+        const o = order[n];
+        if (o >= 0 && o !== nextWp) continue;
+        if (n === end && len + 1 !== total) continue;
+        budget--;
+        visited[n] = 1; path.push(n);
+        if (o >= 0) nextWp++;
+        step(n, len + 1);
+        if (o >= 0) nextWp--;
+        visited[n] = 0; path.pop();
+        if (sols.length >= limit || budget < 0) return;
       }
     }
+
     visited[waypoints[0]] = 1;
-    nextWp = 1;
     step(waypoints[0], 1);
-    return count;
+    return { sols, complete: budget >= 0 || sols.length >= limit };
   }
 
+  // Builds a board around a random full path, then makes it unique: while another solution
+  // exists, wall off the edge where it first leaves the intended path (which rules it out for
+  // good); once the tier's wall budget is spent, number that cell instead. Boards that need
+  // more clues than the tier allows are discarded.
   function generate(seed) {
     const rng = Gamekit.mulberry32(seed);
-    const { N: n, K: k, walls: wallCount } = DIFFS[diff];
-    N = n; K = k;
-    for (let attempt = 0; attempt < 40; attempt++) {
+    const cfg = DIFFS[diff];
+    N = cfg.N;
+    const total = N * N;
+    let fallback = null;
+    for (let attempt = 0; attempt < 60; attempt++) {
       const hp = hamiltonian(rng);
       if (!hp) continue;
-      // Pick K waypoint positions along the path: index 0, last, plus K-2 in between sorted.
-      const totalCells = N * N;
-      const positions = [0, totalCells - 1];
-      const interior = [];
-      for (let i = 1; i < totalCells - 1; i++) interior.push(i);
-      const shuffled = Gamekit.shuffle(interior, rng);
-      for (let i = 0; i < K - 2; i++) positions.push(shuffled[i]);
-      positions.sort((a, b) => a - b);
-      const wps = positions.map(p => hp[p]);
+      const positions = new Set([0, total - 1]);
+      const interior = Gamekit.shuffle(Array.from({ length: total - 2 }, (_, i) => i + 1), rng);
+      for (let i = 0; i < cfg.K - 2; i++) positions.add(interior[i]);
 
-      // Add walls: random edges NOT on the path
+      // Starting walls go only on edges the intended path doesn't use.
       const pathEdges = new Set();
       for (let i = 0; i < hp.length - 1; i++) pathEdges.add(edgeKey(hp[i], hp[i + 1]));
       const nonPath = [];
-      for (let i = 0; i < totalCells; i++) {
-        for (const nn of neighbors(i)) {
-          if (nn > i && !pathEdges.has(edgeKey(i, nn))) nonPath.push([i, nn]);
-        }
+      for (let i = 0; i < total; i++) {
+        for (const nn of neighbors(i)) if (nn > i && !pathEdges.has(edgeKey(i, nn))) nonPath.push([i, nn]);
       }
-      const sw = Gamekit.shuffle(nonPath, rng);
-      const ws = new Set();
-      for (let i = 0; i < Math.min(wallCount, sw.length); i++) ws.add(edgeKey(sw[i][0], sw[i][1]));
+      walls = new Set(Gamekit.shuffle(nonPath, rng).slice(0, cfg.walls).map(e => edgeKey(e[0], e[1])));
 
-      waypoints = wps;
-      walls = ws;
-
-      const count = countSolutions(2);
-      if (count === 1) return true;
+      let unique = false;
+      for (let guard = 0; guard < 60 && positions.size <= cfg.maxK && walls.size <= cfg.maxWalls; guard++) {
+        const sorted = [...positions].sort((a, b) => a - b);
+        waypoints = sorted.map(p => hp[p]);
+        K = waypoints.length;
+        const res = findSolutions(40, 60000, hp);
+        const alts = res.sols.filter(s => s.some((c, i) => c !== hp[i]));
+        if (!alts.length) {
+          if (res.complete) { unique = true; break; }
+          positions.add(interior.find(p => !positions.has(p)));
+          continue;
+        }
+        // Greedy cover: pick the single wall or number that rules out the most alternatives.
+        let best = null, bestKill = 0;
+        if (positions.size < cfg.maxK) {
+          const at = alts.map(s => { const a = new Int16Array(total); s.forEach((c, i) => { a[c] = i; }); return a; });
+          for (let p = 1; p < total - 1; p++) {
+            if (positions.has(p)) continue;
+            let j = 0;
+            while (sorted[j + 1] < p) j++;
+            const lo = hp[sorted[j]], hi = hp[sorted[j + 1]], c = hp[p];
+            let kill = 0;
+            for (const a of at) if (!(a[lo] < a[c] && a[c] < a[hi])) kill++;
+            if (kill > bestKill) { bestKill = kill; best = { number: p }; }
+          }
+        }
+        if (walls.size < cfg.maxWalls) {
+          const uses = new Map();
+          for (const s of alts) {
+            const seen = new Set();
+            for (let i = 0; i < s.length - 1; i++) {
+              const e = edgeKey(s[i], s[i + 1]);
+              if (!pathEdges.has(e) && !seen.has(e)) { seen.add(e); uses.set(e, (uses.get(e) || 0) + 1); }
+            }
+          }
+          for (const [e, kill] of uses) if (kill > bestKill) { bestKill = kill; best = { wall: e }; }
+        }
+        if (!best) break;
+        if (best.wall) walls.add(best.wall); else positions.add(best.number);
+      }
+      if (unique && positions.size <= cfg.maxK) return;
+      if (!fallback) fallback = { waypoints: [...positions].sort((a, b) => a - b).map(p => hp[p]), walls: new Set(walls) };
     }
-    return true; // accept last attempt even if non-unique
+    // Practically unreachable: keep a valid (solvable) board even if not provably unique.
+    waypoints = fallback.waypoints;
+    walls = fallback.walls;
+    K = waypoints.length;
   }
 
   function newPuzzle(seedOverride) {

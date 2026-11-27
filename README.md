@@ -122,7 +122,7 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | mini-sudoku | 22 clues | 18 clues | 14 clues |
 | tango | 16 givens, 10 edges | 10 givens, 8 edges | 6 givens, 7 edges |
 | queens | 6×6 | 7×7 | 8×8 |
-| zip | 5×5, 4 waypoints | 6×6, 5 wp, 3 walls | 7×7, 6 wp, 5 walls |
+| zip | 5×5, ~6 numbers | 6×6, ~8 numbers, ~2 walls | 7×7, ~11 numbers, ~3–4 walls |
 | patches | 5×5 partition | 6×6 partition | 7×7 partition |
 | nonogram | 5×5 | 8×8 | 10×10 |
 | hashi | 7×7, ~9 islands, counting rules | 9×9, ~15, look-ahead | 11×11, ~22, deeper look-ahead |
@@ -130,7 +130,7 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | code-breaker | 4 pegs, 6 colors, 10 guesses | 4 / 6 / 8 | 5 / 8 / 10 |
 | slide-15 | 3×3 | 4×4 | 5×5 |
 
-Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi and akari are graded by how much look-ahead they need). zip is the exception: boards are built from a real path, so they are always solvable, and any valid path wins — the generator tries briefly for a unique board but doesn't require one. slide-15 scrambles by legal moves, so it is always solvable.
+Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi and akari are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable.
 
 ## Tech
 

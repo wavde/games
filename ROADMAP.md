@@ -18,7 +18,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 
 1. **Cheap syntax check** — run `node --check` over all JS before committing (see commands below). No tooling added; a portable Node works fine.
 2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently hashi, akari, gomoku).
-3. **zip uniqueness** (proposal) — boards are always solvable but almost never unique with the current waypoint/wall counts; uniqueness would need more waypoints or walls per tier plus a stronger solver. Generation is now bounded (≤ ~0.4 s on hard) after fixing an odd-board hang.
+3. **zip uniqueness** ✅ — every board is unique. A pruned path solver (degree, connectivity, colour-parity, and forced-move checks) lists alternative paths; the generator greedily adds whichever number or wall rules out the most, within per-tier caps. ~5 ms easy, ~20 ms medium, ~170 ms hard (worst ~0.6 s); 120/120 boards confirmed unique by an independent solver.
 
 4. **Keyboard play** ✅ — every game is playable by keyboard: shared `Gamekit.gridKeys` gives each board one Tab stop, arrow-key movement (by on-screen position, so sparse boards like hashi work; dots-and-boxes walks its line lattice), Enter/Space to play, and F/X for flag/mark. Board buttons use `aria-disabled` instead of `disabled` so focus survives AI turns.
 5. **CI checks** ✅ — `.github/workflows/checks.yml` runs `node --check`, ESLint, html-validate, and a headless-Chrome pass (page errors, manpage auto-open, axe-core) on every push and PR. Tools install only in CI; the site stays dependency-free.
