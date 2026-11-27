@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-8affc1?style=flat)](LICENSE)
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 
-Seventeen classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Eighteen classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -42,6 +42,7 @@ Every logic puzzle ships with an in-browser generator + solver and three difficu
 | 🧵 | **[zip](zip/)** | Draw one Hamiltonian path through numbered waypoints in order. |
 | ▦ | **[patches](patches/)** | Partition the grid into rectangles — clue number = rectangle area. |
 | ▩ | **[nonogram](nonogram/)** | Paint the picture from run-length clues. Drag to fill or mark a line. |
+| ≡ | **[hashi](hashi/)** | Bridges: link numbered islands with up to two bridges each way, no crossings, one network. |
 
 ---
 
@@ -94,7 +95,8 @@ games/
 ├── queens/
 ├── zip/
 ├── patches/
-└── nonogram/
+├── nonogram/
+└── hashi/
 ```
 
 Each game folder is self-contained: `index.html` + `game.js`. Styling inherits from `shared.css`, `soft.css`, and `manpage.css`.
@@ -115,10 +117,11 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | zip | 5×5, 4 waypoints | 6×6, 5 wp, 3 walls | 7×7, 6 wp, 5 walls |
 | patches | 5×5 partition | 6×6 partition | 7×7 partition |
 | nonogram | 5×5 | 8×8 | 10×10 |
+| hashi | 7×7, ~9 islands, counting rules | 9×9, ~15, look-ahead | 11×11, ~22, deeper look-ahead |
 | code-breaker | 4 pegs, 6 colors, 10 guesses | 4 / 6 / 8 | 5 / 8 / 10 |
 | slide-15 | 3×3 | 4×4 | 5×5 |
 
-Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve). zip is the exception: boards are built from a real path, so they are always solvable, and any valid path wins — the generator tries briefly for a unique board but doesn't require one. slide-15 scrambles by legal moves, so it is always solvable.
+Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi is graded by how much look-ahead it needs). zip is the exception: boards are built from a real path, so they are always solvable, and any valid path wins — the generator tries briefly for a unique board but doesn't require one. slide-15 scrambles by legal moves, so it is always solvable.
 
 ## Tech
 

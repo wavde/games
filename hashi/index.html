@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hashi · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Hashi (Bridges) — connect numbered islands with bridges so every island has its count and all are linked.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .hs-wrap {
+    width: min(440px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    padding: 6px;
+    box-sizing: border-box;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .hs-board {
+    --n: 7;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(var(--n), 1fr);
+    grid-template-rows: repeat(var(--n), 1fr);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .hs-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .hs-dot { fill: var(--border-hi); }
+  .hs-bridge { stroke: var(--fg); stroke-width: 0.075; stroke-linecap: round; }
+  .hs-board.solved .hs-bridge { stroke: var(--accent-2); }
+  body.g-hashi .panel .hs-island {
+    position: relative;
+    z-index: 1;
+    place-self: center;
+    width: 92%;
+    height: 92%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border-radius: 50%;
+    border: 2px solid var(--border-hi);
+    background: var(--panel);
+    color: var(--fg);
+    font: 700 clamp(11px, calc(min(440px, 92vw) / var(--n) * 0.42), 20px) var(--font-mono);
+    line-height: 1;
+    cursor: pointer;
+  }
+  body.g-hashi .panel .hs-island:hover { background: var(--panel); border-color: var(--muted); }
+  body.g-hashi .panel .hs-island.target { border-color: var(--accent); border-style: dashed; }
+  body.g-hashi .panel .hs-island.sel { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245, 184, 0, 0.3); }
+  body.g-hashi .panel .hs-island.done { background: color-mix(in srgb, var(--accent-2) 22%, var(--panel)); border-color: var(--accent-2); color: var(--accent-2); }
+  body.g-hashi .panel .hs-island.over { border-color: var(--danger); color: var(--danger); }
+  body.g-hashi .panel .hs-board.solved .hs-island { cursor: default; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
+</style>
+</head>
+<body class="g-hashi">
+<main class="wrap">
+  <div class="topbar">
+    <h1>hashi</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Connect every island.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="hashi" data-man-title="HASHI(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="tablist" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
+        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
+        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="hs-wrap"><div class="hs-board" id="board" aria-label="Hashi board"></div></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-hashi">
+  <h2>Name</h2>
+  <p>hashi — build bridges between numbered islands (also called <em>Bridges</em>).</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Each island's number is how many bridges must touch it.</li>
+    <li>Bridges run straight across or down between two islands, with nothing in between.</li>
+    <li>At most <strong>two</strong> bridges join any pair of islands, and bridges <strong>never cross</strong>.</li>
+    <li>When you're done, every island must be linked into <strong>one connected network</strong>.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> an island, then tap a neighbor (dashed outline) to add a bridge. Or <strong>drag</strong> from one island to another.</li>
+    <li>Tapping the water between two islands works too.</li>
+    <li>Each tap cycles 0 → 1 → 2 → 0 bridges. Finished islands turn green; overfull ones turn red.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears the board. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 7×7, solvable with counting rules alone. <strong>Medium</strong> — 9×9, needs some look-ahead ("if this were a double bridge…"). <strong>Hard</strong> — 11×11, more islands and loops, deeper look-ahead.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Start with islands that leave no choice: a 4 with two neighbors needs double bridges to both; an 8 needs doubles everywhere. A 1 next to only a 1 can't connect to it (they'd be cut off). Count each island's remaining capacity as you go.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
