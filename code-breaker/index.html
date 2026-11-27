@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>code-breaker · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Code Breaker — crack the hidden color code using exact and partial-match clues.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .cb-board {
+    --peg: clamp(28px, 9vw, 42px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    margin: 8px auto;
+    padding: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .cb-row { display: flex; align-items: center; gap: 10px; }
+  .cb-row .num { width: 2ch; text-align: right; color: var(--dim); font-size: var(--fs-sm); }
+  .cb-row.active .num { color: var(--accent); }
+  .cb-pegs { display: flex; gap: 6px; }
+  .cb-peg {
+    width: var(--peg);
+    height: var(--peg);
+    border-radius: 50%;
+    border: 1px solid var(--border-hi);
+    background: var(--panel-2);
+    color: #1a1715;
+    font: 700 var(--fs-md) var(--font-mono);
+    display: grid;
+    place-items: center;
+    padding: 0;
+    user-select: none;
+  }
+  body.g-code-breaker .panel .cb-peg { border-radius: 50%; min-height: 0; min-width: 0; padding: 0; }
+  .cb-board button.cb-peg { cursor: pointer; }
+  .cb-peg.empty { color: var(--dim); }
+  .cb-row.secret .cb-peg.hidden { background: var(--panel); color: var(--muted); }
+  .cb-row.secret { padding-bottom: 6px; border-bottom: 1px dashed var(--border-hi); }
+  .cb-peg.c1 { background: #ff6b6b; border-color: #ff6b6b; }
+  .cb-peg.c2 { background: #ff9f43; border-color: #ff9f43; }
+  .cb-peg.c3 { background: #f5d400; border-color: #f5d400; }
+  .cb-peg.c4 { background: #6dd58c; border-color: #6dd58c; }
+  .cb-peg.c5 { background: #5c9cff; border-color: #5c9cff; }
+  .cb-peg.c6 { background: #a78bfa; border-color: #a78bfa; }
+  .cb-peg.c7 { background: #ff7ac6; border-color: #ff7ac6; }
+  .cb-peg.c8 { background: #ede8e1; border-color: #ede8e1; }
+  body.g-code-breaker .panel .cb-peg.c1 { background: #ff6b6b; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c2 { background: #ff9f43; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c3 { background: #f5d400; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c4 { background: #6dd58c; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c5 { background: #5c9cff; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c6 { background: #a78bfa; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c7 { background: #ff7ac6; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c8 { background: #ede8e1; color: #1a1715; }
+  .cb-fb {
+    display: grid;
+    grid-template-columns: repeat(3, 10px);
+    gap: 4px;
+    width: 38px;
+  }
+  .cb-fb i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--border-hi); box-sizing: border-box; }
+  .cb-fb i.exact { background: var(--accent-2); border-color: var(--accent-2); }
+  .cb-fb i.partial { border: 2px solid var(--accent); }
+  .cb-palette { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  body.g-code-breaker .panel .cb-palette .cb-peg { width: var(--tap); height: var(--tap); cursor: pointer; }
+  .cb-palette .cb-peg:disabled { opacity: 0.4; cursor: default; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
+</style>
+</head>
+<body class="g-code-breaker">
+<main class="wrap">
+  <div class="topbar">
+    <h1>code-breaker</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Crack the code.</p>
+      <p class="status">Guess: <span id="turn">1</span>/<span id="max">10</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="code-breaker" data-man-title="CODE-BREAKER(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="tablist" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" role="tab" type="button">Easy</button>
+        <button class="chip" data-diff="medium" role="tab" type="button">Medium</button>
+        <button class="chip" data-diff="hard" role="tab" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="cb-board" id="board"></div>
+    <div class="cb-palette" id="palette" aria-label="Colors"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="del-btn" type="button"><span class="glyph">⌫</span> delete</button>
+      <button class="btn ghost tool-btn" id="guess-btn" type="button"><span class="glyph">✓</span> guess</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-code-breaker">
+  <h2>Name</h2>
+  <p>code-breaker — crack the hidden color code.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>A secret code of colored pegs is hidden at the top. Colors may repeat.</li>
+    <li>Fill a row and submit it as a guess. Each guess gets clue dots:
+      <ul>
+        <li><strong>Solid dot</strong> — a peg is the right color in the right spot.</li>
+        <li><strong>Ring</strong> — a peg is the right color in the wrong spot.</li>
+      </ul>
+    </li>
+    <li>Dots don't tell you <em>which</em> pegs they refer to.</li>
+    <li>Win by matching the whole code before you run out of guesses.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap a color</strong> to fill the next empty slot. Tap a filled slot in the current row to clear it.</li>
+    <li><code>⌫ delete</code> removes the last peg. <code>✓ guess</code> submits a full row.</li>
+    <li>Keyboard: <span class="kbd">1</span>–<span class="kbd">8</span> pick colors, <span class="kbd">Backspace</span> deletes, <span class="kbd">Enter</span> guesses.</li>
+    <li><code>↻ new</code> rolls a fresh code. The daily code loads by default.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 4 pegs, 6 colors, 10 guesses.</li>
+    <li><strong>Medium</strong> — 4 pegs, 6 colors, 8 guesses.</li>
+    <li><strong>Hard</strong> — 5 pegs, 8 colors, 10 guesses.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Open with two colors split across the row (e.g. 1 1 2 2) to learn counts quickly. Make each new guess a code that could still be the answer given every earlier clue.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

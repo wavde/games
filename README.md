@@ -4,9 +4,11 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-8affc1?style=flat)](LICENSE)
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 
-Twelve classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Thirteen classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
+
+What's next: see [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -23,6 +25,7 @@ Twelve classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript
 | ♞ | **[chess](chess/)** | Full rules. Alpha-beta + piece-square-table engine, 3 levels. |
 | 🔴 | **[connect-four](connect-four/)** | Local 2P or alpha-beta AI (depths 2/4/6). |
 | 💡 | **[lights-out](lights-out/)** | 5×5 toggle grid. Turn every light off. |
+| 🔐 | **[code-breaker](code-breaker/)** | Mastermind-style. Daily code, 3 difficulties, best per difficulty. |
 
 ### Logic puzzles
 
@@ -78,6 +81,7 @@ games/
 ├── chess/           │
 ├── connect-four/    │
 ├── lights-out/      │   (new — generator-backed)
+├── code-breaker/    │   (new — daily seed)
 ├── mini-sudoku/     │   (new — generator + solver)
 ├── tango/           │
 ├── queens/          │
