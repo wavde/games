@@ -5,7 +5,7 @@
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 [![checks](https://github.com/wavde/games/actions/workflows/checks.yml/badge.svg)](https://github.com/wavde/games/actions/workflows/checks.yml)
 
-Twenty-two classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Twenty-three classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -32,6 +32,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 | ▢ | **[dots-and-boxes](dots-and-boxes/)** | 3×3 / 4×4 / 5×5 boxes. Local 2P or chain-aware AI, W–L–D record. |
 | ⚪ | **[gomoku](gomoku/)** | Five in a row on 15×15. Local 2P or look-ahead AI, W–L–D record. |
 | ⛀ | **[checkers](checkers/)** | English draughts: forced jumps, multi-jumps, kings. Local 2P or alpha-beta AI (depths 2/4/8), W–L–D record. |
+| ◎ | **[mancala](mancala/)** | Kalah: sow seeds, chain extra turns, capture across the board. Local 2P or alpha-beta AI, W–L–D record. |
 
 ### Logic puzzles
 
@@ -99,6 +100,7 @@ games/
 ├── dots-and-boxes/
 ├── gomoku/
 ├── checkers/
+├── mancala/
 ├── mini-sudoku/
 ├── tango/
 ├── queens/
@@ -124,6 +126,7 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | dots-and-boxes (AI) | greedy + random | + safe lines, fewest-box sacrifice | + endgame search, chain analysis, double-dealing |
 | gomoku (AI) | random among top 4 | best heuristic move | 4-ply alpha-beta, 8 candidates |
 | checkers (AI) | depth 2, random among near-best | depth 4 | depth 8 |
+| mancala (AI) | depth 2, random among near-best | depth 6 | deepest in 0.8 s |
 | mini-sudoku | 22 clues | 18 clues | 14 clues |
 | tango | 16 givens, 10 edges | 10 givens, 8 edges | 6 givens, 7 edges |
 | queens | 6×6 | 7×7 | 8×8 |
@@ -149,6 +152,7 @@ Logic-puzzle generators check uniqueness against a solver before returning (nono
   - *reversi*: negamax alpha-beta, corner-first ordering, positional weights + mobility.
   - *gomoku*: scores every 5-cell window for attack and defence; always takes a win or blocks an immediate five; hard adds 4-ply alpha-beta over the best 8 candidates.
   - *checkers*: negamax alpha-beta that always follows capture sequences to the end, with iterative deepening under a 0.8 s budget; material, advancement, back-row and centre terms, trades down when ahead, and drives kings at the enemy in the endgame. Two kings v one king is solved exactly (built on first use), so won king endings are converted. Rules verified against published perft counts to depth 9.
+  - *mancala*: negamax alpha-beta where an extra turn is the same player moving again; extra-turn and capture moves searched first; store and on-side seed difference; hard deepens until its 0.8 s budget runs out. Rules checked against an independent Kalah implementation over 5,000 random games.
   - *dots-and-boxes*: takes free boxes and avoids third sides; hard searches the last safe moves, values the chain/loop endgame exactly, and double-deals when keeping control pays.
 - **PRNG**: mulberry32 seeded by FNV-1a hash of date+difficulty+game — deterministic dailies across devices.
 
