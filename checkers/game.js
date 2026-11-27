@@ -110,7 +110,7 @@
 
   function evaluate(b, side) {
     let score = 0, mine = 0, theirs = 0;
-    const kings = [], foes = [];
+    const kings = { 1: [], 2: [] }, pieces = { 1: [], 2: [] };
     for (let i = 0; i < 64; i++) {
       const p = b[i];
       if (!p) continue;
@@ -122,17 +122,22 @@
         if ((p === 1 && r === 7) || (p === 2 && r === 0)) v += 8;
         if (r >= 3 && r <= 4 && c >= 2 && c <= 5) v += 4;
       }
-      if (sideOf(p) === side) { score += v; mine += v; if (isKing(p)) kings.push(i); }
-      else { score -= v; theirs += v; foes.push(i); }
+      pieces[sideOf(p)].push(i);
+      if (isKing(p)) kings[sideOf(p)].push(i);
+      if (sideOf(p) === side) { score += v; mine += v; } else { score -= v; theirs += v; }
     }
-    // Ahead on material: prefer trading down, and in sparse endgames drive kings at the enemy.
+    // Ahead on material: prefer trading down, and in sparse endgames drive kings at the enemy
+    // (scored the same from both sides so the search stays consistent).
     score += Math.round(300 * (mine - theirs) / (mine + theirs || 1));
-    if (mine > theirs && kings.length + foes.length <= 10) {
-      for (const k of kings) {
+    const lead = mine > theirs ? side : theirs > mine ? 3 - side : 0;
+    if (lead && kings[lead].length + pieces[3 - lead].length <= 10) {
+      let t = 0;
+      for (const k of kings[lead]) {
         let d = 8;
-        for (const f of foes) d = Math.min(d, Math.max(Math.abs((k >> 3) - (f >> 3)), Math.abs((k & 7) - (f & 7))));
-        score -= 3 * d;
+        for (const f of pieces[3 - lead]) d = Math.min(d, Math.max(Math.abs((k >> 3) - (f >> 3)), Math.abs((k & 7) - (f & 7))));
+        t += 3 * d;
       }
+      score += lead === side ? -t : t;
     }
     return score;
   }
@@ -143,7 +148,92 @@
   }
   function crownsNext(b, m) { return crowns(b[m.path[0]], m.path[m.path.length - 1]) ? 1 : 0; }
 
+  // ---------- Endgame table: two kings v one king ----------
+  // Wins can take 33 plies, beyond any search horizon, so this ending is solved exactly by
+  // retrograde analysis the first time it shows up (~30k positions). Index: the leader's two
+  // king squares (a < c), the lone king's square, and who moves (0 leader, 1 loner), all as
+  // indices 0..31 of the dark squares. tbVal: 1 side to move wins, -1 loses, 0 draw; tbDist: plies.
+
+  const DARK = [], DARK_INDEX = new Int8Array(64).fill(-1);
+  for (let i = 0; i < 64; i++) if (((i >> 3) + (i & 7)) % 2) { DARK_INDEX[i] = DARK.length; DARK.push(i); }
+  let tbVal = null, tbDist = null;
+
+  function tbIndex(k1, k2, lone, stm) {
+    let a = DARK_INDEX[k1], c = DARK_INDEX[k2];
+    if (a > c) { const t = a; a = c; c = t; }
+    return ((a * 32 + c) * 32 + DARK_INDEX[lone]) * 2 + stm;
+  }
+
+  function buildTable() {
+    const N = 32 * 32 * 32 * 2, succ = new Array(N);
+    tbVal = new Int8Array(N);
+    tbDist = new Int16Array(N);
+    const IMMEDIATE_WIN = -2, DRAW = -1, OPP_WINS = -3;
+    for (let a = 0; a < 32; a++) for (let c = a + 1; c < 32; c++) for (let w = 0; w < 32; w++) {
+      if (w === a || w === c) continue;
+      for (let stm = 0; stm < 2; stm++) {
+        const b = new Array(64).fill(EMPTY);
+        b[DARK[a]] = 3; b[DARK[c]] = 3; b[DARK[w]] = 4;
+        const list = [];
+        for (const m of legalMoves(b, stm ? WHITE : BLACK)) {
+          // The leader taking the lone king, or the lone king taking both, ends the game. If it
+          // takes one, the last king either recaptures at once or it's a drawn 1 v 1.
+          if (m.caps.length === (stm ? 2 : 1)) list.push(IMMEDIATE_WIN);
+          else if (m.caps.length) list.push(legalMoves(applyMove(b, m), BLACK)[0]?.caps.length ? OPP_WINS : DRAW);
+          else {
+            const nb = applyMove(b, m), ks = [];
+            let lone = -1;
+            for (let i = 0; i < 64; i++) if (nb[i] === 3) ks.push(i); else if (nb[i] === 4) lone = i;
+            list.push(tbIndex(ks[0], ks[1], lone, 1 - stm));
+          }
+        }
+        succ[((a * 32 + c) * 32 + w) * 2 + stm] = list;
+      }
+    }
+    for (let i = 0; i < N; i++) if (succ[i] && !succ[i].length) tbVal[i] = -1;
+    for (let d = 1, changed = true; changed; d++) {
+      changed = false;
+      for (let i = 0; i < N; i++) {
+        const list = succ[i];
+        if (!list || tbVal[i] || !list.length) continue;
+        let win = false, lose = true;
+        for (const j of list) {
+          if (j === IMMEDIATE_WIN) { if (d === 1) win = true; lose = false; continue; }
+          if (j === OPP_WINS) { if (d < 2) lose = false; continue; }
+          if (j === DRAW) { lose = false; continue; }
+          if (tbVal[j] === -1 && tbDist[j] === d - 1) win = true;
+          if (!(tbVal[j] === 1 && tbDist[j] < d)) lose = false;
+        }
+        if (win) { tbVal[i] = 1; tbDist[i] = d; changed = true; }
+        else if (lose) { tbVal[i] = -1; tbDist[i] = d; changed = true; }
+      }
+    }
+  }
+
+  // Exact score for a two-kings-v-one-king position, or null for anything else.
+  function probe(b, side, ply) {
+    const pieces = [];
+    for (let i = 0; i < 64; i++) if (b[i]) { if (!isKing(b[i]) || pieces.length === 3) return null; pieces.push(i); }
+    if (pieces.length !== 3) return null;
+    const sides = pieces.map((i) => sideOf(b[i]));
+    const loneAt = sides.findIndex((s) => sides.filter((t) => t === s).length === 1);
+    if (loneAt < 0) return null;
+    const lone = pieces[loneAt], ks = pieces.filter((i) => i !== lone);
+    if (!tbVal) buildTable();
+    const idx = tbIndex(ks[0], ks[1], lone, side === sides[loneAt] ? 1 : 0);
+    const v = tbVal[idx], d = tbDist[idx];
+    return v > 0 ? WIN - ply - d : v < 0 ? -WIN + ply + d : 0;
+  }
+
+  // Hard searches can blow up in tactical positions, so the search has a deadline: it deepens
+  // two plies at a time and plays the result of the deepest search that finished.
+  const TIMEOUT = {};
+  let deadline = Infinity, nodes = 0;
+
   function negamax(b, side, depth, alpha, beta, ply) {
+    if ((++nodes & 1023) === 0 && Date.now() > deadline) throw TIMEOUT;
+    const exact = probe(b, side, ply);
+    if (exact !== null) return exact;
     const moves = legalMoves(b, side);
     if (!moves.length) return -WIN + ply;
     if ((depth <= 0 && !moves[0].caps.length) || ply >= 40) return evaluate(b, side);
@@ -158,17 +248,28 @@
   }
 
   // Root search keeps exact scores for every move within `tol` of the best, then picks one at random.
-  function pickMove(b, side, depth, tol) {
-    const moves = ordered(b, legalMoves(b, side));
+  function pickMove(b, side, depth, tol, budgetMs) {
+    let moves = ordered(b, legalMoves(b, side));
     if (moves.length === 1) return moves[0];
-    let best = -Infinity;
-    const scored = [];
-    for (const m of moves) {
-      const v = -negamax(applyMove(b, m), 3 - side, depth - 1, -Infinity, -(best - tol - 1), 1);
-      scored.push([m, v]);
-      if (v > best) best = v;
+    let choices = moves;
+    deadline = budgetMs ? Date.now() + budgetMs : Infinity;
+    try {
+      for (let d = depth % 2 || 2; d <= depth; d += 2) {
+        let best = -Infinity;
+        const scored = [];
+        for (const m of moves) {
+          const v = -negamax(applyMove(b, m), 3 - side, d - 1, -Infinity, -(best - tol - 1), 1);
+          scored.push([m, v]);
+          if (v > best) best = v;
+        }
+        choices = scored.filter(([, v]) => v >= best - tol).map(([m]) => m);
+        moves = scored.sort((x, y) => y[1] - x[1]).map(([m]) => m);
+      }
+    } catch (e) {
+      if (e !== TIMEOUT) throw e;
+    } finally {
+      deadline = Infinity;
     }
-    const choices = scored.filter(([, v]) => v >= best - tol).map(([m]) => m);
     return choices[Math.floor(Math.random() * choices.length)];
   }
 
@@ -228,7 +329,7 @@
     aiTimer = setTimeout(() => {
       aiTimer = null;
       if (gen !== aiGen || over || isHumanTurn()) return;
-      play(pickMove(board, current, DEPTHS[diff], diff === "easy" ? 30 : 0));
+      play(pickMove(board, current, DEPTHS[diff], diff === "easy" ? 30 : 0, 800));
     }, 350);
   }
 

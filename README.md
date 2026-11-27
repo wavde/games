@@ -148,7 +148,7 @@ Logic-puzzle generators check uniqueness against a solver before returning (nono
   - *connect-four*: alpha-beta with center-first column ordering.
   - *reversi*: negamax alpha-beta, corner-first ordering, positional weights + mobility.
   - *gomoku*: scores every 5-cell window for attack and defence; always takes a win or blocks an immediate five; hard adds 4-ply alpha-beta over the best 8 candidates.
-  - *checkers*: negamax alpha-beta that always follows capture sequences to the end; material, advancement, back-row and centre terms, trades down when ahead, and drives kings at the enemy in the endgame. Rules verified against published perft counts to depth 9.
+  - *checkers*: negamax alpha-beta that always follows capture sequences to the end, with iterative deepening under a 0.8 s budget; material, advancement, back-row and centre terms, trades down when ahead, and drives kings at the enemy in the endgame. Two kings v one king is solved exactly (built on first use), so won king endings are converted. Rules verified against published perft counts to depth 9.
   - *dots-and-boxes*: takes free boxes and avoids third sides; hard searches the last safe moves, values the chain/loop endgame exactly, and double-deals when keeping control pays.
 - **PRNG**: mulberry32 seeded by FNV-1a hash of date+difficulty+game — deterministic dailies across devices.
 
