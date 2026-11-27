@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>battleships · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Battleships — hunt the AI's hidden fleet before it sinks yours. Three AI levels, from hunt-and-target to a probability heat-map.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .bs-board {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 2px;
+    aspect-ratio: 1;
+    margin: 6px auto;
+    padding: 4px;
+    box-sizing: border-box;
+    background: #10263a;
+    border-radius: var(--r-md);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  #target { width: min(400px, 100%); }
+  #fleet { width: min(240px, 66%); }
+  .bs-label { text-align: center; font-size: var(--fs-sm); color: var(--muted); margin: 10px 0 0; }
+  body.g-battleships .panel .bs-cell,
+  .bs-own {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: #1d4466;
+  }
+  body.g-battleships .panel .bs-cell { cursor: crosshair; }
+  body.g-battleships .panel .bs-cell:hover { background: #2a5a84; }
+  body.g-battleships .panel .bs-cell.miss,
+  body.g-battleships .panel .bs-cell.hit,
+  body.g-battleships .panel .bs-cell.sunk { cursor: default; }
+  body.g-battleships .panel .bs-cell.miss:hover { background: #1d4466; }
+  .bs-own.ship { background: #8a9199; }
+  body.g-battleships .panel .bs-cell.ghost { background: #4a5560; cursor: default; }
+  body.g-battleships .panel .bs-cell.hit, body.g-battleships .panel .bs-cell.hit:hover, .bs-own.hit { background: #7a2e2e; }
+  body.g-battleships .panel .bs-cell.sunk, body.g-battleships .panel .bs-cell.sunk:hover, .bs-own.sunk { background: #3a1616; }
+  .miss::after, .hit::after, .sunk::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    inset: 38%;
+    background: rgba(230, 240, 250, 0.55);
+  }
+  .hit::after { inset: 24%; background: #ff6b6b; }
+  .sunk::after { inset: 24%; background: #b84848; }
+  .bs-cell.last, .bs-own.last { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 1; }
+  .bs-cell.fresh::after, .bs-own.fresh::after { animation: bs-pop .25s ease-out; }
+  @keyframes bs-pop { from { transform: scale(0.2); } to { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .bs-cell.fresh::after, .bs-own.fresh::after { animation: none; } }
+  .bs-ships { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; margin: 2px 0 0; padding: 0; list-style: none; font-size: var(--fs-sm); color: var(--fg); }
+  .bs-ships li.down { color: var(--muted); text-decoration: line-through; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
+</style>
+</head>
+<body class="g-battleships">
+<main class="wrap">
+  <div class="topbar">
+    <h1>battleships</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Fire at the enemy grid.</p>
+      <p class="status">Shots: <span id="shots">0</span> · <span id="record">W–L 0–0</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="battleships" data-man-title="BATTLESHIPS(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="AI difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+    </div>
+    <p class="bs-label" id="target-label">Enemy waters</p>
+    <ul class="bs-ships" id="enemy-ships" aria-label="Enemy fleet"></ul>
+    <div class="bs-board" id="target" role="group" aria-labelledby="target-label"></div>
+    <p class="bs-label">Your fleet</p>
+    <ul class="bs-ships" id="my-ships" aria-label="Your fleet"></ul>
+    <div class="bs-board" id="fleet" role="img" aria-label="Your fleet"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="shuffle-btn" type="button"><span class="glyph">⇄</span> shuffle fleet</button>
+      <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new game</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-battleships">
+  <h2>Name</h2>
+  <p>battleships — find and sink the hidden enemy fleet.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Each side hides five ships on a 10×10 grid: carrier (5), battleship (4), cruiser (3), submarine (3), destroyer (2). Ships lie straight, never overlap, and may touch.</li>
+    <li>Take turns firing one shot. You hear <strong>hit</strong> or <strong>miss</strong>; once every square of a ship is hit, it <strong>sinks</strong> and its squares are revealed.</li>
+    <li>Sink the whole enemy fleet before yours goes down.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a square in <em>Enemy waters</em> to fire. Small dots are misses, red is a hit, dark red is sunk. The last shot on each grid is outlined.</li>
+    <li>Your fleet is dealt at random — <code>⇄ shuffle fleet</code> re-deals it until you fire your first shot.</li>
+    <li>Your win–loss record and fewest shots to win are kept per AI level on this device.</li>
+    <li><strong>Keyboard</strong>: Tab to the enemy grid, arrow keys move, Enter or Space fires.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — fires at random until it hits, then tries the squares around the hit.</li>
+    <li><strong>Medium</strong> — searches a checkerboard pattern and follows a line of hits to its end.</li>
+    <li><strong>Hard</strong> — counts every way the remaining ships could still fit and fires where a ship is most likely.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Every ship is at least two long, so a checkerboard pattern finds them all with half the shots. After a hit, fire along the line until you get a miss, then go back the other way. Late in the game, aim at open water where the biggest unsunk ship still fits.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

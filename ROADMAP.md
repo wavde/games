@@ -4,12 +4,12 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 
 ## Current inventory
 
-- **23 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
-  - Classics: tic-tac-toe, 2048, minesweeper, memory, chess, connect-four, lights-out, code-breaker, slide-15, reversi, dots-and-boxes, gomoku, checkers, mancala.
+- **24 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
+  - Classics: tic-tac-toe, 2048, minesweeper, memory, chess, connect-four, lights-out, code-breaker, slide-15, reversi, dots-and-boxes, gomoku, checkers, mancala, battleships.
   - Logic puzzles: mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink.
-- **Shared layer** (all 23 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
-  - `gamekit.js` (`window.Gamekit`): mulberry32 PRNG, `dailySeed`, `storage(prefix)`, `wireDifficultyChips`, `fmtTime`, `onLongPress`, `shuffle`, `gridKeys` (keyboard play). Loaded by all 23 games.
-  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink. connect-four, reversi, dots-and-boxes, gomoku, checkers, and mancala use chips for AI level.
+- **Shared layer** (all 24 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
+  - `gamekit.js` (`window.Gamekit`): mulberry32 PRNG, `dailySeed`, `storage(prefix)`, `wireDifficultyChips`, `fmtTime`, `onLongPress`, `shuffle`, `gridKeys` (keyboard play). Loaded by all 24 games.
+  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink. connect-four, reversi, dots-and-boxes, gomoku, checkers, mancala, and battleships use chips for AI level.
   - Help: a `<template id="man-<game>">` + `.man-trigger` button per game.
   - Game pages (`body.g-<name>`) always use soft.css's warm-dark palette; the dark/light toggle only affects the hub.
 - **No build, no runtime dependencies.** CI checks (below) install their tools only in CI.
@@ -17,7 +17,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 ## Proposed improvements
 
 1. **Cheap syntax check** — run `node --check` over all JS before committing (see commands below). No tooling added; a portable Node works fine.
-2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently checkers, slitherlink, mancala).
+2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently slitherlink, mancala, battleships).
 3. **zip uniqueness** ✅ — every board is unique. A pruned path solver (degree, connectivity, colour-parity, and forced-move checks) lists alternative paths; the generator greedily adds whichever number or wall rules out the most, within per-tier caps. ~5 ms easy, ~20 ms medium, ~170 ms hard (worst ~0.6 s); 120/120 boards confirmed unique by an independent solver.
 
 4. **Keyboard play** ✅ — every game is playable by keyboard: shared `Gamekit.gridKeys` gives each board one Tab stop, arrow-key movement (by on-screen position, so sparse boards like hashi work; dots-and-boxes walks its line lattice), Enter/Space to play, and F/X for flag/mark. Board buttons use `aria-disabled` instead of `disabled` so focus survives AI turns.
@@ -26,7 +26,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 ## Code-quality audit (latest)
 
 - **ESLint** (`recommended` + `eqeqeq`, `no-var`, `prefer-const`, `no-unused-vars`, `no-implicit-globals`, `no-use-before-define`): 0 errors, 0 warnings across all JS. Every script is an IIFE in strict mode; no globals leak besides `Gamekit` and `Manpage`.
-- **html-validate** (`recommended`): 0 messages on all 24 pages (hub + 23 games).
+- **html-validate** (`recommended`): 0 messages on all 25 pages (hub + 24 games).
 - **axe-core** (WCAG 2.0/2.1 A+AA + best practices): 0 violations on every page freshly loaded, after random play, with the manpage open, and on the hub in light mode.
 - No `console`/`debugger`/TODO leftovers; `innerHTML` only ever receives fixed strings and numbers (no user input).
 
@@ -45,18 +45,18 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 | ✅ | **checkers** | 8×8 English draughts: compulsory captures, multi-jumps, crowning ends the move, 40-move no-progress draw; vs. AI or local 2P (board flips when you play white). Negamax alpha-beta at depth 2/4/8 with capture quiescence, iterative deepening, and an 0.8 s think budget (medium beat easy 16–0–4, hard beat medium 20–0–0). Two kings v one king (wins take up to 33 plies) is solved exactly by retrograde analysis on first use (~170 ms, 29,760 entries, verified against an independent recomputation); with it, hard converted 20/20 each of 2K v 1K, 3K v 2K, 3K v 1K, 2K v 1M, and 2K+1M v 1K from random starts. Move generator matches published perft to depth 9 and an independent generator on 20k random positions. W–L–D per level. |
 | ✅ | **slitherlink** | 6×6/7×7/8×8 loop puzzle. Random hole-free region → its outline is the loop; starts fully clued and blanks numbers while the grade holds (easy = direct rules, medium = single-edge look-ahead, hard = unique by search, never direct-rules-solvable). 120/120 sampled boards confirmed unique by an independent OR-Tools CP-SAT model; hard generates in ~150 ms median. Tap cycles line/×; over-full numbers and branching lines turn red. |
 | ✅ | **mancala** | Kalah(6,4): sowing skips the opponent's store, extra turn on landing in your store, captures from your own empty pit, remaining seeds banked when a side empties. vs. AI or local 2P; negamax alpha-beta where an extra turn is the same player moving again, extra-turn/capture moves ordered first; easy = depth 2 with near-best randomness, medium = depth 6, hard = iterative deepening under 0.8 s (medium beat easy 27–3, hard beat medium 19–0–1). Rules match an independent implementation over 5,000 random games (219k moves). Sowing animates seed by seed (skipped under reduced motion); undo to your turn; W–L–D per level. |
+| ✅ | **battleships** | 10×10, classic fleet (5/4/3/3/2), straight non-overlapping ships that may touch; sunk ships revealed. vs. AI: easy = random hunt + neighbours of hits, medium = checkerboard hunt sized to the smallest unsunk ship + follows lines of hits, hard = probability heat-map over every consistent placement. Mean shots to sink a random fleet 63 / 51 / 45 (400 games each); medium beat easy 296–104 and hard beat medium 294–106 head to head. Fleet shuffle until your first shot; W–L and fewest shots to win per level. |
 
 ## Proposals
 
 | Game | Pitch | Size |
 |---|---|---|
-| **battleships** | Hide a fleet, hunt the AI's. AI uses hunt/target with a probability heat-map; daily solo variant possible. | Medium |
 | **kakuro** | Cross-sum logic puzzle: digits 1–9, no repeats in a run. Generator + uniqueness solver, graded like akari. | Medium–large |
 | **star battle** | Two stars per row, column, and region; stars never touch. Distinct from queens (2 per unit, diagonal touch rule). | Medium |
 
 ## Next build
 
-Nothing queued. Pick one of the proposals above (battleships is the smallest) and write acceptance criteria here first, following the same template: folder with `index.html` + `game.js`, shared CSS/manpage/gamekit, keyboard play, hub card + counts in hub, manifest, README.
+Nothing queued. Pick one of the proposals above (star battle is the smaller) and write acceptance criteria here first, following the same template: folder with `index.html` + `game.js`, shared CSS/manpage/gamekit, keyboard play, hub card + counts in hub, manifest, README.
 
 ## Run / check
 
