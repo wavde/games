@@ -1,0 +1,35 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      # Tools are installed only in CI; the site itself has no dependencies.
+      - name: Install check tools
+        run: npm install --prefix .github/checks --no-save --no-audit --no-fund eslint @eslint/js globals html-validate axe-core puppeteer-core
+
+      - name: Syntax check
+        run: for f in $(git ls-files '*.js'); do node --check "$f"; done
+
+      - name: ESLint
+        run: .github/checks/node_modules/.bin/eslint --config .github/checks/eslint.config.mjs .
+
+      - name: HTML validation
+        run: .github/checks/node_modules/.bin/html-validate --config .github/checks/htmlvalidate.json index.html */index.html
+
+      - name: Browser + accessibility checks
+        run: node .github/checks/browser.mjs

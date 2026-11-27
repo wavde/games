@@ -21,7 +21,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 3. **zip uniqueness** (proposal) — boards are always solvable but almost never unique with the current waypoint/wall counts; uniqueness would need more waypoints or walls per tier plus a stronger solver. Generation is now bounded (≤ ~0.4 s on hard) after fixing an odd-board hang.
 
 4. **Keyboard play** — most boards are pointer/touch only (mini-sudoku, code-breaker, slide-15, 2048 have keys). Roving-tabindex arrow-key navigation per board would close the biggest remaining accessibility gap.
-5. **CI checks** (proposal) — a GitHub Actions workflow that installs ESLint, html-validate, and axe-core in CI only (repo stays dependency-free) and runs the audit below on every push.
+5. **CI checks** ✅ — `.github/workflows/checks.yml` runs `node --check`, ESLint, html-validate, and a headless-Chrome pass (page errors, manpage auto-open, axe-core) on every push and PR. Tools install only in CI; the site stays dependency-free.
 
 ## Code-quality audit (latest)
 
@@ -50,6 +50,15 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 Nothing queued. Pick one of the proposals above; write acceptance criteria here first, following the same template (folder with `index.html` + `game.js`, shared CSS/manpage/gamekit, hub card + counts in hub, manifest, README).
 
 ## Run / check
+
+CI (`.github/workflows/checks.yml`) runs everything below automatically. To run it locally from the repo root:
+
+```bash
+npm install --prefix .github/checks --no-save eslint @eslint/js globals html-validate axe-core puppeteer-core
+.github/checks/node_modules/.bin/eslint --config .github/checks/eslint.config.mjs .
+.github/checks/node_modules/.bin/html-validate --config .github/checks/htmlvalidate.json index.html */index.html
+node .github/checks/browser.mjs   # set CHROME_PATH if Chrome isn't in a standard location
+```
 
 ```bash
 python -m http.server 8000          # then open http://localhost:8000
