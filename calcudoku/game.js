@@ -178,36 +178,26 @@
 
   const boardEl  = document.getElementById("board");
   const padEl    = document.getElementById("pad");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
   const notesBtn = document.getElementById("notes-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "Fill each cage to its target.";
-  const store = Gamekit.storage("calcudoku:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
-  let diff = "medium";
-  let P = null, val = null, notes = null, history = [], won = false, sel = -1, noteMode = false, cellEls = [], dailyDate = null;
+  let P = null, val = null, notes = null, history = [], won = false, sel = -1, noteMode = false, cellEls = [];
 
   const cageText = (g) => g.target + OP_SIGN[g.op];
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("calcudoku", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    sel = -1;
+    clear();
+    build();
+    buildPad();
+  }
+
+  function clear() {
     val = new Uint8Array(P.n * P.n);
     notes = new Uint16Array(P.n * P.n);
     history = [];
     won = false;
-    sel = -1;
-    build();
-    buildPad();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function build() {
@@ -308,9 +298,7 @@
     const { bad, cage } = check();
     if (bad.size || cage.some((c) => c !== 1)) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("calcudoku", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
+    page.win();
     render();
   }
 
@@ -329,7 +317,7 @@
     if (el) select(+el.dataset.i);
   });
 
-  notesBtn.addEventListener("click", () => { noteMode = !noteMode; render(); });
+  notesBtn.addEventListener("click", () => { if (!P) return; noteMode = !noteMode; render(); });
 
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector(".man-backdrop")) return;
@@ -337,7 +325,7 @@
     const k = e.key;
     if (k >= "1" && k <= "9") { enter(+k); e.preventDefault(); }
     else if (k === "Backspace" || k === "Delete" || k === "0") { enter(0); e.preventDefault(); }
-    else if (k === "n" || k === "N") { noteMode = !noteMode; render(); e.preventDefault(); }
+    else if ((k === "n" || k === "N") && P) { noteMode = !noteMode; render(); e.preventDefault(); }
   });
 
   undoBtn.addEventListener("click", () => {
@@ -348,29 +336,13 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    val = new Uint8Array(P.n * P.n);
-    notes = new Uint16Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "calcudoku",
+    status: "Fill each cage to its target.",
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("calcudoku"));
 
   Gamekit.gridKeys(boardEl, { selector: ".cg-cell" });

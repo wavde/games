@@ -101,6 +101,7 @@
         <option value="human-black" selected>You first (black) vs AI</option>
         <option value="human-white">AI first (you white)</option>
         <option value="local">2 players local</option>
+        <option value="online">Online with a friend</option>
       </select>
     </div>
     <div class="rv-board" id="board" role="group" aria-label="Reversi board"></div>
@@ -128,6 +129,7 @@
     <li><strong>Tap</strong> a square with a dot — dots mark your legal moves.</li>
     <li>The last move is outlined. <code>↶ undo</code> takes back your last move (and the AI's reply).</li>
     <li>Pick an AI level and who goes first, or play <strong>2 players local</strong> on one device.</li>
+    <li><strong>Online with a friend</strong> shows an invite link to send; paste the reply code your friend sends back to connect. The inviter plays black and moves first.</li>
     <li>Your win–loss–draw record against each AI level is kept on this device.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space plays a dotted square.</li>
   </ul>
@@ -144,6 +146,7 @@
 
 <script defer src="../manpage.js"></script>
 <script defer src="../gamekit.js"></script>
+<script defer src="../net.js"></script>
 <script defer src="game.js"></script>
 </body>
 </html>

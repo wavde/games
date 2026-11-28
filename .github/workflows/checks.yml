@@ -39,3 +39,6 @@ jobs:
 
       - name: Play-through checks
         run: node .github/checks/play.mjs
+
+      - name: Offline checks
+        run: node .github/checks/offline.mjs

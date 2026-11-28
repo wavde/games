@@ -33,7 +33,7 @@ export async function startServer(hookFor = () => "") {
   return { server, base: "http://127.0.0.1:" + server.address().port };
 }
 
-export async function launchBrowser() {
+export async function launchBrowser(extraArgs = []) {
   const executablePath = [
     process.env.CHROME_PATH,
     "/usr/bin/google-chrome",
@@ -42,5 +42,5 @@ export async function launchBrowser() {
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   ].filter(Boolean).find((p) => fs.existsSync(p));
   if (!executablePath) { console.error("No Chrome found; set CHROME_PATH."); process.exit(2); }
-  return puppeteer.launch({ executablePath, headless: true, args: ["--no-sandbox"] });
+  return puppeteer.launch({ executablePath, headless: true, args: ["--no-sandbox", ...extraArgs] });
 }

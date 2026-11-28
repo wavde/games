@@ -215,8 +215,11 @@
   if (!["human-white", "human-black", "local"].includes(mode)) mode = "human-white";
   modeSel.value = mode;
 
-  const humanColor = () => (mode === "human-black" ? BLACK : WHITE);
+  // Online: the host is White and moves first. "online" plays like "local" with one side remote.
+  const twoPlayer = () => mode === "local" || mode === "online";
+  const humanColor = () => (mode === "human-black" || mode === "online" && link.role() === "guest" ? BLACK : WHITE);
   const isHumanTurn = () => mode === "local" || S.turn === humanColor();
+  const remoteTurn = () => mode === "online" && (!link.connected() || S.turn !== humanColor());
 
   function buildBoard() {
     const svgNS = "http://www.w3.org/2000/svg", svg = document.createElementNS(svgNS, "svg");
@@ -277,7 +280,7 @@
   }
 
   function finish() {
-    if (mode === "local") return;
+    if (twoPlayer()) return;
     const rec = store.getJSON("rec:" + diff, { w: 0, l: 0, d: 0 });
     if (!result.winner) rec.d++;
     else if (result.winner === humanColor()) rec.w++;
@@ -291,39 +294,54 @@
   }
 
   function advance() {
-    if (over || isHumanTurn()) return;
+    if (over || twoPlayer() || isHumanTurn()) return;
     const gen = ++aiGen;
     aiTimer = setTimeout(() => {
       aiTimer = null;
-      if (gen !== aiGen || over || isHumanTurn()) return;
+      if (gen !== aiGen || over || twoPlayer() || isHumanTurn()) return;
       play(pickMove(S, DEPTHS[diff], diff === "easy" ? 60 : 0, diff === "hard" ? 800 : 5000));
     }, 350);
   }
 
   // Taps narrow the legal moves: piece to move (moving phase), destination, then a piece to take.
+  // Online, the destination and the take are each sent as they happen and replayed by the
+  // other page through step() and take(), so the turn passes in the same place on both.
   function tap(i) {
-    if (over || !isHumanTurn()) return;
+    if (over || remoteTurn() || !isHumanTurn()) return;
     if (pending) {
-      const m = pending.find((x) => x.take === i);
-      if (m) play(m);
+      if (take(i)) send({ t: "take", i });
       return;
     }
     const placing = S.hand[S.turn] > 0;
     if (!placing && S.b[i] === S.turn) { sel = sel === i ? -1 : i; render(); return; }
     const from = placing ? -1 : sel;
     if (!placing && sel < 0) return;
-    const ms = legal.filter((m) => m.from === from && m.to === i);
-    if (!ms.length) return;
-    if (ms[0].take < 0) { play(ms[0]); return; }
+    if (step(from, i)) send({ t: "move", from, to: i });
+  }
+
+  // Place or move a piece; after a mill, wait for the piece to take. False if illegal.
+  function step(from, to) {
+    const ms = legal.filter((m) => m.from === from && m.to === to);
+    if (!ms.length) return false;
+    if (ms[0].take < 0) { play(ms[0]); return true; }
     pending = ms;
     sel = -1;
     render();
+    return true;
   }
+
+  function take(i) {
+    const m = pending && pending.find((x) => x.take === i);
+    if (m) play(m);
+    return !!m;
+  }
+
+  function send(msg) { if (mode === "online") link.send(msg); }
 
   function render() {
     const b = pending ? (() => { const t = S.b.slice(); if (pending[0].from >= 0) t[pending[0].from] = 0; t[pending[0].to] = S.turn; return t; })() : S.b;
-    const placing = S.hand[S.turn] > 0, human = isHumanTurn() && !over;
-    const dests = new Set(), movable = new Set(), takes = new Set(pending ? pending.map((m) => m.take) : []);
+    const placing = S.hand[S.turn] > 0, human = isHumanTurn() && !remoteTurn() && !over;
+    const dests = new Set(), movable = new Set(), takes = new Set(pending && human ? pending.map((m) => m.take) : []);
     if (human && !pending) {
       for (const m of legal) {
         if (placing || m.from === sel) dests.add(m.to);
@@ -347,19 +365,21 @@
     handWEl.textContent = S.hand[WHITE] + " / " + onBoard(S, WHITE);
     handBEl.textContent = S.hand[BLACK] + " / " + onBoard(S, BLACK);
     const rec = store.getJSON("rec:" + diff, { w: 0, l: 0, d: 0 });
-    recordEl.textContent = mode === "local" ? "2P local" : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
-    undoBtn.disabled = !history.length || (over && mode !== "local");
+    recordEl.textContent = mode === "local" ? "2P local" : mode === "online" ? "online" : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
+    undoBtn.disabled = !history.length || mode === "online" || (over && mode !== "local");
 
     if (over) {
       const why = result.why === "pieces" ? " is down to two pieces." : " has no move.";
-      const loser = NAMES[3 - result.winner];
+      const loser = NAMES[3 - result.winner], them = mode === "online" ? "your friend" : "the AI";
       if (!result.winner) statusEl.innerHTML = '<span class="hot">Draw — ' + DRAW_PLIES / 2 + " moves each without a capture.</span>";
       else if (mode === "local") statusEl.innerHTML = '<span class="ok">' + NAMES[result.winner] + " wins — " + loser + why + "</span>";
-      else if (result.winner === humanColor()) statusEl.innerHTML = '<span class="ok">You win — the AI' + why + "</span>";
-      else statusEl.innerHTML = '<span class="bad">AI wins — you' + (result.why === "pieces" ? " are down to two pieces." : " have no move.") + "</span>";
+      else if (result.winner === humanColor()) statusEl.innerHTML = '<span class="ok">You win — ' + them + why + "</span>";
+      else statusEl.innerHTML = '<span class="bad">' + (mode === "online" ? "Your friend wins" : "AI wins") + " — you" + (result.why === "pieces" ? " are down to two pieces." : " have no move.") + "</span>";
       return;
     }
-    const who = mode === "local" ? NAMES[S.turn] : "You";
+    if (mode === "online" && !link.connected()) { statusEl.textContent = "Online: waiting for your friend to join."; return; }
+    if (mode === "online" && !isHumanTurn()) { statusEl.textContent = pending ? "Mill! Your friend takes a piece…" : "Your friend's turn…"; return; }
+    const who = mode === "local" ? NAMES[S.turn] : mode === "online" ? "Your turn (" + NAMES[S.turn] + ")" : "You";
     if (!isHumanTurn()) statusEl.textContent = "AI thinking…";
     else if (pending) statusEl.textContent = "Mill! " + (mode === "local" ? NAMES[S.turn] + ": take" : "Take") + " a " + NAMES[3 - S.turn].toLowerCase() + " piece.";
     else if (placing) statusEl.textContent = who + (mode === "local" ? " places" : ": place") + " a piece (" + S.hand[S.turn] + " left).";
@@ -379,7 +399,7 @@
   // Undo back to the most recent position where it was the human's move.
   // Finished AI games stay final so the win–loss record can't be replayed.
   undoBtn.addEventListener("click", () => {
-    if (!history.length || (over && mode !== "local")) return;
+    if (!history.length || mode === "online" || (over && mode !== "local")) return;
     cancelAI();
     let h;
     do { h = history.pop(); } while (mode !== "local" && history.length && h.S.turn !== humanColor());
@@ -394,12 +414,43 @@
     advance();
   });
 
-  newBtn.addEventListener("click", newGame);
-
-  modeSel.addEventListener("change", () => {
-    mode = modeSel.value;
-    store.set("mode", mode);
+  newBtn.addEventListener("click", () => {
+    if (mode === "online" && !link.connected()) return;
     newGame();
+    send({ t: "new" });
+  });
+
+  function applyMode() {
+    chipsEl.hidden = twoPlayer();
+    newGame();
+  }
+
+  function setMode(m) {
+    if (mode === "online" && m !== "online") link.leave();
+    mode = m;
+    modeSel.value = m;
+    if (m !== "online") store.set("mode", m);
+    applyMode();
+  }
+  modeSel.addEventListener("change", () => {
+    setMode(modeSel.value);
+    if (mode === "online") link.host();
+  });
+
+  const link = Net.attach({
+    container: document.querySelector(".game-controls"),
+    onJoin: () => setMode("online"),
+    onOpen: () => applyMode(),
+    onMessage: (msg) => {
+      if (mode !== "online") return;
+      if (msg.t === "new") newGame();
+      else if ((msg.t === "move" || msg.t === "take") && !over && S.turn !== humanColor()) {
+        const ok = msg.t === "move" ? !pending && step(msg.from, msg.to) : take(msg.i);
+        if (!ok) statusEl.textContent = "Out of sync — press new game.";
+      }
+    },
+    onClose: () => { mode = "local"; setMode("local"); }, // keep the "friend left" note showing
+    onLeave: () => setMode("local"),
   });
 
   const chips = Gamekit.wireDifficultyChips({
@@ -413,7 +464,7 @@
   diff = chips.get();
 
   buildBoard();
-  newGame();
+  applyMode();
   window.addEventListener("load", () => Manpage.autoOpen("morris"));
 
   Gamekit.gridKeys(boardEl, { selector: ".mm-pt" });

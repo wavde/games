@@ -89,7 +89,7 @@
     padding: 8px;
     border-radius: var(--r-md);
     width: min(420px, 92vw);
-    margin: 0 auto;
+    margin: 8px auto 0;
     aspect-ratio: 1;
     touch-action: none;
   }
@@ -121,6 +121,7 @@
   .t4096, .t8192 { background: var(--accent); color: #0a0a0a; border-color: var(--accent); font-size: clamp(0.9rem, 4vw, 1.5rem); }
   @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
   .tile.merged { animation: pop 0.18s ease-out; }
+  .hint-2048 { margin: 12px 0 0; text-align: center; color: var(--muted); font-size: var(--fs-xs); }
 </style>
 </head>
 <body class="g-2048">
@@ -131,15 +132,16 @@
   </div>
   <div class="panel">
     <div class="row">
-      <p class="status">Slide tiles. Merge to 2048. Score: <span class="hot" id="score">0</span> · Best: <span id="best">0</span> <span id="over-msg"></span></p>
+      <p class="status" id="status" aria-live="polite">Slide tiles. Merge to 2048.</p>
+      <p class="status">Score: <span class="hot" id="score">0</span> · Best: <span id="best">0</span> · Top tile: <span id="top">—</span></p>
       <button class="btn ghost tool-btn man-trigger" data-man="2048" data-man-title="2048(1)" type="button">
         <span class="q">?</span> man
       </button>
     </div>
     <div class="board2048" id="board" role="group" aria-label="2048 game board" aria-live="polite"></div>
-    <div class="controls" style="justify-content:center">
-      <button type="button" class="primary" id="reset">New game</button>
-      <span class="kbd">↑ ← ↓ →</span> or swipe
+    <p class="hint-2048"><span class="kbd">↑ ← ↓ →</span> or <span class="kbd">W A S D</span> · swipe on touch screens</p>
+    <div class="toolbar">
+      <button class="btn primary" id="new-btn" type="button">↻ new game</button>
     </div>
   </div>
 </main>
@@ -161,7 +163,8 @@
   <ul>
     <li><strong>Swipe</strong> up/down/left/right on the board (mobile).</li>
     <li>Keyboard: <span class="k">↑</span> <span class="k">↓</span> <span class="k">←</span> <span class="k">→</span> or <span class="k">W</span> <span class="k">A</span> <span class="k">S</span> <span class="k">D</span>.</li>
-    <li><code>New game</code> resets the board. Best score persists across sessions.</li>
+    <li><code>↻ new game</code> in the toolbar starts a fresh board.</li>
+    <li>The stats line shows your <strong>Score</strong>, your <strong>Best</strong> score and the <strong>Top tile</strong> you have ever reached; best and top tile are kept on this device.</li>
   </ul>
 
   <h2>Strategy</h2>

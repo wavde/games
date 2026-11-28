@@ -393,3 +393,32 @@ body[class*="g-"] .man-window .man-close:hover {
   color: var(--fg);
   background: rgba(255,255,255,0.06);
 }
+
+/* ── Online play panel (net.js) ─────────────────────────────── */
+body[class*="g-"] .net {
+  flex-basis: 100%;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-hi);
+  border-radius: 6px;
+  background: var(--panel-2);
+}
+body[class*="g-"] .net-say { margin: 0; font-size: var(--fs-sm); color: var(--fg); }
+body[class*="g-"] .net-code { display: grid; gap: 6px; }
+body[class*="g-"] .net-label { font-size: var(--fs-xs); color: var(--muted); }
+body[class*="g-"] .net-row { display: flex; gap: 8px; }
+body[class*="g-"] .net-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-hi);
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--fs-xs);
+}
+body[class*="g-"] .net-row input[aria-invalid="true"] { border-color: var(--danger); }
+body[class*="g-"] .net > .btn { justify-self: start; }

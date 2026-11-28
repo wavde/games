@@ -7,9 +7,6 @@
   const movesEl  = document.getElementById("moves");
   const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
 
   const DIFFS = { easy: 3, medium: 6, hard: 10 };
   const store = Gamekit.storage("lights-out:");
@@ -20,7 +17,6 @@
   let history = [];
   let moves = 0;
   let won = false;
-  let dailyDate = null;
   let cellEls = [];
 
   function idx(r, c) { return r * N + c; }
@@ -53,10 +49,9 @@
     return b;
   }
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("lights-out", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    initial = generate(seed, DIFFS[diff]);
+  function start(P0, level) {
+    diff = level;
+    initial = P0;
     board = new Uint8Array(initial);
     history = [];
     moves = 0;
@@ -106,30 +101,20 @@
     const anyOn = board.some(x => x);
     if (!anyOn && !won) {
       won = true;
-      if (dailyDate) Gamekit.markDailySolved("lights-out", diff, dailyDate);
-      statusEl.innerHTML = '<span class="ok">Solved in ' + moves + ' moves.</span>';
+      page.win(() => "Solved in " + moves + " moves.");
       if (best === null || moves < best) {
         store.set("best:" + diff, moves);
         bestEl.textContent = moves;
       }
     } else if (!won) {
-      const on = board.reduce((a, x) => a + x, 0);
-      statusEl.textContent = on + ' light' + (on === 1 ? '' : 's') + ' still on.';
+      statusEl.textContent = lightsLeft();
     }
   }
 
-  // Difficulty chips
-  Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  // Pull stored diff back (gamekit already applied it visually, but our local var needs sync)
-  const storedDiff = store.get("diff", "medium");
-  if (DIFFS[storedDiff]) diff = storedDiff;
+  function lightsLeft() {
+    const on = board.reduce((a, x) => a + x, 0);
+    return on + ' light' + (on === 1 ? '' : 's') + ' still on.';
+  }
 
   undoBtn.addEventListener("click", () => {
     if (history.length === 0) return;
@@ -140,21 +125,21 @@
     updateStatus();
   });
 
-  resetBtn.addEventListener("click", () => {
-    board = new Uint8Array(initial);
-    history = [];
-    moves = 0;
-    won = false;
-    syncLights();
-    updateStatus();
+  const page = Gamekit.puzzlePage({
+    id: "lights-out",
+    status: lightsLeft,
+    clock: false,
+    generate: (level, seed) => generate(seed, DIFFS[level]),
+    start,
+    reset: () => {
+      board = new Uint8Array(initial);
+      history = [];
+      moves = 0;
+      won = false;
+      syncLights();
+      updateStatus();
+    },
   });
-
-  newBtn.addEventListener("click", () => {
-    newPuzzle(Gamekit.randomSeed());
-  });
-
-  // First render + manpage auto-open
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("lights-out"));
 
   Gamekit.gridKeys(boardEl, { selector: ".lo-cell" });

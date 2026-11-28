@@ -6,18 +6,10 @@
 
   const boardEl = document.getElementById("board");
   const statusEl = document.getElementById("status");
-  const timeEl = document.getElementById("time");
-  const bestEl = document.getElementById("best");
   const undoBtn = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
   const hintBtn = document.getElementById("hint-btn");
-  const newBtn = document.getElementById("new-btn");
-  const chipsEl = document.getElementById("chips");
 
-  const store = Gamekit.storage("queens:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
-  let diff = store.get("diff", "medium");
-  if (!DIFFS[diff]) diff = "medium";
+  let diff = "medium";
   let N = DIFFS[diff];
 
   let regions = [];      // length N*N, region id 0..N-1
@@ -25,7 +17,6 @@
   let grid = [];         // length N*N, EMPTY | MARK | QUEEN
   let history = [];
   let won = false;
-  let dailyDate = null;
   let cellEls = [];
 
   function idx(r, c) { return r * N + c; }
@@ -202,19 +193,18 @@
     return { regions: reg, solution: qCols };
   }
 
-  function newPuzzle(seedOverride) {
-    N = DIFFS[diff];
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("queens", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    const p = generate(seed);
+  function start(p) {
     regions = p.regions;
     solution = p.solution;
+    clear();
+    renderShell();
+    renderAll();
+  }
+
+  function clear() {
     grid = new Array(N * N).fill(EMPTY);
     history = [];
     won = false;
-    clock.start();
-    renderShell();
-    renderAll();
   }
 
   function renderShell() {
@@ -306,9 +296,7 @@
       return;
     }
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("queens", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win();
     // Golden blink on all queen cells
     for (let i = 0; i < N * N; i++) {
       if (grid[i] === QUEEN) cellEls[i].classList.add("won");
@@ -323,16 +311,8 @@
     renderAll();
     statusEl.textContent = "One queen per row, column, and color.";
   });
-  resetBtn.addEventListener("click", () => {
-    grid = new Array(N * N).fill(EMPTY);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = "One queen per row, column, and color.";
-    renderAll();
-  });
   hintBtn.addEventListener("click", () => {
-    if (won) return;
+    if (won || !solution.length) return;
     // Find a row that doesn't yet have the correct queen placed; place it.
     for (let r = 0; r < N; r++) {
       const target = idx(r, solution[r]);
@@ -345,21 +325,14 @@
       }
     }
   });
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
 
-  Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
+  const page = Gamekit.puzzlePage({
+    id: "queens",
+    status: "One queen per row, column, and color.",
+    generate: (level, seed) => { diff = level; N = DIFFS[diff]; return generate(seed); },
+    start,
+    reset: () => { clear(); renderAll(); },
   });
-  diff = store.get("diff", diff);
-  if (!DIFFS[diff]) diff = "medium";
-  N = DIFFS[diff];
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("queens"));
 
   Gamekit.gridKeys(boardEl, { selector: ".qn-cell" });

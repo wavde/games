@@ -261,31 +261,21 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "Islands match their numbers.";
   const EMPTY = 0, SEA = 1, DOT = 2;
-  const store = Gamekit.storage("nurikabe:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
-  let diff = "medium";
-  let P = null, state = null, history = [], won = false, cellEls = [], dailyDate = null;
+  let P = null, state = null, history = [], won = false, cellEls = [];
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("nurikabe", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    clear();
+    build();
+  }
+
+  function clear() {
     state = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
-    build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function build() {
@@ -343,9 +333,7 @@
   function checkWin() {
     if (!isSolution(P, Int8Array.from(state, (s) => (s === SEA ? 0 : 1)))) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("nurikabe", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
+    page.win();
     render();
   }
 
@@ -369,28 +357,13 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    state = new Uint8Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "nurikabe",
+    status: "Islands match their numbers.",
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("nurikabe"));
 
   Gamekit.gridKeys(boardEl, {

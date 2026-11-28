@@ -92,15 +92,23 @@
   </div>
   <div class="panel">
     <div class="row">
-      <p class="status" id="status">Your turn (X).</p>
+      <p class="status" id="status" aria-live="polite">Your turn (X).</p>
+      <p class="status">Record: <span id="record">0 wins · 0 draws · 0 losses</span></p>
       <button class="btn ghost tool-btn man-trigger" data-man="tic-tac-toe" data-man-title="TIC-TAC-TOE(1)" type="button">
         <span class="q">?</span> man
       </button>
     </div>
+    <div class="game-controls">
+      <select id="mode" aria-label="Mode">
+        <option value="ai-x" selected>Play X (first) vs AI</option>
+        <option value="ai-o">Play O (second) vs AI</option>
+        <option value="local">2 players (this device)</option>
+        <option value="online">Online with a friend</option>
+      </select>
+    </div>
     <div class="board" id="board" role="group" aria-label="Tic-tac-toe board"></div>
-    <div class="controls center" style="justify-content:center">
-      <button type="button" class="primary" id="reset">New game</button>
-      <button type="button" id="toggle">Play as O</button>
+    <div class="toolbar">
+      <button class="btn primary" id="new-btn" type="button">↻ new game</button>
     </div>
   </div>
 </main>
@@ -114,7 +122,7 @@
 
   <h2>Rules</h2>
   <ul>
-    <li>You play <strong>X</strong> by default; the AI plays <strong>O</strong>. Switch sides with <code>Play as O</code>.</li>
+    <li>You play <strong>X</strong> by default and move first; the AI plays <strong>O</strong>. Pick <code>Play O (second) vs AI</code> in the mode selector to let the AI open.</li>
     <li>Win by getting three marks in a row, column, or diagonal.</li>
     <li>If the grid fills with no winner, it's a <strong>draw</strong>.</li>
   </ul>
@@ -122,7 +130,10 @@
   <h2>Controls</h2>
   <ul>
     <li><strong>Tap / click</strong> any empty cell to place your mark.</li>
-    <li><code>New game</code> resets the board.</li>
+    <li>The mode selector picks <code>Play X (first) vs AI</code>, <code>Play O (second) vs AI</code>, <code>2 players (this device)</code> or <code>Online with a friend</code>, and starts a new game; your choice is remembered.</li>
+    <li><strong>Online with a friend</strong>: send the invite link, paste back the reply code your friend gets, and play on two devices with no server. You host as X and move first. <code>↻ new game</code> restarts both boards; online games don't count toward the record.</li>
+    <li><code>↻ new game</code> resets the board.</li>
+    <li>The stats line shows your wins · draws · losses against the AI, kept on this device. Each finished game counts once.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space plays the square.</li>
   </ul>
 
@@ -132,6 +143,7 @@
 
 <script defer src="../manpage.js"></script>
 <script defer src="../gamekit.js"></script>
+<script defer src="../net.js"></script>
 <script defer src="game.js"></script>
 <script>window.addEventListener("load", () => Manpage.autoOpen("tic-tac-toe"));</script>
 </body>

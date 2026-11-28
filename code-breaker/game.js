@@ -9,8 +9,6 @@
   const bestEl    = document.getElementById("best");
   const delBtn    = document.getElementById("del-btn");
   const guessBtn  = document.getElementById("guess-btn");
-  const newBtn    = document.getElementById("new-btn");
-  const chipsEl   = document.getElementById("chips");
 
   const DIFFS = {
     easy:   { pegs: 4, colors: 6, guesses: 10 },
@@ -27,7 +25,6 @@
   let current = [];    // active row; 0 = empty, 1..colors = color
   let over = false;
   let won = false;
-  let dailyDate = null;
 
   function makeSecret(seed) {
     const rng = Gamekit.mulberry32(seed);
@@ -49,11 +46,10 @@
     return { exact, partial };
   }
 
-  function newGame(seedOverride) {
+  function start(P0, level) {
+    diff = level;
     cfg = DIFFS[diff];
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("code-breaker", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    secret = makeSecret(seed);
+    secret = P0;
     rows = [];
     current = new Array(cfg.pegs).fill(0);
     over = false;
@@ -156,9 +152,8 @@
     delBtn.disabled = over || current.every(x => !x);
     paletteEl.querySelectorAll("button").forEach(b => { b.disabled = over; });
 
-    if (won) {
-      statusEl.innerHTML = '<span class="ok">Cracked in ' + rows.length + ' guess' + (rows.length === 1 ? '' : 'es') + '.</span>';
-    } else if (over) {
+    if (won) return; // page.win() shows the result.
+    if (over) {
       statusEl.innerHTML = '<span class="bad">Out of guesses.</span> Code revealed above.';
     } else if (rows.length === 0) {
       statusEl.textContent = "Crack the code.";
@@ -184,14 +179,13 @@
   }
 
   function submit() {
-    if (over || current.some(x => !x)) return;
+    if (over || !secret.length || current.some(x => !x)) return;
     const guess = current.slice();
     const r = score(secret, guess);
     rows.push({ guess, exact: r.exact, partial: r.partial });
     current = new Array(cfg.pegs).fill(0);
     if (r.exact === cfg.pegs) {
       won = true;
-      if (dailyDate) Gamekit.markDailySolved("code-breaker", diff, dailyDate);
       over = true;
       const best = store.getInt("best:" + diff, null);
       if (best === null || rows.length < best) store.set("best:" + diff, rows.length);
@@ -199,21 +193,11 @@
       over = true;
     }
     render();
+    if (won) page.win(() => "Cracked in " + rows.length + " guess" + (rows.length === 1 ? "" : "es") + ".");
   }
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newGame(); },
-  });
-  diff = chips.get();
 
   delBtn.addEventListener("click", deletePeg);
   guessBtn.addEventListener("click", submit);
-  newBtn.addEventListener("click", () => newGame(Gamekit.randomSeed()));
 
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -228,6 +212,12 @@
     }
   });
 
-  newGame();
+  const page = Gamekit.puzzlePage({
+    id: "code-breaker",
+    status: "Crack the code.",
+    clock: false,
+    generate: (level, seed) => { cfg = DIFFS[level]; return makeSecret(seed); },
+    start,
+  });
   window.addEventListener("load", () => Manpage.autoOpen("code-breaker"));
 })();

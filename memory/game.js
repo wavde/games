@@ -10,20 +10,27 @@
     '#74b9ff','#dfe6e9','#ffeaa7','#81ecec','#ff7675','#fdcb6e','#b2bec3','#6ab04c',
   ];
   const store = Gamekit.storage('memory:');
+  const SIZES = { easy: 4, medium: 6, hard: 8 };
+  const fmt = Gamekit.fmtTime;
+  let diff = 'medium';
   let size, cards, flipped, matched, moves, startTime, timerId, locked;
 
+  function showBest() {
+    const best = store.getInt('best:' + size, null);
+    document.getElementById('best').textContent = best !== null ? fmt(best) : '—';
+  }
+
   function reset() {
-    size = +document.getElementById('size').value;
+    size = SIZES[diff];
     const n = size*size;
     const pairs = n/2;
     const shuffled = EMOJI.map((e,i)=>({emoji:e,color:PAIR_COLORS[i]})).sort(()=>Math.random()-0.5).slice(0, pairs);
     cards = shuffled.concat(shuffled).sort(()=>Math.random()-0.5).map((e,i)=>({id:i, emoji:e.emoji, color:e.color, flipped:false, matched:false}));
     flipped = []; matched = 0; moves = 0; locked = false;
     document.getElementById('moves').textContent = 0;
-    document.getElementById('time').textContent = 0;
+    document.getElementById('time').textContent = fmt(0);
     document.getElementById('status').textContent = 'Flip two. Match all pairs.';
-    const best = store.getInt('best:' + size, null);
-    document.getElementById('best').textContent = best !== null ? best + 's' : '—';
+    showBest();
     clearInterval(timerId); timerId = null; startTime = null;
     render();
   }
@@ -31,7 +38,7 @@
   function startTimer() {
     startTime = Date.now();
     timerId = setInterval(() => {
-      document.getElementById('time').textContent = Math.floor((Date.now()-startTime)/1000);
+      document.getElementById('time').textContent = fmt((Date.now()-startTime)/1000);
     }, 250);
   }
 
@@ -89,13 +96,25 @@
     const secs = Math.floor((Date.now()-startTime)/1000);
     const prev = store.getInt('best:' + size, null);
     if (prev === null || secs < prev) store.set('best:' + size, secs);
-    const newBest = store.getInt('best:' + size, null);
-    document.getElementById('best').textContent = newBest !== null ? newBest + 's' : '—';
-    document.getElementById('status').textContent = `Done in ${moves} moves, ${secs}s 🎉`;
+    showBest();
+    document.getElementById('time').textContent = fmt(secs);
+    const status = document.getElementById('status');
+    status.textContent = '';
+    const done = document.createElement('span');
+    done.className = 'ok';
+    done.textContent = `Done in ${moves} moves, ${fmt(secs)}` + (prev === null || secs < prev ? ' · new best! 🎉' : ' 🎉');
+    status.appendChild(done);
   }
 
-  document.getElementById('reset').addEventListener('click', reset);
-  document.getElementById('size').addEventListener('change', reset);
+  document.getElementById('new-btn').addEventListener('click', reset);
+  diff = Gamekit.wireDifficultyChips({
+    el: document.getElementById('chips'),
+    difficulties: ['easy', 'medium', 'hard'],
+    initial: diff,
+    storage: store,
+    storageKey: 'diff',
+    onChange: (d) => { diff = d; reset(); },
+  }).get();
   reset();
 
   Gamekit.gridKeys(document.getElementById('board'), { selector: '.card' });

@@ -332,6 +332,21 @@
   }
 
   // ---------- UI ----------
+  const DEPTH = { easy: 1, medium: 2, hard: 3 };
+  const MODES = ['ai-w', 'ai-b', 'local', 'online'];
+  const COLOR = { w: 'White', b: 'Black' };
+  const store = Gamekit.storage('chess:');
+  const modeSel = document.getElementById('mode');
+  const chipsEl = document.getElementById('chips');
+  const undoBtn = document.getElementById('undo-btn');
+  const statusEl = document.getElementById('status');
+  const recordEl = document.getElementById('record');
+  let diff = 'medium';
+  let counted = false;   // this game's result is already in the record, so undo-and-replay can't add another
+  let mode = store.get('mode', store.get('side', 'w') === 'b' ? 'ai-b' : 'ai-w');
+  if (!MODES.includes(mode) || mode === 'online') mode = 'ai-w';
+  modeSel.value = mode;
+
   let state = initialState();
   let humanColor = 'w';
   let flipped = false;
@@ -339,6 +354,19 @@
   let legalFromSel = [];
   let lastMove = null;
   let thinking = false;
+  let over = false;
+  // Online: the host plays White and moves first. "online" plays like "local" with one side remote.
+  const twoPlayer = () => mode === 'local' || mode === 'online';
+  const remoteTurn = () => mode === 'online' && (!link.connected() || state.turn !== humanColor);
+
+  function turnStatus() {
+    if (mode === 'online') {
+      if (!link.connected()) return 'Online: waiting for your friend to join.';
+      return state.turn === humanColor ? 'Your turn (' + COLOR[humanColor] + ').' : 'Your friend\'s turn…';
+    }
+    if (mode === 'local') return COLOR[state.turn] + ' to move.';
+    return thinking ? 'AI thinking…' : (state.turn === humanColor ? 'Your move.' : 'AI to move.');
+  }
 
   function renderBoard() {
     const el = document.getElementById('board');
@@ -364,28 +392,34 @@
       d.addEventListener('click', () => onSquare(r,c));
       el.appendChild(d);
     }
-    const checkMsg = inCheck(state, state.turn) ? ' — check!' : '';
-    document.getElementById('status').textContent =
-      (thinking ? 'AI thinking…' : (state.turn === humanColor ? 'Your move.' : 'AI to move.')) + checkMsg;
+    if (over) return; // keep the result showing
+    statusEl.textContent = turnStatus() + (inCheck(state, state.turn) ? ' — check!' : '');
+  }
+
+  // Plays a legal move for the side to move (a local tap or the friend's move online).
+  function playMove(mv) {
+    makeMove(state, mv);
+    lastMove = mv;
+    selected = null; legalFromSel = [];
+    renderBoard();
+    checkEnd();
   }
 
   function onSquare(r,c) {
-    if (thinking || state.turn !== humanColor) return;
+    if (thinking || over || remoteTurn() || (!twoPlayer() && state.turn !== humanColor)) return;
+    const mover = state.turn;
     const p = state.board[r][c];
     if (selected) {
       const mv = legalFromSel.find(m => m.to[0]===r && m.to[1]===c);
       if (mv) {
-        makeMove(state, mv);
-        lastMove = mv;
-        selected = null; legalFromSel = [];
-        renderBoard();
-        checkEnd();
-        if (!thinking) setTimeout(aiTurn, 150);
+        playMove(mv);
+        if (mode === 'online') link.send({ t: 'move', from: mv.from, to: mv.to, promotion: mv.promotion || null });
+        if (!twoPlayer() && !thinking) setTimeout(aiTurn, 150);
         return;
       }
-      if (p && p.color === humanColor) {
+      if (p && p.color === mover) {
         selected = [r,c];
-        legalFromSel = allLegal(state, humanColor).filter(m => m.from[0]===r && m.from[1]===c);
+        legalFromSel = allLegal(state, mover).filter(m => m.from[0]===r && m.from[1]===c);
         renderBoard();
         return;
       }
@@ -393,9 +427,9 @@
       renderBoard();
       return;
     }
-    if (p && p.color === humanColor) {
+    if (p && p.color === mover) {
       selected = [r,c];
-      legalFromSel = allLegal(state, humanColor).filter(m => m.from[0]===r && m.from[1]===c);
+      legalFromSel = allLegal(state, mover).filter(m => m.from[0]===r && m.from[1]===c);
       renderBoard();
     }
   }
@@ -404,14 +438,14 @@
   function cancelAI() { if (aiTimer !== null) { clearTimeout(aiTimer); aiTimer = null; } thinking = false; }
 
   function aiTurn() {
-    if (state.turn === humanColor) return;
+    if (twoPlayer() || over || state.turn === humanColor) return;
     if (checkEnd()) return;
     thinking = true;
     renderBoard();
     aiTimer = setTimeout(() => {
       aiTimer = null;
-      if (state.turn === humanColor) { thinking = false; renderBoard(); return; }
-      const depth = +document.getElementById('level').value;
+      if (twoPlayer() || state.turn === humanColor) { thinking = false; renderBoard(); return; }
+      const depth = DEPTH[diff];
       const m = bestMove(state, depth);
       if (m) { makeMove(state, m); lastMove = m; }
       thinking = false;
@@ -448,56 +482,123 @@
     return c >= 3;
   }
 
+  function showRecord() {
+    const rec = store.getJSON('rec:' + diff, null) || { w: 0, d: 0, l: 0 };
+    recordEl.textContent = rec.w + (rec.w === 1 ? ' win' : ' wins') + ' · ' + rec.d + (rec.d === 1 ? ' draw' : ' draws') + ' · ' + rec.l + (rec.l === 1 ? ' loss' : ' losses');
+  }
+
+  // result: 'w' | 'd' | 'l' from this player's side; only games vs the AI are recorded, once each.
+  function finish(msg, result) {
+    statusEl.textContent = '';
+    const span = document.createElement('span');
+    span.className = result === 'w' ? 'ok' : result === 'l' ? 'bad' : 'hot';
+    span.textContent = msg;
+    statusEl.appendChild(span);
+    over = true;
+    thinking = true; // freeze interaction
+    if (counted || twoPlayer()) return;
+    counted = true;
+    const rec = store.getJSON('rec:' + diff, null) || { w: 0, d: 0, l: 0 };
+    rec[result] = (rec[result] || 0) + 1;
+    store.setJSON('rec:' + diff, rec);
+    showRecord();
+  }
+
   function checkEnd() {
     const moves = allLegal(state, state.turn);
     if (moves.length === 0) {
-      const msg = inCheck(state, state.turn)
-        ? `Checkmate — ${state.turn === 'w' ? 'Black' : 'White'} wins.`
-        : 'Stalemate — draw.';
-      document.getElementById('status').textContent = msg;
-      thinking = true; // freeze interaction
+      if (!inCheck(state, state.turn)) finish('Stalemate — draw.', 'd');
+      else if (mode === 'local') finish(`Checkmate — ${COLOR[opp(state.turn)]} wins.`, 'w');
+      else if (mode === 'online') finish(state.turn === humanColor ? 'Checkmate — Your friend wins.' : 'Checkmate — You win.', state.turn === humanColor ? 'l' : 'w');
+      else finish(`Checkmate — ${COLOR[opp(state.turn)]} wins.`, state.turn === humanColor ? 'l' : 'w');
       return true;
     }
-    if (state.halfmove >= 100) {
-      document.getElementById('status').textContent = 'Draw — 50-move rule.';
-      thinking = true; return true;
-    }
-    if (threefold(state)) {
-      document.getElementById('status').textContent = 'Draw — threefold repetition.';
-      thinking = true; return true;
-    }
-    if (insufficientMaterial(state)) {
-      document.getElementById('status').textContent = 'Draw — insufficient material.';
-      thinking = true; return true;
-    }
+    if (state.halfmove >= 100) { finish('Draw — 50-move rule.', 'd'); return true; }
+    if (threefold(state)) { finish('Draw — threefold repetition.', 'd'); return true; }
+    if (insufficientMaterial(state)) { finish('Draw — insufficient material.', 'd'); return true; }
     return false;
   }
 
-  document.getElementById('reset').addEventListener('click', () => {
+  function newGame() {
     cancelAI();
     state = initialState();
     selected = null; legalFromSel = []; lastMove = null;
-    humanColor = document.getElementById('side').value;
+    counted = false; over = false;
+    humanColor = mode === 'ai-b' || (mode === 'online' && link.role() === 'guest') ? 'b' : 'w';
     flipped = humanColor === 'b';
     renderBoard();
-    document.getElementById('status').textContent = humanColor === 'b' ? 'AI is thinking…' : 'Your move.';
-    if (humanColor === 'b') aiTimer = setTimeout(() => { aiTimer = null; aiTurn(); }, 200);
+    if (mode === 'ai-b') {
+      statusEl.textContent = 'AI is thinking…';
+      aiTimer = setTimeout(() => { aiTimer = null; aiTurn(); }, 200);
+    }
+  }
+
+  document.getElementById('new-btn').addEventListener('click', () => {
+    if (mode === 'online' && !link.connected()) return;
+    newGame();
+    if (mode === 'online') link.send({ t: 'new' });
   });
 
-  document.getElementById('undo').addEventListener('click', () => {
-    if (state.history.length === 0) return;
+  undoBtn.addEventListener('click', () => {
+    if (mode === 'online' || state.history.length === 0) return;
     cancelAI();
+    over = false;
     undoMove(state);
-    if (state.turn !== humanColor && state.history.length > 0) undoMove(state);
+    if (!twoPlayer() && state.turn !== humanColor && state.history.length > 0) undoMove(state);
     lastMove = null; selected = null; legalFromSel = [];
     renderBoard();
-    document.getElementById('status').textContent = 'Your move.';
+    if (!twoPlayer() && state.turn !== humanColor) aiTimer = setTimeout(() => { aiTimer = null; aiTurn(); }, 200);
   });
 
-  document.getElementById('flip').addEventListener('click', () => { flipped = !flipped; renderBoard(); });
-  document.getElementById('side').addEventListener('change', () => document.getElementById('reset').click());
+  document.getElementById('flip-btn').addEventListener('click', () => { flipped = !flipped; renderBoard(); });
 
-  renderBoard();
+  function applyMode() {
+    chipsEl.hidden = twoPlayer();
+    recordEl.parentElement.hidden = twoPlayer();
+    undoBtn.disabled = mode === 'online';
+    newGame();
+  }
+
+  function setMode(m) {
+    if (mode === 'online' && m !== 'online') link.leave();
+    mode = m;
+    modeSel.value = m;
+    if (m !== 'online') store.set('mode', m);
+    applyMode();
+  }
+  modeSel.addEventListener('change', () => {
+    setMode(modeSel.value);
+    if (mode === 'online') link.host();
+  });
+
+  const link = Net.attach({
+    container: document.querySelector('.game-controls'),
+    onJoin: () => setMode('online'),
+    onOpen: () => applyMode(),
+    onMessage: (msg) => {
+      if (mode !== 'online') return;
+      if (msg.t === 'new') { newGame(); return; }
+      if (msg.t !== 'move') return;
+      const from = msg.from || [], to = msg.to || [];
+      const mv = !over && state.turn !== humanColor && allLegal(state, state.turn).find(m =>
+        m.from[0] === from[0] && m.from[1] === from[1] && m.to[0] === to[0] && m.to[1] === to[1] && (m.promotion || null) === (msg.promotion || null));
+      if (mv) playMove(mv);
+      else statusEl.textContent = 'Out of sync — press new game.';
+    },
+    onClose: () => { mode = 'local'; setMode('local'); }, // keep the "friend left" note showing
+    onLeave: () => setMode('local'),
+  });
+
+  diff = Gamekit.wireDifficultyChips({
+    el: chipsEl,
+    difficulties: ['easy', 'medium', 'hard'],
+    initial: diff,
+    storage: store,
+    storageKey: 'diff',
+    onChange: (d) => { diff = d; showRecord(); newGame(); },
+  }).get();
+  showRecord();
+  applyMode();
 
   Gamekit.gridKeys(document.getElementById('board'), { selector: '.sq' });
 })();

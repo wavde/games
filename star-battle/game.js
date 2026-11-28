@@ -311,32 +311,21 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "2 stars per row, column, region.";
   const EMPTY = 0, STAR = 1, DOT = 2;
-  const store = Gamekit.storage("star-battle:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
-  let diff = "medium";
   let P = null, state = null, history = [], won = false, cellEls = [];
-  let dailyDate = null;
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("star-battle", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    clear();
+    build();
+  }
+
+  function clear() {
     state = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
-    build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function build() {
@@ -401,9 +390,7 @@
     for (const u of P.units) if (u.filter((i) => state[i] === STAR).length !== STARS) return;
     if (clashes().size) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("star-battle", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
+    page.win();
     render();
   }
 
@@ -427,28 +414,13 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    state = new Uint8Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "star-battle",
+    status: "2 stars per row, column, region.",
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("star-battle"));
 
   Gamekit.gridKeys(boardEl, { selector: ".sb-cell", onSecondary: (el) => el.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })) });

@@ -219,21 +219,12 @@
 
   const boardEl  = document.getElementById("board");
   const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
   const STATUS = "Connect every island.";
   const SVGNS = "http://www.w3.org/2000/svg";
-  const store = Gamekit.storage("hashi:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
-  let diff = "medium";
   let P = null, val = [], history = [], won = false, sel = -1, dragFrom = -1;
   let islandEls = [], svgEl = null;
-  let dailyDate = null;
 
   function edgeBetween(a, b) {
     for (const e of P.adj[a]) if (P.edges[e].a === b || P.edges[e].b === b) return e;
@@ -241,17 +232,17 @@
   }
   function sumAt(i) { let s = 0; for (const e of P.adj[i]) s += val[e]; return s; }
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("hashi", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    clear();
+    build();
+  }
+
+  function clear() {
     val = new Array(P.edges.length).fill(0);
     history = [];
     won = false;
     sel = -1;
-    build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function build() {
@@ -337,9 +328,7 @@
     }
     won = true;
     sel = -1;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("hashi", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win();
     render();
   }
 
@@ -352,7 +341,7 @@
   }
 
   boardEl.addEventListener("pointerdown", (e) => {
-    if (won) return;
+    if (won || !P) return;
     e.preventDefault();
     const i = islandAt(e.clientX, e.clientY);
     if (i >= 0) { dragFrom = i; return; }
@@ -398,28 +387,12 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    val = new Array(P.edges.length).fill(0);
-    history = [];
-    won = false;
-    sel = -1;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "hashi",
+    status: STATUS,
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("hashi"));
 })();

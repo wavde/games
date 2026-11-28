@@ -193,32 +193,21 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "Light every white cell.";
   const EMPTY = 0, BULB = 1, MARK = 2;
-  const store = Gamekit.storage("akari:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
-  let diff = "medium";
   let P = null, state = null, history = [], won = false, cellEls = [];
-  let dailyDate = null;
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("akari", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    clear();
+    build();
+  }
+
+  function clear() {
     state = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
-    build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function build() {
@@ -282,9 +271,7 @@
     for (const w of P.numbered) { let b = 0; for (const c of P.adj.get(w)) b += v[c]; if (b !== P.cell[w]) return; }
     if (!P.whites.every(c => isLit(P, v, c))) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("akari", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win();
     render();
   }
 
@@ -308,28 +295,13 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    state = new Uint8Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "akari",
+    status: "Light every white cell.",
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("akari"));
 
   Gamekit.gridKeys(boardEl, { selector: ".ak-cell", onSecondary: (el) => el.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })) });

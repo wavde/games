@@ -28,6 +28,9 @@
   let winLine = null;         // [{r,c},...]
   let thinking = false;
   let humanIs = P1;           // set per mode
+  // Online: the host is Amber and moves first. "online" plays like "local" with one side remote.
+  const twoPlayer = () => mode === "local" || mode === "online";
+  const remoteTurn = () => mode === "online" && (!link.connected() || current !== humanIs);
 
   function newGrid() {
     const g = [];
@@ -225,8 +228,9 @@
   }
 
   function onColClick(c) {
-    if (gameOver || thinking || mode !== "local" && current !== humanIs) return;
+    if (gameOver || thinking || remoteTurn() || !twoPlayer() && current !== humanIs) return;
     if (!playMove(c)) return;
+    if (mode === "online") link.send({ t: "move", c });
     advance();
   }
 
@@ -239,9 +243,8 @@
     if (win) {
       winLine = win;
       gameOver = true;
-      const who = (mode === "local")
-        ? (last.p === P1 ? "Amber" : "Mint") + " wins."
-        : (last.p === humanIs ? "You win." : "AI wins.");
+      const who = mode === "local" ? (last.p === P1 ? "Amber" : "Mint") + " wins."
+        : last.p === humanIs ? "You win." : mode === "online" ? "Your friend wins." : "AI wins.";
       statusEl.innerHTML = '<span class="ok">' + who + '</span>';
     } else if (isFull(grid)) {
       gameOver = true;
@@ -256,7 +259,10 @@
 
   function updateTurnStatus() {
     if (gameOver) return;
-    if (mode === "local") {
+    if (mode === "online") {
+      statusEl.textContent = !link.connected() ? "Online: waiting for your friend to join." :
+        current === humanIs ? "Your turn (" + (humanIs === P1 ? "Amber" : "Mint") + ")." : "Your friend's turn…";
+    } else if (mode === "local") {
       statusEl.textContent = (current === P1 ? "Amber" : "Mint") + " to move.";
     } else if (current === humanIs) {
       statusEl.textContent = "Your turn · drop a checker.";
@@ -270,14 +276,14 @@
 
   function advance() {
     if (gameOver) return;
-    if (mode === "local") return;
+    if (twoPlayer()) return;
     if (current !== humanIs) {
       thinking = true;
       renderBoard();
       const gen = aiTimer = setTimeout(() => {
         if (aiTimer !== gen) return;
         aiTimer = null;
-        if (gameOver || mode === "local" || current === humanIs) { thinking = false; renderBoard(); return; }
+        if (gameOver || twoPlayer() || current === humanIs) { thinking = false; renderBoard(); return; }
         const col = pickAIMove(current);
         thinking = false;
         if (col >= 0) playMove(col);
@@ -288,7 +294,9 @@
   function applyMode() {
     if (mode === "ai-first-p1") humanIs = P1;
     else if (mode === "ai-first-p2") humanIs = P2;
+    else if (mode === "online") humanIs = link.role() === "guest" ? P2 : P1;
     else humanIs = P1; // unused in local
+    chipsEl.hidden = twoPlayer();
     reset();
   }
 
@@ -302,15 +310,15 @@
     renderShell();
     renderBoard();
     updateTurnStatus();
-    if (mode !== "local" && current !== humanIs) advance();
+    if (!twoPlayer() && current !== humanIs) advance();
   }
 
   undoBtn.addEventListener("click", () => {
-    if (thinking) return;
+    if (thinking || mode === "online") return;
     if (history.length === 0) return;
     // Undo last move; in AI mode, undo the pair so it's the player's turn again.
     undoMove();
-    if (mode !== "local" && !gameOver && history.length > 0) {
+    if (!twoPlayer() && !gameOver && history.length > 0) {
       const last = history[history.length - 1];
       if (last.p === humanIs) undoMove();
     }
@@ -322,12 +330,37 @@
     updateTurnStatus();
   });
 
-  resetBtn.addEventListener("click", () => reset());
+  resetBtn.addEventListener("click", () => {
+    if (mode === "online" && !link.connected()) return;
+    reset();
+    if (mode === "online") link.send({ t: "new" });
+  });
 
-  modeSel.addEventListener("change", () => {
-    mode = modeSel.value;
-    store.set("mode", mode);
+  function setMode(m) {
+    if (mode === "online" && m !== "online") link.leave();
+    mode = m;
+    modeSel.value = m;
+    if (m !== "online") store.set("mode", m);
     applyMode();
+  }
+  modeSel.addEventListener("change", () => {
+    setMode(modeSel.value);
+    if (mode === "online") link.host();
+  });
+
+  const link = Net.attach({
+    container: document.querySelector(".game-controls"),
+    onJoin: () => setMode("online"),
+    onOpen: () => applyMode(),
+    onMessage: (msg) => {
+      if (mode !== "online") return;
+      if (msg.t === "new") reset();
+      else if (msg.t === "move" && !gameOver && current !== humanIs && !playMove(msg.c)) {
+        statusEl.textContent = "Out of sync — press new game.";
+      }
+    },
+    onClose: () => { mode = "local"; setMode("local"); }, // keep the "friend left" note showing
+    onLeave: () => setMode("local"),
   });
 
   Gamekit.wireDifficultyChips({

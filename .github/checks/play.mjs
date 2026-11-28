@@ -313,6 +313,18 @@ for (const game of Object.keys(PLANS).concat(Object.keys(BANKED))) {
       failures.push(game + " " + level + ": " + e.message.split("\n")[0]);
     }
   }
+  // New and Reset give a fresh, ready board.
+  if (!PLANS[game] || PLANS[game].chip !== false) {
+    try {
+      for (const id of ["new-btn", "reset-btn"]) {
+        if (!(await page.$("#" + id))) continue;
+        await page.click("#" + id);
+        await ready(page);
+        const st = await page.evaluate(() => ({ cells: document.getElementById("board").children.length, status: document.getElementById("status").textContent, won: window.__play.won() }));
+        if (!st.cells || /Generating|Solved|Won/.test(st.status) || st.won) throw new Error(id + " left " + JSON.stringify(st));
+      }
+    } catch (e) { failures.push(game + " new/reset: " + e.message.split("\n")[0]); }
+  }
   for (const e of errors) failures.push(game + ": page error " + e);
   console.log((done.length === (PLANS[game]?.levels || LEVELS).length && !errors.length ? "ok   " : "FAIL ") + game + " — solved " + (done.join(", ") || "nothing") + " (" + ((Date.now() - t0) / 1000).toFixed(1) + " s)");
   await page.close();

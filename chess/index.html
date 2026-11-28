@@ -116,28 +116,32 @@
   </div>
   <div class="panel">
     <div class="row">
-      <p class="status" id="status">White to move.</p>
-      <p class="status" id="info"></p>
+      <p class="status" id="status" aria-live="polite">White to move.</p>
+      <p class="status" id="info">Record: <span id="record">0 wins · 0 draws · 0 losses</span></p>
       <button class="btn ghost tool-btn man-trigger" data-man="chess" data-man-title="CHESS(1)" type="button">
         <span class="q">?</span> man
       </button>
     </div>
-    <div class="board" id="board"></div>
-    <div class="controls" style="justify-content:center">
-      <button type="button" class="primary" id="reset">New game</button>
-      <button type="button" id="undo">Undo</button>
-      <button type="button" id="flip">Flip board</button>
-      <select id="level" aria-label="AI level">
-        <option value="1">Easy (depth 1)</option>
-        <option value="2" selected>Normal (depth 2)</option>
-        <option value="3">Hard (depth 3)</option>
-      </select>
-      <select id="side" aria-label="Your side">
-        <option value="w" selected>Play White</option>
-        <option value="b">Play Black</option>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="AI difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <select id="mode" aria-label="Mode">
+        <option value="ai-w" selected>Play White vs AI</option>
+        <option value="ai-b">Play Black vs AI</option>
+        <option value="local">2 players (this device)</option>
+        <option value="online">Online with a friend</option>
       </select>
     </div>
+    <div class="board" id="board"></div>
     <p class="footer-note">Tap a piece, then tap a destination. Pawns auto-promote to queen.</p>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="flip-btn" type="button"><span class="glyph">⇅</span> flip</button>
+      <button class="btn primary" id="new-btn" type="button">↻ new game</button>
+    </div>
   </div>
 </main>
 
@@ -155,9 +159,11 @@
   <ul>
     <li><strong>Tap</strong> one of your pieces to select it. Legal destinations are highlighted with dots (moves) or rings (captures).</li>
     <li><strong>Tap a highlighted square</strong> to move there. Tap the piece again to deselect.</li>
-    <li><code>Undo</code> takes back one full pair of moves (yours + the engine's).</li>
-    <li><code>Flip board</code> rotates the view.</li>
-    <li>Choose AI strength via the <code>Easy / Normal / Hard</code> selector — deeper search is stronger but slower.</li>
+    <li>Pick the AI strength with the <code>Easy</code> / <code>Medium</code> / <code>Hard</code> chips (search depth 1, 2 and 3) and how to play with the mode selector: <code>Play White vs AI</code>, <code>Play Black vs AI</code>, <code>2 players (this device)</code> or <code>Online with a friend</code>. Either change starts a new game.</li>
+    <li><code>↶ undo</code> takes back one full pair of moves (yours + the engine's), even after the game has ended; with 2 players on one device it takes back one move.</li>
+    <li><strong>Online with a friend</strong>: send the invite link, paste back the reply code your friend gets, and play on two devices with no server. You host as White and move first; your friend plays Black with the board turned round. Undo is off online, <code>↻ new game</code> restarts both boards, and online games don't count toward the record.</li>
+    <li><code>⇅ flip</code> rotates the view. <code>↻ new game</code> starts over.</li>
+    <li>The stats line shows your wins · draws · losses against the current AI level, kept on this device. Each game counts once, when it ends; abandoning a game counts nothing.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space selects a piece, then its destination.</li>
   </ul>
 
@@ -166,6 +172,7 @@
 </template>
 
 <script src="../gamekit.js"></script>
+<script src="../net.js"></script>
 <script src="game.js"></script>
 <script defer src="../manpage.js"></script>
 <script>window.addEventListener("load", () => Manpage.autoOpen("chess"));</script>

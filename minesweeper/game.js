@@ -2,6 +2,10 @@
   "use strict";
 
   const DIFFS = { easy:[9,9,10], medium:[16,16,40], hard:[20,20,80] };
+  const store = Gamekit.storage('minesweeper:');
+  const fmt = Gamekit.fmtTime;
+  // Phones start on the small board; a stored choice still wins.
+  let diff = window.matchMedia('(max-width: 560px)').matches ? 'easy' : 'medium';
   let W,H,M, cells, mines, revealed, flags, over, won, firstClick;
   let timerStart = 0, timerId = null, elapsed = 0;
 
@@ -14,16 +18,27 @@
     stopTimer();
     timerStart = Date.now();
     elapsed = 0;
-    document.getElementById('time').textContent = '0s';
+    document.getElementById('time').textContent = fmt(0);
     timerId = setInterval(() => {
       elapsed = Math.floor((Date.now() - timerStart) / 1000);
-      document.getElementById('time').textContent = elapsed + 's';
+      document.getElementById('time').textContent = fmt(elapsed);
     }, 500);
   }
 
+  function getRecord() {
+    const rec = store.getJSON('rec:' + diff, null);
+    return rec && typeof rec === 'object' ? { won: rec.won | 0, played: rec.played | 0 } : { won: 0, played: 0 };
+  }
+
+  function showStats() {
+    const best = store.getInt('best:' + diff, null);
+    document.getElementById('best').textContent = best === null ? '—' : fmt(best);
+    const rec = getRecord();
+    document.getElementById('record').textContent = rec.won + '/' + rec.played;
+  }
+
   function reset() {
-    const d = document.getElementById('diff').value;
-    [H,W,M] = DIFFS[d];
+    [H,W,M] = DIFFS[diff];
     cells = new Int8Array(H*W);
     mines = new Uint8Array(H*W);
     revealed = new Uint8Array(H*W);
@@ -31,10 +46,11 @@
     over = false; won = false; firstClick = true;
     stopTimer();
     elapsed = 0;
-    document.getElementById('time').textContent = '0s';
-    document.getElementById('status').textContent = 'Click to reveal.';
+    document.getElementById('time').textContent = fmt(0);
+    document.getElementById('status').textContent = 'Tap to reveal. Long-press (or right-click) to flag.';
     render();
     updateHud();
+    showStats();
   }
 
   function placeMines(safeR, safeC) {
@@ -70,22 +86,34 @@
 
   function updateHud() {
     let flagged=0; for (let i=0;i<H*W;i++) if (flags[i]) flagged++;
-    document.getElementById('mines').textContent = `${M - flagged} mines left`;
-    if (over) document.getElementById('status').textContent = won ? 'You won! 🎉' : 'Boom. 💥';
+    document.getElementById('mines').textContent = String(M - flagged);
+    if (over) {
+      const st = document.getElementById('status');
+      st.textContent = '';
+      const span = document.createElement('span');
+      span.className = won ? 'ok' : 'bad';
+      span.textContent = won ? 'You won in ' + fmt(elapsed) + '! 🎉' : 'Boom. 💥';
+      st.appendChild(span);
+    }
   }
 
-  function cellSize() {
-    const vw = Math.min(document.documentElement.clientWidth * 0.94 - 16, 600);
-    return Math.min(28, Math.floor(vw / Math.max(W, H)));
+  // Cells fill the panel up to 32px but never drop below 24px (a usable tap target);
+  // a board that still doesn't fit scrolls inside its own frame.
+  function cellSize(el) {
+    const panel = el.parentElement, ps = getComputedStyle(panel), bs = getComputedStyle(el);
+    const avail = Math.min(panel.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight), 640);
+    const chrome = parseFloat(bs.paddingLeft) + parseFloat(bs.paddingRight) + parseFloat(bs.borderLeftWidth) + parseFloat(bs.borderRightWidth);
+    const gap = parseFloat(bs.columnGap) || 0;
+    return Math.max(24, Math.min(32, Math.floor((avail - chrome - gap * (W - 1)) / W)));
   }
 
   function render() {
     const el = document.getElementById('board');
-    const sz = cellSize();
+    const sz = cellSize(el);
     el.style.gridTemplateColumns = `repeat(${W}, ${sz}px)`;
     el.style.gridTemplateRows = `repeat(${H}, ${sz}px)`;
     el.replaceChildren();
-    el.style.fontSize = sz < 22 ? '0.65rem' : sz < 26 ? '0.75rem' : '0.9rem';
+    el.style.fontSize = sz < 26 ? '0.75rem' : sz < 30 ? '0.9rem' : '1rem';
     for (let r=0;r<H;r++) for (let c=0;c<W;c++) {
       const i = idx(r,c);
       const d = document.createElement('div');
@@ -109,11 +137,27 @@
     if (over) return;
     const i = idx(r,c);
     if (flags[i]) return;
-    if (firstClick) { placeMines(r,c); firstClick = false; startTimer(); }
+    if (firstClick) {
+      placeMines(r,c); firstClick = false; startTimer();
+      const rec = getRecord();
+      rec.played++;
+      store.setJSON('rec:' + diff, rec);
+    }
     reveal(r,c);
     checkWin();
-    if (over) stopTimer();
-    render(); updateHud();
+    if (over) {
+      stopTimer();
+      elapsed = Math.floor((Date.now() - timerStart) / 1000);
+      document.getElementById('time').textContent = fmt(elapsed);
+      if (won) {
+        const rec = getRecord();
+        rec.won++;
+        store.setJSON('rec:' + diff, rec);
+        const best = store.getInt('best:' + diff, null);
+        if (best === null || elapsed < best) store.set('best:' + diff, elapsed);
+      }
+    }
+    render(); updateHud(); showStats();
   }
 
   function flag(r,c) {
@@ -151,8 +195,15 @@
   boardEl.addEventListener('touchcancel', cancelPress);
   boardEl.addEventListener('touchmove', cancelPress, { passive: true });
 
-  document.getElementById('reset').addEventListener('click', reset);
-  document.getElementById('diff').addEventListener('change', reset);
+  document.getElementById('new-btn').addEventListener('click', reset);
+  diff = Gamekit.wireDifficultyChips({
+    el: document.getElementById('chips'),
+    difficulties: ['easy', 'medium', 'hard'],
+    initial: diff,
+    storage: store,
+    storageKey: 'diff',
+    onChange: (d) => { diff = d; reset(); },
+  }).get();
   window.addEventListener('resize', () => { if (!over) render(); });
   reset();
 

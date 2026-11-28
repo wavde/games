@@ -133,28 +133,17 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
   const movesEl  = document.getElementById("moves");
   const parEl    = document.getElementById("par");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
   const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "Push every box onto a goal.";
   const KEYS = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3, w: 0, s: 1, a: 2, d: 3, W: 0, S: 1, A: 2, D: 3 };
-  const store = Gamekit.storage("sokoban:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
-  let diff = "medium";
-  let L = null, player = 0, box = null, moves = 0, pushes = 0, history = [], won = false, cellEls = [], dailyDate = null;
+  let L = null, player = 0, box = null, moves = 0, pushes = 0, history = [], won = false, cellEls = [];
   let sx = 0, sy = 0, swiped = false;
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("sokoban", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    L = generate(diff, seed);
+  function start(P0) {
+    L = P0;
     parEl.textContent = L.par;
     build();
     restart();
@@ -167,8 +156,6 @@
     moves = pushes = 0;
     history = [];
     won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
     render();
   }
 
@@ -220,7 +207,7 @@
   function snapshot() { return { player, box: box.slice(), moves, pushes }; }
 
   function act(k) {
-    if (won || !step(k, true)) return;
+    if (!L || won || !step(k, true)) return;
     after();
   }
 
@@ -230,9 +217,7 @@
     for (let i = 0; i < box.length; i++) if (box[i] && !L.goal[i]) done = false;
     if (!done) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("sokoban", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + moves + " moves, " + pushes + " pushes (par " + L.par + "), " + Gamekit.fmtTime(s) + ".</span>";
+    page.win((t) => "Solved in " + moves + " moves, " + pushes + " pushes (par " + L.par + "), " + t + ".");
     render();
   }
 
@@ -287,20 +272,12 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => { if (!won) restart(); });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
+  const page = Gamekit.puzzlePage({
+    id: "sokoban",
+    status: "Push every box onto a goal.",
+    generate,
+    start,
+    reset: restart,
   });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("sokoban"));
 })();

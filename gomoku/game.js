@@ -138,8 +138,14 @@
   let board, current, history, last, over, winLine, aiTimer = null, aiGen = 0;
   let cellEls = [];
 
-  function humanColor() { return mode === "human-white" ? WHITE : BLACK; }
-  function isHumanTurn() { return mode === "local" || current === humanColor(); }
+  // Online: the host plays black and moves first; "online" plays like "local" with one side remote.
+  const twoPlayer = () => mode === "local" || mode === "online";
+  const remoteTurn = () => mode === "online" && (!link.connected() || current !== humanColor());
+  function humanColor() {
+    if (mode === "online") return link.role() === "guest" ? WHITE : BLACK;
+    return mode === "human-white" ? WHITE : BLACK;
+  }
+  function isHumanTurn() { return twoPlayer() || current === humanColor(); }
 
   function lineThrough(i) {
     const p = board[i], r0 = Math.floor(i / N), c0 = i % N;
@@ -192,7 +198,7 @@
   }
 
   function finish(winner) {
-    if (mode === "local") return;
+    if (twoPlayer()) return;
     const rec = store.getJSON("rec:" + diff, { w: 0, l: 0, d: 0 });
     if (!winner) rec.d++; else if (winner === humanColor()) rec.w++; else rec.l++;
     store.setJSON("rec:" + diff, rec);
@@ -214,7 +220,7 @@
   }
 
   function render() {
-    const win = new Set(winLine), canPlay = !over && isHumanTurn();
+    const win = new Set(winLine), canPlay = !over && isHumanTurn() && !remoteTurn();
     for (let i = 0; i < N * N; i++) {
       const el = cellEls[i], v = board[i];
       el.classList.toggle("avail", canPlay && !v);
@@ -229,31 +235,36 @@
       el.setAttribute("aria-label", "abcdefghjklmnop"[c] + (N - r) + ": " + (v === BLACK ? "black" : v === WHITE ? "white" : "empty"));
     }
     const rec = store.getJSON("rec:" + diff, { w: 0, l: 0, d: 0 });
-    recordEl.textContent = mode === "local" ? "2P local" : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
-    undoBtn.disabled = !history.length || (over && mode !== "local");
+    recordEl.textContent = mode === "local" ? "2P local" : mode === "online" ? "online" : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
+    undoBtn.disabled = !history.length || (over && mode !== "local") || mode === "online";
 
     const name = current === BLACK ? "Black" : "White";
     if (over) {
       const winner = winLine.length ? board[winLine[0]] : 0;
       if (!winner) statusEl.innerHTML = '<span class="hot">Board full — draw.</span>';
       else if (mode === "local") statusEl.innerHTML = '<span class="ok">' + (winner === BLACK ? "Black" : "White") + ' wins.</span>';
-      else statusEl.innerHTML = winner === humanColor() ? '<span class="ok">You win.</span>' : '<span class="bad">AI wins.</span>';
+      else statusEl.innerHTML = winner === humanColor() ? '<span class="ok">You win.</span>'
+        : '<span class="bad">' + (mode === "online" ? "Your friend" : "AI") + ' wins.</span>';
+    } else if (mode === "online") {
+      statusEl.textContent = !link.connected() ? "Online: waiting for your friend to join." :
+        current === humanColor() ? "Your turn (" + name.toLowerCase() + ")." : "Your friend's turn…";
     } else if (mode === "local") statusEl.textContent = name + " to move.";
     else statusEl.textContent = isHumanTurn() ? "Your move (" + name.toLowerCase() + ")." : "AI thinking…";
   }
 
   boardEl.addEventListener("click", (e) => {
     const cell = e.target.closest(".gm-cell");
-    if (!cell || over || !isHumanTurn()) return;
+    if (!cell || over || !isHumanTurn() || remoteTurn()) return;
     const i = parseInt(cell.dataset.i, 10);
     if (board[i]) return;
     play(i);
+    if (mode === "online") link.send({ t: "move", i });
   });
 
   // Undo back to the most recent position where it was the human's move.
   // Finished AI games stay final so the win–loss record can't be replayed.
   undoBtn.addEventListener("click", () => {
-    if (!history.length || (over && mode !== "local")) return;
+    if (!history.length || (over && mode !== "local") || mode === "online") return;
     cancelAI();
     let h;
     do { h = history.pop(); } while (mode !== "local" && history.length && h.current !== humanColor());
@@ -264,12 +275,40 @@
     advance();
   });
 
-  newBtn.addEventListener("click", newGame);
-
-  modeSel.addEventListener("change", () => {
-    mode = modeSel.value;
-    store.set("mode", mode);
+  newBtn.addEventListener("click", () => {
+    if (mode === "online" && !link.connected()) return;
     newGame();
+    if (mode === "online") link.send({ t: "new" });
+  });
+
+  function setMode(m) {
+    if (mode === "online" && m !== "online") link.leave();
+    mode = m;
+    modeSel.value = m;
+    if (m !== "online") store.set("mode", m);
+    chipsEl.hidden = twoPlayer();
+    newGame();
+  }
+  modeSel.addEventListener("change", () => {
+    setMode(modeSel.value);
+    if (mode === "online") link.host();
+  });
+
+  const link = Net.attach({
+    container: document.querySelector(".game-controls"),
+    onJoin: () => setMode("online"),
+    onOpen: () => setMode("online"),
+    onMessage: (msg) => {
+      if (mode !== "online") return;
+      if (msg.t === "new") newGame();
+      else if (msg.t === "move" && !over) {
+        const i = msg.i;
+        if (current !== humanColor() && Number.isInteger(i) && i >= 0 && i < N * N && !board[i]) play(i);
+        else statusEl.textContent = "Out of sync — press new game.";
+      }
+    },
+    onClose: () => { mode = "local"; setMode("local"); }, // keep the "friend left" note showing
+    onLeave: () => setMode("local"),
   });
 
   const chips = Gamekit.wireDifficultyChips({
@@ -283,6 +322,7 @@
   diff = chips.get();
 
   buildBoard();
+  chipsEl.hidden = twoPlayer();
   newGame();
   window.addEventListener("load", () => Manpage.autoOpen("gomoku"));
 

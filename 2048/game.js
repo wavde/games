@@ -3,7 +3,9 @@
 
   const N = 4;
   const store = Gamekit.storage('2048:');
-  let grid, score, over, mergedCells;
+  const statusEl = document.getElementById('status');
+  const START = 'Slide tiles. Merge to 2048.';
+  let grid, score, over, won, mergedCells;
 
   function empty() { return Array.from({length: N}, () => Array(N).fill(0)); }
 
@@ -29,6 +31,12 @@
     mergedCells = null;
     document.getElementById('score').textContent = score;
     document.getElementById('best').textContent = store.getInt('best', 0);
+    let maxTile = 0;
+    for (let r=0;r<N;r++) for (let c=0;c<N;c++) maxTile = Math.max(maxTile, grid[r][c]);
+    const top = store.getInt('top', 0);
+    if (maxTile > top) store.set('top', maxTile);
+    document.getElementById('top').textContent = Math.max(top, maxTile) || '—';
+    if (maxTile >= 2048 && !won) { won = true; statusEl.innerHTML = '<span class="ok">You made 2048! Keep going.</span>'; }
   }
 
   function slideRow(row) {
@@ -74,7 +82,7 @@
     if (score > best) store.set('best', score);
     addTile();
     render();
-    if (!canMove()) { over = true; document.getElementById('over-msg').textContent = '· Game over.'; }
+    if (!canMove()) { over = true; statusEl.innerHTML = '<span class="bad">Game over.</span> Score ' + score + '.'; }
   }
 
   function rot(m) {
@@ -94,8 +102,8 @@
   }
 
   function reset() {
-    grid = empty(); score = 0; over = false;
-    const om = document.getElementById('over-msg'); if (om) om.textContent = '';
+    grid = empty(); score = 0; over = false; won = false;
+    statusEl.textContent = START;
     addTile(); addTile(); render();
   }
 
@@ -114,6 +122,6 @@
     tStart=null;
   });
 
-  document.getElementById('reset').addEventListener('click', reset);
+  document.getElementById('new-btn').addEventListener('click', reset);
   reset();
 })();

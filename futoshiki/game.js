@@ -142,37 +142,27 @@
 
   const boardEl  = document.getElementById("board");
   const padEl    = document.getElementById("pad");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
   const notesBtn = document.getElementById("notes-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "Every row and column holds 1 to n once; obey the signs.";
-  const store = Gamekit.storage("futoshiki:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
   const GLYPH = [["", "<", ">"], ["", "∧", "∨"]];
 
-  let diff = "medium";
   let P = null, val = null, notes = null, history = [], won = false, sel = -1, noteMode = false;
-  let cellEls = [], signEls = [], dailyDate = null, relText = [];
+  let cellEls = [], signEls = [], relText = [];
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("futoshiki", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    sel = -1;
+    clear();
+    describe();
+    build();
+    buildPad();
+  }
+
+  function clear() {
     val = Uint8Array.from(P.given);
     notes = new Uint16Array(P.n * P.n);
     history = [];
     won = false;
-    sel = -1;
-    describe();
-    build();
-    buildPad();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   // Spoken relations for each cell, e.g. "smaller than right, bigger than below".
@@ -293,9 +283,7 @@
     const { bad, badSign } = check();
     if (bad.size || badSign.size) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("futoshiki", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
+    page.win();
     render();
   }
 
@@ -314,7 +302,7 @@
     if (el) select(+el.dataset.i);
   });
 
-  notesBtn.addEventListener("click", () => { noteMode = !noteMode; render(); });
+  notesBtn.addEventListener("click", () => { if (!P) return; noteMode = !noteMode; render(); });
 
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector(".man-backdrop")) return;
@@ -322,7 +310,7 @@
     const k = e.key;
     if (k >= "1" && k <= "9") { enter(+k); e.preventDefault(); }
     else if (k === "Backspace" || k === "Delete" || k === "0") { enter(0); e.preventDefault(); }
-    else if (k === "n" || k === "N") { noteMode = !noteMode; render(); e.preventDefault(); }
+    else if ((k === "n" || k === "N") && P) { noteMode = !noteMode; render(); e.preventDefault(); }
   });
 
   undoBtn.addEventListener("click", () => {
@@ -333,29 +321,13 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    val = Uint8Array.from(P.given);
-    notes = new Uint16Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "futoshiki",
+    status: "Every row and column holds 1 to n once; obey the signs.",
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("futoshiki"));
 
   Gamekit.gridKeys(boardEl, { selector: ".ft-cell" });

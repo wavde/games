@@ -26,9 +26,11 @@
     return { n, reg, regions, nb: Array.from({ length: n * n }, (_, i) => orth(n, i)) };
   }
 
-  function pick(level, seed) {
+  // The daily board walks through the bank one day at a time (no repeats for a bank's length
+  // in days); "new" picks at random.
+  function pick(level, seed, day) {
     const bank = window.LITS_PUZZLES[level];
-    return decode(bank[seed % bank.length]);
+    return decode(bank[(day !== undefined ? day : seed) % bank.length]);
   }
 
   // L, I, T, S for four connected cells, "" for the square or anything else.
@@ -94,31 +96,17 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "One L, I, T, or S per region; all connected; same shapes never touch.";
-  const store = Gamekit.storage("lits:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
   const NAME = ["empty", "shaded", "dot"];
 
-  let diff = "medium";
-  let P = null, mark = null, history = [], won = false, cellEls = [], dailyDate = null;
+  let P = null, mark = null, history = [], won = false, cellEls = [];
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("lits", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = pick(diff, seed);
+  function start(P0) {
+    P = P0;
     mark = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
     build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function build() {
@@ -164,9 +152,7 @@
     render();
     if (solved(P, Int8Array.from(mark, (m) => (m === 1 ? 1 : 0)))) {
       won = true;
-      const s = clock.stop();
-      if (dailyDate) Gamekit.markDailySolved("lits", diff, dailyDate);
-      statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
+      page.win();
       render();
     }
   }
@@ -191,28 +177,18 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    mark = new Uint8Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "lits",
+    status: "One L, I, T, or S per region; all connected; same shapes never touch.",
+    generate: pick,
+    start,
+    reset: () => {
+      mark = new Uint8Array(P.n * P.n);
+      history = [];
+      won = false;
+      render();
+    },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("lits"));
 
   Gamekit.gridKeys(boardEl, { selector: ".lt-cell", onSecondary: (el) => toggleDot(+el.dataset.i) });

@@ -199,32 +199,22 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "One tent beside each tree; tents never touch.";
-  const store = Gamekit.storage("tents:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
   const NAME = ["empty", "tent", "grass"];
 
-  let diff = "medium";
   let P = null, mark = null, history = [], won = false;
-  let cellEls = [], rowEls = [], colEls = [], dailyDate = null;
+  let cellEls = [], rowEls = [], colEls = [];
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("tents", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    clear();
+    build();
+  }
+
+  function clear() {
     mark = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
-    build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   // (n + 1)² grid: column counts along the top, row counts down the left.
@@ -313,9 +303,7 @@
     if (touch.size || state.some((x) => x !== 1)) return;
     if (!matchable(P, mark.map((m) => (m === TENT ? TENT : GRASS)))) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("tents", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
+    page.win();
     render();
   }
 
@@ -338,28 +326,13 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    mark = new Uint8Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "tents",
+    status: "One tent beside each tree; tents never touch.",
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("tents"));
 
   Gamekit.gridKeys(boardEl, {

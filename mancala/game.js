@@ -148,8 +148,16 @@
 
   // ---------- Game flow ----------
 
-  function isHumanTurn() { return mode === "local" || current === BOTTOM; }
-  function name(p) { return mode === "local" ? (p === BOTTOM ? "Bottom" : "Top") : (p === BOTTOM ? "You" : "AI"); }
+  // Online: the host plays the bottom row and moves first. "online" plays like "local" with
+  // one side remote; landing in your store keeps the turn, so turns follow `current`.
+  function twoPlayer() { return mode === "local" || mode === "online"; }
+  function me() { return mode === "online" && link.role() === "guest" ? TOP : BOTTOM; }
+  function isHumanTurn() { return mode === "local" || current === me(); }
+  function remoteTurn() { return mode === "online" && (!link.connected() || current !== me()); }
+  function name(p) {
+    if (mode === "local") return p === BOTTOM ? "Bottom" : "Top";
+    return p === me() ? "You" : mode === "online" ? "Friend" : "AI";
+  }
 
   function cancel() {
     gen++;
@@ -177,8 +185,9 @@
     lastFrom = i;
     over = r.over;
     note = "";
-    if (r.captured) note = name(mover) + (mover === BOTTOM && mode !== "local" ? " capture " : " captures ") + r.captured + ". ";
-    else if (!over && r.next === mover) note = name(mover) + (mover === BOTTOM && mode !== "local" ? " go again. " : " goes again. ");
+    const who = mode === "online" && mover !== me() ? "Your friend" : name(mover), you = who === "You";
+    if (r.captured) note = who + (you ? " capture " : " captures ") + r.captured + ". ";
+    else if (!over && r.next === mover) note = who + (you ? " go again. " : " goes again. ");
     if (over) finish();
     sow(before, i, r.path, () => { render(); advance(); });
   }
@@ -208,7 +217,7 @@
   }
 
   function finish() {
-    if (mode === "local") return;
+    if (twoPlayer()) return;
     const d = board[6] - board[13];
     const rec = store.getJSON("rec:" + diff, { w: 0, l: 0, d: 0 });
     if (d > 0) rec.w++; else if (d < 0) rec.l++; else rec.d++;
@@ -216,11 +225,11 @@
   }
 
   function advance() {
-    if (over || isHumanTurn()) return;
+    if (over || twoPlayer() || isHumanTurn()) return;
     const g = ++gen;
     timer = setTimeout(() => {
       timer = null;
-      if (g !== gen || over || isHumanTurn()) return;
+      if (g !== gen || over || twoPlayer() || isHumanTurn()) return;
       play(pickMove(board, current, DEPTHS[diff], diff === "easy" ? 6 : 0, 800));
     }, 300);
   }
@@ -255,7 +264,7 @@
 
   function render(view, hot) {
     const v = view || board;
-    const human = !busy && !over && isHumanTurn();
+    const human = !busy && !over && isHumanTurn() && !remoteTurn();
     for (let i = 0; i < 14; i++) {
       const el = els[i], n = v[i];
       el.querySelector(".n").textContent = n;
@@ -270,7 +279,7 @@
       const p = i < 6 ? BOTTOM : TOP, can = human && p === current && n > 0;
       el.className = "mc-pit" + (can ? " can" : "") + (i === hot ? " hot" : "") + (!view && i === lastFrom ? " last" : "");
       el.setAttribute("aria-disabled", can ? "false" : "true");
-      const owner = mode === "local" ? name(p) : p === BOTTOM ? "Your" : "AI's";
+      const owner = mode === "local" ? name(p) : p === me() ? "Your" : mode === "online" ? "Your friend's" : "AI's";
       el.setAttribute("aria-label", owner + " pit " + (i % 7 + 1) + ": " + n + (n === 1 ? " seed" : " seeds"));
       const seeds = el.firstChild, show = Math.min(n, 12);
       while (seeds.childElementCount > show) seeds.lastChild.remove();
@@ -278,18 +287,21 @@
     }
 
     const rec = store.getJSON("rec:" + diff, { w: 0, l: 0, d: 0 });
-    recordEl.textContent = mode === "local" ? "2P local" : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
-    undoBtn.disabled = !history.length || (over && mode !== "local");
+    recordEl.textContent = mode === "local" ? "2P local" : mode === "online" ? "online" : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
+    undoBtn.disabled = !history.length || mode === "online" || (over && mode !== "local");
 
     if (view) return;
     if (over) {
-      const a = board[6], b = board[13];
+      const a = board[6], b = board[13], mine = board[STORE[me()]], theirs = board[STORE[1 - me()]];
       if (a === b) statusEl.innerHTML = '<span class="hot">Draw ' + a + "–" + b + ".</span>";
       else if (mode === "local") statusEl.innerHTML = '<span class="ok">' + (a > b ? "Bottom" : "Top") + " wins " + Math.max(a, b) + "–" + Math.min(a, b) + ".</span>";
-      else if (a > b) statusEl.innerHTML = '<span class="ok">You win ' + a + "–" + b + ".</span>";
-      else statusEl.innerHTML = '<span class="bad">AI wins ' + b + "–" + a + ".</span>";
+      else if (mine > theirs) statusEl.innerHTML = '<span class="ok">You win ' + mine + "–" + theirs + ".</span>";
+      else statusEl.innerHTML = '<span class="bad">' + (mode === "online" ? "Your friend" : "AI") + " wins " + theirs + "–" + mine + ".</span>";
     } else if (mode === "local") {
       statusEl.textContent = note + name(current) + " to move.";
+    } else if (mode === "online") {
+      statusEl.textContent = !link.connected() ? "Online: waiting for your friend to join."
+        : note + (isHumanTurn() ? "Your turn (" + (me() === BOTTOM ? "bottom row" : "top row") + ")." : "Your friend's turn…");
     } else {
       statusEl.textContent = note + (isHumanTurn() ? "Your move." : "AI thinking…");
     }
@@ -297,16 +309,17 @@
 
   boardEl.addEventListener("click", (e) => {
     const el = e.target.closest(".mc-pit");
-    if (!el || busy || over || !isHumanTurn()) return;
+    if (!el || busy || over || remoteTurn() || !isHumanTurn()) return;
     const i = +el.dataset.i;
     if (!owns(current, i) || !board[i]) return;
     play(i);
+    if (mode === "online") link.send({ t: "move", i });
   });
 
   // Undo back to the most recent position where it was the human's move.
   // Finished AI games stay final so the win–loss record can't be replayed.
   undoBtn.addEventListener("click", () => {
-    if (!history.length || (over && mode !== "local")) return;
+    if (!history.length || mode === "online" || (over && mode !== "local")) return;
     cancel();
     let h;
     do { h = history.pop(); } while (mode !== "local" && history.length && h.current !== BOTTOM);
@@ -317,12 +330,44 @@
     advance();
   });
 
-  newBtn.addEventListener("click", newGame);
-
-  modeSel.addEventListener("change", () => {
-    mode = modeSel.value;
-    store.set("mode", mode);
+  newBtn.addEventListener("click", () => {
+    if (mode === "online" && !link.connected()) return;
     newGame();
+    if (mode === "online") link.send({ t: "new" });
+  });
+
+  function applyMode() {
+    chipsEl.hidden = twoPlayer();
+    newGame();
+  }
+
+  function setMode(m) {
+    if (mode === "online" && m !== "online") link.leave();
+    mode = m;
+    modeSel.value = m;
+    if (m !== "online") store.set("mode", m);
+    applyMode();
+  }
+  modeSel.addEventListener("change", () => {
+    setMode(modeSel.value);
+    if (mode === "online") link.host();
+  });
+
+  // The friend's move plays at once, even mid-animation: play() updates the board right away.
+  const link = Net.attach({
+    container: document.querySelector(".game-controls"),
+    onJoin: () => setMode("online"),
+    onOpen: () => applyMode(),
+    onMessage: (msg) => {
+      if (mode !== "online") return;
+      if (msg.t === "new") newGame();
+      else if (msg.t === "move" && !over && current !== me()) {
+        if (Number.isInteger(msg.i) && owns(current, msg.i) && board[msg.i]) play(msg.i);
+        else statusEl.textContent = "Out of sync — press new game.";
+      }
+    },
+    onClose: () => { mode = "local"; setMode("local"); }, // keep the "friend left" note showing
+    onLeave: () => setMode("local"),
   });
 
   const chips = Gamekit.wireDifficultyChips({
@@ -336,7 +381,7 @@
   diff = chips.get();
 
   buildBoard();
-  newGame();
+  applyMode();
   window.addEventListener("load", () => Manpage.autoOpen("mancala"));
 
   Gamekit.gridKeys(boardEl, { selector: ".mc-pit" });

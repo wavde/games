@@ -280,32 +280,21 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "Draw one closed loop.";
   const EMPTY = 0, LINE = 1, CROSS = 2;
-  const store = Gamekit.storage("slitherlink:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
-  let diff = "medium";
   let P = null, state = null, history = [], won = false, lineEls = [], cellEls = [];
-  let dailyDate = null;
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("slitherlink", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = generate(diff, seed);
+  function start(P0) {
+    P = P0;
+    clear();
+    build();
+  }
+
+  function clear() {
     state = new Uint8Array(P.E);
     history = [];
     won = false;
-    build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function edgeLabel(e) {
@@ -387,9 +376,7 @@
   function checkWin() {
     if (!isSolution(P, lines())) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("slitherlink", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Loop closed in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win((t) => "Loop closed in " + t + ".");
     render();
   }
 
@@ -413,28 +400,13 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    state = new Uint8Array(P.E);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "slitherlink",
+    status: "Draw one closed loop.",
+    generate,
+    start,
+    reset: () => { clear(); render(); },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("slitherlink"));
 
   // Lattice arrows: Left/Right step along a row of lines; Up/Down alternate between

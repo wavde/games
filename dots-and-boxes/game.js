@@ -259,8 +259,12 @@
 
   // ---------- Game flow ----------
 
-  function humanPlayer() { return mode === "ai-first" ? P2 : P1; }
+  // Online: the host is P1 (amber) and moves first. "online" plays like "local" with one side
+  // remote; closing a box keeps the turn, so turns follow `current`, not strict alternation.
+  function twoPlayer() { return mode === "local" || mode === "online"; }
+  function humanPlayer() { return mode === "ai-first" || mode === "online" && link.role() === "guest" ? P2 : P1; }
   function isHumanTurn() { return mode === "local" || current === humanPlayer(); }
+  function remoteTurn() { return mode === "online" && (!link.connected() || current !== humanPlayer()); }
 
   function newGame() {
     cancelAI();
@@ -297,7 +301,7 @@
   function recKey() { return "rec:" + diff + ":" + N; }
 
   function finish() {
-    if (mode === "local") return;
+    if (twoPlayer()) return;
     const h = humanPlayer();
     const diffScore = scores[h] - scores[3 - h];
     const rec = store.getJSON(recKey(), { w: 0, l: 0, d: 0 });
@@ -311,11 +315,11 @@
   }
 
   function advance() {
-    if (over || isHumanTurn()) return;
+    if (over || twoPlayer() || isHumanTurn()) return;
     const gen = ++aiGen;
     aiTimer = setTimeout(() => {
       aiTimer = null;
-      if (gen !== aiGen || over || isHumanTurn()) return;
+      if (gen !== aiGen || over || twoPlayer() || isHumanTurn()) return;
       play(aiMove(drawn));
     }, 320);
   }
@@ -358,11 +362,14 @@
 
   function names() {
     if (mode === "local") return { 1: "P1", 2: "P2" };
+    if (mode === "online") return humanPlayer() === P2 ? { 1: "Friend", 2: "You" } : { 1: "You", 2: "Friend" };
     return mode === "ai-first" ? { 1: "AI", 2: "You" } : { 1: "You", 2: "AI" };
   }
 
+  const COLORS = { 1: "Amber", 2: "Mint" };
+
   function render(justScored) {
-    const humanTurn = !over && isHumanTurn();
+    const humanTurn = !over && isHumanTurn() && !remoteTurn();
     const nm = names();
     for (let x = 0; x < L; x++) {
       const el = lineEls[x];
@@ -372,15 +379,15 @@
     }
     for (let b = 0; b < N * N; b++) {
       boxEls[b].className = "db-box" + (owner[b] ? " p" + owner[b] : "");
-      boxEls[b].textContent = owner[b] ? (nm[owner[b]] === "You" ? "Y" : nm[owner[b]] === "AI" ? "A" : String(owner[b])) : "";
+      boxEls[b].textContent = owner[b] ? (nm[owner[b]] === "You" ? "Y" : nm[owner[b]] === "AI" ? "A" : nm[owner[b]] === "Friend" ? "F" : String(owner[b])) : "";
     }
     name1El.textContent = nm[1];
     name2El.textContent = nm[2];
     score1El.textContent = scores[1];
     score2El.textContent = scores[2];
     const rec = store.getJSON(recKey(), { w: 0, l: 0, d: 0 });
-    recordEl.textContent = mode === "local" ? N + "×" + N : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
-    undoBtn.disabled = !history.length || (over && mode !== "local");
+    recordEl.textContent = twoPlayer() ? N + "×" + N : "W–L–D " + rec.w + "–" + rec.l + "–" + rec.d;
+    undoBtn.disabled = !history.length || mode === "online" || (over && mode !== "local");
 
     if (over) {
       const a = scores[1], b = scores[2];
@@ -390,11 +397,15 @@
       } else {
         const h = humanPlayer(), mine = scores[h], theirs = scores[3 - h];
         statusEl.innerHTML = mine > theirs ? '<span class="ok">You win ' + mine + '–' + theirs + '.</span>'
-          : mine < theirs ? '<span class="bad">AI wins ' + theirs + '–' + mine + '.</span>'
+          : mine < theirs ? '<span class="bad">' + (mode === "online" ? "Your friend" : "AI") + ' wins ' + theirs + '–' + mine + '.</span>'
           : '<span class="hot">Draw ' + mine + '–' + theirs + '.</span>';
       }
     } else if (mode === "local") {
       statusEl.textContent = (justScored ? "Box! " : "") + nm[current] + " to move.";
+    } else if (mode === "online") {
+      statusEl.textContent = !link.connected() ? "Online: waiting for your friend to join."
+        : isHumanTurn() ? (justScored ? "Box! Go again. " : "") + "Your turn (" + COLORS[current] + ")."
+        : justScored ? "Your friend took a box…" : "Your friend's turn…";
     } else if (isHumanTurn()) {
       statusEl.textContent = justScored ? "Box! Go again." : "Your move.";
     } else {
@@ -404,16 +415,17 @@
 
   boardEl.addEventListener("click", (e) => {
     const el = e.target.closest(".db-line");
-    if (!el || over || !isHumanTurn()) return;
+    if (!el || over || remoteTurn() || !isHumanTurn()) return;
     const x = parseInt(el.dataset.x, 10);
     if (drawn[x]) return;
     play(x);
+    if (mode === "online") link.send({ t: "move", x });
   });
 
   // Undo back to the most recent position where it was the human's move.
   // Finished AI games stay final so the win–loss record can't be replayed.
   undoBtn.addEventListener("click", () => {
-    if (!history.length || (over && mode !== "local")) return;
+    if (!history.length || mode === "online" || (over && mode !== "local")) return;
     cancelAI();
     let h;
     do { h = history.pop(); } while (mode !== "local" && history.length && h.current !== humanPlayer());
@@ -424,18 +436,55 @@
     advance();
   });
 
-  newBtn.addEventListener("click", newGame);
+  // Online, "new" carries the board size so both pages play on the same board.
+  function newOnline() { if (mode === "online") link.send({ t: "new", n: N }); }
 
-  modeSel.addEventListener("change", () => {
-    mode = modeSel.value;
-    store.set("mode", mode);
+  newBtn.addEventListener("click", () => {
+    if (mode === "online" && !link.connected()) return;
     newGame();
+    newOnline();
+  });
+
+  function applyMode() {
+    chipsEl.hidden = twoPlayer();
+    newGame();
+  }
+
+  function setMode(m) {
+    if (mode === "online" && m !== "online") link.leave();
+    mode = m;
+    modeSel.value = m;
+    if (m !== "online") store.set("mode", m);
+    applyMode();
+  }
+  modeSel.addEventListener("change", () => {
+    setMode(modeSel.value);
+    if (mode === "online") link.host();
   });
 
   sizeSel.addEventListener("change", () => {
     N = parseInt(sizeSel.value, 10);
     store.set("size", N);
     newGame();
+    newOnline();
+  });
+
+  const link = Net.attach({
+    container: document.querySelector(".game-controls"),
+    onJoin: () => setMode("online"),
+    onOpen: (role) => { applyMode(); if (role === "host") newOnline(); },
+    onMessage: (msg) => {
+      if (mode !== "online") return;
+      if (msg.t === "new") {
+        if (SIZES.includes(msg.n)) { N = msg.n; sizeSel.value = String(N); }
+        newGame();
+      } else if (msg.t === "move" && !over && current !== humanPlayer()) {
+        if (Number.isInteger(msg.x) && msg.x >= 0 && msg.x < L && !drawn[msg.x]) play(msg.x);
+        else statusEl.textContent = "Out of sync — press new game.";
+      }
+    },
+    onClose: () => { mode = "local"; setMode("local"); }, // keep the "friend left" note showing
+    onLeave: () => setMode("local"),
   });
 
   const chips = Gamekit.wireDifficultyChips({
@@ -448,7 +497,7 @@
   });
   diff = chips.get();
 
-  newGame();
+  applyMode();
   window.addEventListener("load", () => Manpage.autoOpen("dots-and-boxes"));
 
   // Lines sit on a (2N+1)² lattice where row+col is odd. Left/Right walk the row;

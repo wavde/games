@@ -8,18 +8,9 @@
   const boardEl  = document.getElementById("board");
   const padEl    = document.getElementById("pad");
   const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
 
-  const store = Gamekit.storage("mini-sudoku:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
-
-  let diff = store.get("diff", "medium");
-  if (!DIFFS[diff]) diff = "medium";
+  let diff = "medium";
 
   // State
   let givens = new Uint8Array(N * N);   // 0 or 1-6 (initial puzzle)
@@ -29,7 +20,6 @@
   let sel = -1;                          // selected index
   let pencil = false;
   let won = false;
-  let dailyDate = null;
 
   let cellEls = [];
 
@@ -116,10 +106,9 @@
     return g;
   }
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("mini-sudoku", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    givens = generate(seed);
+  function start(g, level) {
+    diff = level;
+    givens = g;
     grid = new Uint8Array(givens);
     notes = [];
     for (let i = 0; i < N * N; i++) notes.push(new Set());
@@ -127,7 +116,6 @@
     sel = -1;
     pencil = false;
     won = false;
-    clock.start();
     renderShell();
     renderAll();
     updatePencilBtn();
@@ -282,16 +270,14 @@
       return;
     }
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("mini-sudoku", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win();
   }
 
   // Keyboard
   document.addEventListener("keydown", (e) => {
     if (e.target.closest("input, select, textarea")) return;
     if (document.querySelector(".man-backdrop")) return;
-    if (won) return;
+    if (won || !cellEls.length) return;
     const k = e.key;
     if (k === "ArrowLeft" || k === "ArrowRight" || k === "ArrowUp" || k === "ArrowDown") {
       if (sel < 0) { sel = 0; }
@@ -320,31 +306,20 @@
     notes[h.idx] = h.notes;
     renderAll();
   });
-  resetBtn.addEventListener("click", () => {
-    if (!confirm("Clear all your entries?")) return;
-    grid = new Uint8Array(givens);
-    notes = notes.map(() => new Set());
-    history = [];
-    won = false;
-    sel = -1;
-    clock.start();
-    statusEl.textContent = "Fill each row, column, and 2×3 box with 1–6.";
-    renderAll();
-  });
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = store.get("diff", diff);
-  if (!DIFFS[diff]) diff = "medium";
-
   renderPad();
-  newPuzzle();
+  const page = Gamekit.puzzlePage({
+    id: "mini-sudoku",
+    status: "Fill each row, column, and 2×3 box with 1–6.",
+    generate: (level, seed) => { diff = level; return generate(seed); },
+    start,
+    reset: () => {
+      grid = new Uint8Array(givens);
+      notes = notes.map(() => new Set());
+      history = [];
+      won = false;
+      sel = -1;
+      renderAll();
+    },
+  });
   window.addEventListener("load", () => Manpage.autoOpen("mini-sudoku"));
 })();

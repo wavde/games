@@ -105,6 +105,7 @@
         <option value="human-first" selected>You first vs AI</option>
         <option value="ai-first">AI first</option>
         <option value="local">2 players local</option>
+        <option value="online">Online with a friend</option>
       </select>
     </div>
     <div class="db-board" id="board" role="group" aria-label="Dots and boxes board"></div>
@@ -131,6 +132,7 @@
     <li><strong>Tap</strong> between two dots to draw a line. Lines and boxes take the color of the player who drew or claimed them.</li>
     <li>The most recent line glows. <code>↶ undo</code> takes back your last turn (and the AI's reply).</li>
     <li>Choose a board size, an AI level and who goes first, or play <strong>2 players local</strong>.</li>
+    <li><strong>Online with a friend</strong>: pick it in the mode menu, send the invite link, then paste the reply code your friend sends back. The host is amber and moves first; the host's board size is used.</li>
     <li>Your win–loss–draw record is kept per AI level and board size.</li>
     <li><strong>Keyboard</strong>: Tab to the board; ←/→ move along a row of lines, ↑/↓ to the next row; Enter or Space draws.</li>
   </ul>
@@ -148,6 +150,7 @@
 
 <script defer src="../manpage.js"></script>
 <script defer src="../gamekit.js"></script>
+<script defer src="../net.js"></script>
 <script defer src="game.js"></script>
 </body>
 </html>

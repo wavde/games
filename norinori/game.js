@@ -26,10 +26,11 @@
     return { n, reg, regions, nb: Array.from({ length: n * n }, (_, i) => orth(n, i)) };
   }
 
-  // Board index for a seed: the daily seed picks the day's board; "new" picks at random.
-  function pick(level, seed) {
+  // The daily board walks through the bank one day at a time (no repeats for a bank's length
+  // in days); "new" picks at random.
+  function pick(level, seed, day) {
     const bank = window.NORINORI_PUZZLES[level];
-    return decode(bank[seed % bank.length]);
+    return decode(bank[(day !== undefined ? day : seed) % bank.length]);
   }
 
   function tints(P) {
@@ -48,31 +49,17 @@
   // ---------- game ----------
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
-  const STATUS = "Two shaded cells per region, in dominoes that never touch side-on.";
-  const store = Gamekit.storage("norinori:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
   const NAME = ["empty", "shaded", "dot"];
 
-  let diff = "medium";
-  let P = null, mark = null, history = [], won = false, cellEls = [], dailyDate = null;
+  let P = null, mark = null, history = [], won = false, cellEls = [];
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("norinori", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    P = pick(diff, seed);
+  function start(P0) {
+    P = P0;
     mark = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
     build();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function build() {
@@ -137,9 +124,7 @@
     for (const R of P.regions) if (R.filter((i) => mark[i] === 1).length !== 2) return;
     for (let i = 0; i < mark.length; i++) if (mark[i] === 1 && P.nb[i].filter((j) => mark[j] === 1).length !== 1) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("norinori", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
+    page.win();
     render();
   }
 
@@ -163,28 +148,18 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    mark = new Uint8Array(P.n * P.n);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "norinori",
+    status: "Two shaded cells per region, in dominoes that never touch side-on.",
+    generate: pick,
+    start,
+    reset: () => {
+      mark = new Uint8Array(P.n * P.n);
+      history = [];
+      won = false;
+      render();
+    },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("norinori"));
 
   Gamekit.gridKeys(boardEl, { selector: ".nr-cell", onSecondary: (el) => toggleDot(+el.dataset.i) });

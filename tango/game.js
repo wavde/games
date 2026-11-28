@@ -14,18 +14,10 @@
 
   const boardEl = document.getElementById("board");
   const statusEl = document.getElementById("status");
-  const timeEl = document.getElementById("time");
-  const bestEl = document.getElementById("best");
   const undoBtn = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
   const hintBtn = document.getElementById("hint-btn");
-  const newBtn = document.getElementById("new-btn");
-  const chipsEl = document.getElementById("chips");
 
-  const store = Gamekit.storage("tango:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
-  let diff = store.get("diff", "medium");
-  if (!DIFFS[diff]) diff = "medium";
+  let diff = "medium";
 
   // State
   let solution = new Uint8Array(N * N);
@@ -36,7 +28,6 @@
   let history = [];
   let won = false;
 
-  let dailyDate = null;
   let cellEls = [];
   let edgeEls = [];
 
@@ -220,19 +211,19 @@
     return { solution: sol, givens: given, edges: chosenEdges };
   }
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("tango", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    const p = generate(seed);
+  function start(p) {
     solution = p.solution;
     givens = p.givens;
     edges = p.edges;
+    clear();
+    renderShell();
+    renderAll();
+  }
+
+  function clear() {
     grid = new Uint8Array(givens);
     history = [];
     won = false;
-    clock.start();
-    renderShell();
-    renderAll();
   }
 
   function renderShell() {
@@ -313,9 +304,7 @@
       return;
     }
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("tango", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win();
   }
 
   undoBtn.addEventListener("click", () => {
@@ -326,16 +315,8 @@
     statusEl.textContent = "Fill with suns and moons.";
     renderAll();
   });
-  resetBtn.addEventListener("click", () => {
-    grid = new Uint8Array(givens);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = "Fill with suns and moons.";
-    renderAll();
-  });
   hintBtn.addEventListener("click", () => {
-    if (won) return;
+    if (won || !cellEls.length) return;
     // Find an empty cell and reveal the correct answer
     const empties = [];
     for (let i = 0; i < N * N; i++) if (grid[i] === EMPTY) empties.push(i);
@@ -346,20 +327,14 @@
     renderAll();
     checkWin();
   });
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
 
-  Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
+  const page = Gamekit.puzzlePage({
+    id: "tango",
+    status: "Fill with suns and moons.",
+    generate: (level, seed) => { diff = level; return generate(seed); },
+    start,
+    reset: () => { clear(); renderAll(); },
   });
-  diff = store.get("diff", diff);
-  if (!DIFFS[diff]) diff = "medium";
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("tango"));
 
   Gamekit.gridKeys(boardEl, { selector: ".tg-cell" });

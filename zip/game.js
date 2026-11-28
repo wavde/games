@@ -11,17 +11,10 @@
   const boardEl = document.getElementById("board");
   const svgEl = document.getElementById("svg");
   const statusEl = document.getElementById("status");
-  const timeEl = document.getElementById("time");
-  const bestEl = document.getElementById("best");
   const undoBtn = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn = document.getElementById("new-btn");
-  const chipsEl = document.getElementById("chips");
+  const STATUS = "Connect 1 → 2 → 3 → … filling every cell.";
 
-  const store = Gamekit.storage("zip:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
-  let diff = store.get("diff", "medium");
-  if (!DIFFS[diff]) diff = "medium";
+  let diff = "medium";
 
   let N, K;
   let waypoints = [];    // length K, each is cell index; waypoints[0]=start, sorted by number 1..K
@@ -30,7 +23,6 @@
   let path = [];         // user's current path (array of cell indices)
   let onPath = new Set();
   let won = false;
-  let dailyDate = null;
   let cellEls = [];
   let dragging = false;
 
@@ -245,17 +237,17 @@
     K = waypoints.length;
   }
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("zip", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    generate(seed);
+  // generate() fills in N, K, waypoints and walls, so the shell's puzzle is just a marker.
+  function start() {
+    clear();
+    renderShell();
+    renderPath();
+  }
+
+  function clear() {
     path = [];
     onPath = new Set();
     won = false;
-    clock.start();
-    renderShell();
-    renderPath();
-    statusEl.textContent = "Connect 1 → 2 → 3 → … filling every cell.";
   }
 
   function renderShell() {
@@ -422,9 +414,7 @@
     // Must end at last waypoint; must have visited waypoints in order (already enforced).
     if (path[path.length - 1] !== waypoints[K - 1]) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("zip", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Zipped in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win((t) => "Zipped in " + t + ".");
   }
 
   undoBtn.addEventListener("click", () => {
@@ -432,31 +422,19 @@
     const r = path.pop();
     onPath.delete(r);
     renderPath();
-    statusEl.textContent = "Connect 1 → 2 → 3 → … filling every cell.";
+    statusEl.textContent = STATUS;
   });
-  resetBtn.addEventListener("click", () => {
-    path = []; onPath = new Set(); won = false;
-    clock.start();
-    statusEl.textContent = "Connect 1 → 2 → 3 → … filling every cell.";
-    renderPath();
-  });
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = store.get("diff", diff);
-  if (!DIFFS[diff]) diff = "medium";
 
   window.addEventListener("resize", () => { renderWalls(); renderPath(); });
   // Keyboard: Enter/Space on a cell extends (or truncates) the path to it.
   Gamekit.gridKeys(boardEl, { selector: ".zp-cell", onActivate: (el) => tryExtend(Number(el.dataset.i)) });
 
-  newPuzzle();
+  const page = Gamekit.puzzlePage({
+    id: "zip",
+    status: STATUS,
+    generate: (level, seed) => { diff = level; generate(seed); return { N, K, waypoints, walls }; },
+    start,
+    reset: () => { clear(); renderPath(); },
+  });
   window.addEventListener("load", () => Manpage.autoOpen("zip"));
 })();

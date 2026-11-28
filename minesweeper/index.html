@@ -82,8 +82,6 @@
     touch-action: manipulation;
   }
   .c {
-    width: 28px;
-    height: 28px;
     background: var(--panel-2);
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
@@ -91,18 +89,12 @@
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: inherit;
     cursor: pointer;
     user-select: none;
     font-family: var(--font-mono);
     color: var(--fg);
     transition: background 0.08s, border-color 0.08s;
-  }
-  @media (max-width: 560px) {
-    .c { width: 24px; height: 24px; font-size: 0.75rem; }
-  }
-  @media (max-width: 420px) {
-    .c { width: 20px; height: 20px; font-size: 0.65rem; border-radius: 3px; }
   }
   .c:hover { background: var(--panel); border-color: var(--border-hi); }
   .c.open {
@@ -122,6 +114,7 @@
   .n6 { color: #5fe0d2; }
   .n7 { color: var(--fg); }
   .n8 { color: var(--danger); }
+  .ms-stats > span { white-space: nowrap; }
 
 </style>
 </head>
@@ -133,21 +126,22 @@
   </div>
   <div class="panel">
     <div class="row">
-      <p class="status" id="status">Tap to reveal. Long-press (or right-click) to flag.</p>
+      <p class="status" id="status" aria-live="polite">Tap to reveal. Long-press (or right-click) to flag.</p>
+      <p class="status ms-stats"><span>Mines: <span id="mines">0</span></span> <span>· Time: <span id="time">0:00</span></span> <span>· Best: <span id="best">—</span></span> <span>· Won: <span id="record">0/0</span></span></p>
       <button class="btn ghost tool-btn man-trigger" data-man="minesweeper" data-man-title="MINESWEEPER(1)" type="button">
         <span class="q">?</span> man
       </button>
     </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+    </div>
     <div id="board" class="ms" role="group" aria-label="Minefield"></div>
-    <div class="controls" style="justify-content:center">
-      <button type="button" class="primary" id="reset">New game</button>
-      <select id="diff" aria-label="Difficulty">
-        <option value="easy">Easy · 9×9 · 10 mines</option>
-        <option value="medium" selected>Medium · 16×16 · 40</option>
-        <option value="hard">Hard · 20×20 · 80</option>
-      </select>
-      <span id="mines" class="kbd">0 mines</span>
-      <span id="time" class="kbd">0s</span>
+    <div class="toolbar">
+      <button class="btn primary" id="new-btn" type="button">↻ new game</button>
     </div>
   </div>
 </main>
@@ -169,7 +163,9 @@
   <ul>
     <li><strong>Tap / left-click</strong> a cell to reveal it.</li>
     <li><strong>Long-press (500ms)</strong> or <strong>right-click</strong> to place / remove a flag.</li>
-    <li><code>New game</code> re-deals. Difficulty dropdown changes board size and mine count.</li>
+    <li>The <code>Easy</code> / <code>Medium</code> / <code>Hard</code> chips pick the board: 9×9 with 10 mines, 16×16 with 40, or 20×20 with 80. On a phone the first visit starts on Easy. Bigger boards scroll inside their frame when they don't fit the screen.</li>
+    <li><code>↻ new game</code> re-deals the current board.</li>
+    <li>The stats line shows mines left (mines minus flags), the clock, your <strong>Best</strong> winning time and <strong>Won</strong> (games won / games played) for the current level, kept on this device. A game counts as played once you open your first cell.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space reveals, <span class="kbd">F</span> flags.</li>
   </ul>
 

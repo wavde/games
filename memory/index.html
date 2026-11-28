@@ -85,20 +85,22 @@
   </div>
   <div class="panel">
     <div class="row">
-      <p class="status" id="status">Flip two. Match all pairs.</p>
-      <p class="status">Moves: <span id="moves">0</span> · Time: <span id="time">0</span>s · Best: <span id="best">—</span></p>
+      <p class="status" id="status" aria-live="polite">Flip two. Match all pairs.</p>
+      <p class="status">Moves: <span id="moves">0</span> · Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
       <button class="btn ghost tool-btn man-trigger" data-man="memory" data-man-title="MEMORY(1)" type="button">
         <span class="q">?</span> man
       </button>
     </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Board size">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+    </div>
     <div class="mem" id="board"></div>
-    <div class="controls" style="justify-content:center">
-      <button type="button" class="primary" id="reset">New game</button>
-      <select id="size" aria-label="Board size">
-        <option value="4">4×4</option>
-        <option value="6" selected>6×6</option>
-        <option value="8">8×8</option>
-      </select>
+    <div class="toolbar">
+      <button class="btn primary" id="new-btn" type="button">↻ new game</button>
     </div>
   </div>
 </main>
@@ -117,12 +119,14 @@
   <h2>Controls</h2>
   <ul>
     <li><strong>Tap / click</strong> a card to flip it.</li>
-    <li><code>New game</code> shuffles a fresh board. Size dropdown switches between 4×4, 6×6, 8×8.</li>
+    <li>The <code>Easy</code> / <code>Medium</code> / <code>Hard</code> chips pick a 4×4, 6×6 or 8×8 board; switching deals a new one.</li>
+    <li><code>↻ new game</code> shuffles a fresh board of the same size.</li>
+    <li>The stats line shows your <strong>Moves</strong> (pairs turned), the <strong>Time</strong> since your first flip, and your <strong>Best</strong> time for this size.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space flips a card.</li>
   </ul>
 
   <h2>Notes</h2>
-  <p class="muted">Best time is stored per board size.</p>
+  <p class="muted">Best time is stored per board size on this device.</p>
 </template>
 
 <script defer src="../manpage.js"></script>

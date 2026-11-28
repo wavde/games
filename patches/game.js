@@ -5,23 +5,15 @@
 
   const boardEl = document.getElementById("board");
   const statusEl = document.getElementById("status");
-  const timeEl = document.getElementById("time");
-  const bestEl = document.getElementById("best");
   const undoBtn = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn = document.getElementById("new-btn");
-  const chipsEl = document.getElementById("chips");
+  const STATUS = "Draw rectangles — each clue's number = its rectangle's area.";
 
-  const store = Gamekit.storage("patches:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
-  let diff = store.get("diff", "medium");
-  if (!DIFFS[diff]) diff = "medium";
+  let diff = "medium";
 
   let N;
   let clues = []; // {r, c, v} — clue position + area value
   let userRects = []; // {r0, c0, r1, c1}
   let won = false;
-  let dailyDate = null;
   let cellEls = [];
 
   // Drag state
@@ -169,16 +161,14 @@
     clues = rects.map(r => clueFor(r, rng));
   }
 
-  function newPuzzle(seedOverride) {
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("patches", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    generate(seed);
+  function start(P0, level) {
+    diff = level;
+    N = P0.N;
+    clues = P0.clues;
     userRects = [];
     won = false;
-    clock.start();
     renderShell();
     renderRects();
-    statusEl.textContent = "Draw rectangles — each clue's number = its rectangle's area.";
   }
 
   function renderShell() {
@@ -316,35 +306,15 @@
       if (cluesInside.length !== 1 || cluesInside[0].v !== area) return;
     }
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("patches", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Sewn up in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win((t) => "Sewn up in " + t + ".");
   }
 
   undoBtn.addEventListener("click", () => {
     if (userRects.length === 0 || won) return;
     userRects.pop();
     renderRects();
-    statusEl.textContent = "Draw rectangles — each clue's number = its rectangle's area.";
+    statusEl.textContent = STATUS;
   });
-  resetBtn.addEventListener("click", () => {
-    userRects = []; won = false;
-    clock.start();
-    renderRects();
-    statusEl.textContent = "Draw rectangles — each clue's number = its rectangle's area.";
-  });
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = store.get("diff", diff);
-  if (!DIFFS[diff]) diff = "medium";
 
   window.addEventListener("resize", () => renderRects());
   // Keyboard: Enter/Space marks one corner, move, Enter/Space again places the rectangle.
@@ -378,6 +348,12 @@
     if (e.key === "Escape" && kbStart) { kbStart = null; dragStart = dragEnd = null; clearDragHighlight(); }
   });
 
-  newPuzzle();
+  const page = Gamekit.puzzlePage({
+    id: "patches",
+    status: STATUS,
+    generate: (level, seed) => { diff = level; generate(seed); return { N, clues }; },
+    start,
+    reset: () => { userRects = []; won = false; renderRects(); },
+  });
   window.addEventListener("load", () => Manpage.autoOpen("patches"));
 })();

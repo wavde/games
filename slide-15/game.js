@@ -6,9 +6,6 @@
   const movesEl  = document.getElementById("moves");
   const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
 
   const DIFFS = { easy: 3, medium: 4, hard: 5 };
   const store = Gamekit.storage("slide-15:");
@@ -20,7 +17,6 @@
   let history = [];    // [{ tiles, moves }]
   let moves = 0;
   let won = false;
-  let dailyDate = null;
 
   function solvedBoard(n) {
     const a = [];
@@ -60,11 +56,10 @@
     return t;
   }
 
-  function newPuzzle(seedOverride) {
+  function start(P0, level) {
+    diff = level;
     N = DIFFS[diff];
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("slide-15", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    initial = scramble(seed);
+    initial = P0;
     tiles = initial.slice();
     history = [];
     moves = 0;
@@ -116,11 +111,11 @@
     }
     if (isSolved(tiles)) {
       won = true;
-      if (dailyDate) Gamekit.markDailySolved("slide-15", diff, dailyDate);
       const best = store.getInt("best:" + diff, null);
       if (best === null || moves < best) store.set("best:" + diff, moves);
     }
     render();
+    if (won) page.win(() => "Solved in " + moves + " move" + (moves === 1 ? "" : "s") + ".");
     return true;
   }
 
@@ -129,13 +124,13 @@
     const best = store.getInt("best:" + diff, null);
     bestEl.textContent = best === null ? "—" : best;
     undoBtn.disabled = history.length === 0;
-    if (won) {
-      statusEl.innerHTML = '<span class="ok">Solved in ' + moves + ' move' + (moves === 1 ? '' : 's') + '.</span>';
-    } else {
-      let home = 0;
-      for (let i = 0; i < tiles.length - 1; i++) if (tiles[i] === i + 1) home++;
-      statusEl.textContent = home + " of " + (tiles.length - 1) + " tiles home.";
-    }
+    if (!won) statusEl.textContent = tilesHome();
+  }
+
+  function tilesHome() {
+    let home = 0;
+    for (let i = 0; i < tiles.length - 1; i++) if (tiles[i] === i + 1) home++;
+    return home + " of " + (tiles.length - 1) + " tiles home.";
   }
 
   boardEl.addEventListener("click", (e) => {
@@ -157,16 +152,6 @@
     if (src >= 0) slideFrom(src);
   });
 
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
-  });
-  diff = chips.get();
-
   undoBtn.addEventListener("click", () => {
     const h = history.pop();
     if (!h) return;
@@ -176,16 +161,19 @@
     render();
   });
 
-  resetBtn.addEventListener("click", () => {
-    tiles = initial.slice();
-    history = [];
-    moves = 0;
-    won = false;
-    render();
+  const page = Gamekit.puzzlePage({
+    id: "slide-15",
+    status: tilesHome,
+    clock: false,
+    generate: (level, seed) => { N = DIFFS[level]; return scramble(seed); },
+    start,
+    reset: () => {
+      tiles = initial.slice();
+      history = [];
+      moves = 0;
+      won = false;
+      render();
+    },
   });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
-
-  newPuzzle();
   window.addEventListener("load", () => Manpage.autoOpen("slide-15"));
 })();

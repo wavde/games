@@ -304,6 +304,124 @@
     const diffs = dailySolved(game);
     if (diffs.indexOf(diff) < 0) diffs.push(diff);
     dailyStore.setJSON(game, { date: date, diffs: diffs });
+    const days = dailyStore.getJSON("_days", []);
+    if (days.indexOf(date) < 0) dailyStore.setJSON("_days", days.concat(date).sort().slice(-400));
+  }
+
+  // Days in a row with at least one daily puzzle solved, counting back from today (or from
+  // yesterday while today's is still open). { days, today }.
+  function dailyStreak() {
+    const days = new Set(dailyStore.getJSON("_days", []));
+    const iso = (t) => new Date(t).toISOString().slice(0, 10);
+    let t = Date.parse(todayISO() + "T00:00:00Z");
+    const today = days.has(iso(t));
+    if (!today) t -= 864e5;
+    let n = 0;
+    for (; days.has(iso(t)); t -= 864e5) n++;
+    return { days: n, today: today };
+  }
+
+  // Offline play: register the service worker beside this script (the site root). Plain-http
+  // hosts other than localhost (like the 127.0.0.1 test server) skip it.
+  (function registerOffline() {
+    const me = document.currentScript;
+    if (!me || !("serviceWorker" in navigator)) return;
+    if (location.protocol !== "https:" && location.hostname !== "localhost") return;
+    navigator.serviceWorker.register(new URL("sw.js", me.src)).catch(() => {});
+  })();
+
+  // Recently opened games, newest first (each game page's body carries class g-<name>).
+  const recentStore = storage("games:");
+  function recentGames() { return recentStore.getJSON("recent", []); }
+  (function noteVisit() {
+    const m = document.body && /(?:^|\s)g-([\w-]+)/.exec(document.body.className);
+    if (!m) return;
+    recentStore.setJSON("recent", [m[1]].concat(recentGames().filter((g) => g !== m[1])).slice(0, 8));
+  })();
+
+  // Run fn once the browser has painted (so a "Generating…" line shows before heavy work).
+  // The timeout covers background tabs, where animation frames don't fire.
+  function afterPaint(fn) {
+    let done = false;
+    const go = () => { if (!done) { done = true; fn(); } };
+    requestAnimationFrame(() => setTimeout(go, 0));
+    setTimeout(go, 250);
+  }
+
+  // The shared page shell for the daily puzzles. It owns the difficulty chips (#chips), today's
+  // seed, generating after a paint with the board (#board) marked aria-busy, the clock and best
+  // time per level (#time, #best), New and Reset (#new-btn, optional #reset-btn), and the status line
+  // (#status). The game keeps its rules, rendering, and undo.
+  // opts = {
+  //   id,                  storage prefix and daily-seed name
+  //   status,              status text for a fresh board (string, or function of the puzzle)
+  //   generate(level, seed, day) → puzzle; day (days since 1970, UTC) is set only for the
+  //                        daily board, so banked games can step through their bank
+  //   start(P, level),     set up a fresh board for puzzle P
+  //   reset?(),            clear the player's progress (default: start(P, level) again)
+  //   levels?, initial?,   chip values (default easy/medium/hard) and the first-visit level
+  //   clock?               false for untimed puzzles
+  // }
+  // Returns { level(), win(fmt?), store, daily() }. win stops the clock, records today's daily,
+  // and shows fmt(time) (default "Solved in m:ss."); it returns the seconds taken.
+  function puzzlePage(opts) {
+    const $ = (id) => document.getElementById(id);
+    const boardEl = $("board"), statusEl = $("status"), store = storage(opts.id + ":");
+    let level = opts.initial || "medium", P = null, dailyDate = null, ticket = 0;
+    const clock = opts.clock === false ? null :
+      puzzleClock({ timeEl: $("time"), bestEl: $("best"), store, key: () => "best:" + level });
+
+    function fresh() {
+      if (clock) clock.start();
+      statusEl.textContent = typeof opts.status === "function" ? opts.status(P) : opts.status;
+    }
+
+    function load(seed) {
+      const mine = ++ticket;
+      boardEl.setAttribute("aria-busy", "true");
+      statusEl.textContent = "Generating…";
+      afterPaint(() => {
+        if (mine !== ticket) return;
+        const daily = seed === undefined;
+        dailyDate = daily ? todayISO() : null;
+        P = daily ? opts.generate(level, dailySeed(opts.id, level), Math.floor(Date.parse(dailyDate) / 864e5))
+          : opts.generate(level, seed);
+        opts.start(P, level);
+        boardEl.removeAttribute("aria-busy");
+        fresh();
+      });
+    }
+
+    $("new-btn").addEventListener("click", () => load(randomSeed()));
+    const resetBtn = $("reset-btn");
+    if (resetBtn) resetBtn.addEventListener("click", () => {
+      if (!P || boardEl.getAttribute("aria-busy")) return;
+      if (opts.reset) opts.reset(); else opts.start(P, level);
+      fresh();
+    });
+
+    const chips = wireDifficultyChips({
+      el: $("chips"),
+      difficulties: opts.levels || ["easy", "medium", "hard"],
+      initial: level,
+      storage: store,
+      storageKey: "diff",
+      onChange: (d) => { level = d; load(); },
+    });
+    level = chips.get();
+    load();
+
+    return {
+      level: () => level,
+      store,
+      daily: () => dailyDate,
+      win(fmt) {
+        const s = clock ? clock.stop() : 0;
+        if (dailyDate) markDailySolved(opts.id, level, dailyDate);
+        statusEl.innerHTML = '<span class="ok">' + (fmt ? fmt(fmtTime(s)) : "Solved in " + fmtTime(s) + ".") + "</span>";
+        return s;
+      },
+    };
   }
 
   // ---------- Shared by the digit puzzles (calcudoku, kakuro, skyscrapers, futoshiki) ----------
@@ -425,7 +543,11 @@
     onLongPress,
     gridKeys,
     puzzleClock,
+    afterPaint,
+    puzzlePage,
     dailySolved,
     markDailySolved,
+    dailyStreak,
+    recentGames,
   };
 })(window);

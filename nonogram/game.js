@@ -2,13 +2,7 @@
   "use strict";
 
   const boardEl  = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const timeEl   = document.getElementById("time");
-  const bestEl   = document.getElementById("best");
   const undoBtn  = document.getElementById("undo-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const newBtn   = document.getElementById("new-btn");
-  const chipsEl  = document.getElementById("chips");
   const modeEl   = document.getElementById("mode");
 
   const DIFFS = {
@@ -17,9 +11,6 @@
     hard:   { n: 10, density: 0.58 },
   };
   const EMPTY = 0, FILL = 1, MARK = 2;
-  const STATUS = "Fill cells to match the clues.";
-  const store = Gamekit.storage("nonogram:");
-  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
   let diff = "medium";
   let N = DIFFS[diff].n;
@@ -29,7 +20,6 @@
   let won = false;
   let mode = "fill";
   let cellEls = [], rowClueEls = [], colClueEls = [];
-  let dailyDate = null;
 
   // ---------- Clues + line solver ----------
 
@@ -130,18 +120,16 @@
 
   // ---------- Game ----------
 
-  function newPuzzle(seedOverride) {
-    N = DIFFS[diff].n;
-    const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("nonogram", diff);
-    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
-    const p = generate(seed);
+  function start(p) {
     sol = p.s; rowClues = p.rows; colClues = p.cols;
+    clear();
+    buildBoard();
+  }
+
+  function clear() {
     grid = new Array(N * N).fill(EMPTY);
     history = [];
     won = false;
-    buildBoard();
-    clock.start();
-    statusEl.textContent = STATUS;
   }
 
   function clueSpans(el, clue) {
@@ -234,9 +222,7 @@
   function checkWin() {
     for (let i = 0; i < N * N; i++) if ((grid[i] === FILL) !== (sol[i] === 1)) return;
     won = true;
-    const s = clock.stop();
-    if (dailyDate) Gamekit.markDailySolved("nonogram", diff, dailyDate);
-    statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
+    page.win();
     syncAll();
   }
 
@@ -342,28 +328,14 @@
     syncAll();
   });
 
-  resetBtn.addEventListener("click", () => {
-    grid = new Array(N * N).fill(EMPTY);
-    history = [];
-    won = false;
-    clock.start();
-    statusEl.textContent = STATUS;
-    syncAll();
-  });
-
-  newBtn.addEventListener("click", () => newPuzzle(Gamekit.randomSeed()));
   window.addEventListener("resize", fitBoard);
 
-  const chips = Gamekit.wireDifficultyChips({
-    el: chipsEl,
-    difficulties: ["easy", "medium", "hard"],
-    initial: diff,
-    storage: store,
-    storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); },
+  const page = Gamekit.puzzlePage({
+    id: "nonogram",
+    status: "Fill cells to match the clues.",
+    generate: (level, seed) => { diff = level; N = DIFFS[diff].n; return generate(seed); },
+    start,
+    reset: () => { clear(); syncAll(); },
   });
-  diff = chips.get();
-
-  newPuzzle();
   window.addEventListener("load", () => { fitBoard(); Manpage.autoOpen("nonogram"); });
 })();

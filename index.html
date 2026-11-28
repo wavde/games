@@ -30,7 +30,7 @@
     grid-template-columns: auto 1fr;
     gap: 48px;
     align-items: start;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
   }
   @media (max-width: 720px) { .hero { grid-template-columns: 1fr; gap: 20px; } }
 
@@ -123,6 +123,53 @@
     text-transform: uppercase;
   }
 
+  /* Today strip, recent games, and the filter */
+  .today { display: grid; gap: 10px; margin: 0 0 8px; }
+  .today-line { margin: 0; font-size: var(--fs-md); color: var(--fg); }
+  .today-line .hl { color: var(--accent-2); }
+  .recent { margin: 0; font-size: var(--fs-sm); color: var(--muted); }
+  .recent a { color: var(--fg); }
+  .recent a:hover { color: var(--accent); }
+  .filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 360px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-2);
+  }
+  .filter:focus-within { border-color: var(--accent); }
+  .filter .sigil { color: var(--accent); }
+  .filter input {
+    flex: 1;
+    min-width: 0;
+    min-height: 42px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    font-size: var(--fs-md);
+  }
+  .no-match { margin: 4px 0 0; color: var(--muted); font-size: var(--fs-sm); }
+
+  .group { margin-top: 28px; }
+  .section-head .count { color: var(--muted); letter-spacing: 0; }
+  .group-blurb { margin: -6px 0 12px; color: var(--muted); font-size: var(--fs-sm); }
+
+  /* Phones: two compact columns */
+  @media (max-width: 560px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { padding: 14px 12px; min-height: 0; }
+    .card .num { margin-bottom: 6px; }
+    .card h3 { font-size: 14px; }
+    .card p { font-size: 11px; }
+    .card .arrow { display: none; }
+    .hero .prompt { display: none; }
+  }
+
   .footer {
     margin-top: 40px;
     padding-top: 20px;
@@ -167,147 +214,174 @@
  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝</pre>
     <div>
       <p class="tag"><span class="dot">▍</span> A small, handcrafted arcade</p>
-      <p class="lede">Forty-three games — classics and logic puzzles. <span class="mute">Touch, mouse, or keyboard — every game, no logins, no ads — just pixels and problems to solve.</span></p>
+      <p class="lede">Forty-three games — daily logic puzzles, strategy, cards, and arcade. <span class="mute">Touch, mouse, or keyboard — every game, no logins, no ads — just pixels and problems to solve.</span></p>
       <div class="prompt"><span class="sigil">$</span><span class="cmd">pick-a-game</span><span class="caret"></span></div>
     </div>
   </header>
 
-  <h2 class="section-head">Classics</h2>
-  <nav class="grid" aria-label="Classic games">
-    <a class="card" href="tic-tac-toe/">
-      <div class="num">01</div><h3>Tic-Tac-Toe</h3><p>Unbeatable minimax. Try to draw.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="2048/">
-      <div class="num">02</div><h3>2048</h3><p>Slide and merge. Reach the tile.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="minesweeper/">
-      <div class="num">03</div><h3>Minesweeper</h3><p>Tap to reveal, long-press to flag.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="memory/">
-      <div class="num">04</div><h3>Memory Match</h3><p>Flip pairs. Beat your best time.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="chess/">
-      <div class="num">05</div><h3>Chess</h3><p>vs. a small minimax engine.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="connect-four/">
-      <div class="num">06</div><h3>Connect Four</h3><p>Drop four in a row. Three AI depths.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="lights-out/">
-      <div class="num">07</div><h3>Lights Out</h3><p>Toggle every light off. Fewer moves = better.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="code-breaker/">
-      <div class="num">08</div><h3>Code Breaker</h3><p>Crack the hidden color code. Daily puzzle.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="slide-15/">
-      <div class="num">09</div><h3>Slide 15</h3><p>Slide the tiles back into order. 3×3 to 5×5.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="reversi/">
-      <div class="num">10</div><h3>Reversi</h3><p>Outflank and flip. Three AI levels or 2P.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="dots-and-boxes/">
-      <div class="num">11</div><h3>Dots &amp; Boxes</h3><p>Close boxes, go again. Chain-aware AI.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="gomoku/">
-      <div class="num">12</div><h3>Gomoku</h3><p>Five in a row on 15×15. Three AI levels or 2P.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="checkers/">
-      <div class="num">13</div><h3>Checkers</h3><p>Forced jumps, multi-jumps, kings. Three AI levels or 2P.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="mancala/">
-      <div class="num">14</div><h3>Mancala</h3><p>Sow seeds, chain extra turns, capture. Three AI levels or 2P.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="battleships/">
-      <div class="num">15</div><h3>Battleships</h3><p>Hunt the hidden fleet. Three AI levels.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="sokoban/">
-      <div class="num">16</div><h3>Sokoban</h3><p>Push every box onto a goal. Beat the par.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="snake/">
-      <div class="num">17</div><h3>Snake</h3><p>Steer, eat, grow. Three speeds.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="breakout/">
-      <div class="num">18</div><h3>Breakout</h3><p>Paddle, ball, wall of bricks. Endless levels.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="klondike/">
-      <div class="num">19</div><h3>Klondike</h3><p>Solitaire. Draw one or three; every deal can be won.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="freecell/">
-      <div class="num">20</div><h3>FreeCell</h3><p>Every card face up. The classic numbered deals.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="morris/">
-      <div class="num">21</div><h3>Nine Men's Morris</h3><p>Form mills, take pieces. vs. AI or a friend.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="hex/">
-      <div class="num">22</div><h3>Hex</h3><p>Join your two sides. No draws, ever.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="spider/">
-      <div class="num">23</div><h3>Spider</h3><p>Two decks, ten columns. One, two, or four suits.</p><span class="badge">new</span><span class="arrow">→</span>
-    </a>
-  </nav>
+  <section class="today" aria-label="Today and search">
+    <p class="today-line" id="today-line">Today's daily puzzles are ready.</p>
+    <p class="recent" id="recent" hidden></p>
+    <label class="filter"><span class="sigil" aria-hidden="true">/</span><input type="search" id="filter" placeholder="filter games" aria-label="Filter games" autocomplete="off" spellcheck="false"></label>
+    <p class="no-match" id="no-match" hidden>No game matches that.</p>
+  </section>
 
-  <h2 class="section-head">Logic Puzzles</h2>
-  <nav class="grid" aria-label="Logic puzzle games">
-    <a class="card" href="mini-sudoku/">
-      <div class="num">24</div><h3>Mini Sudoku</h3><p>6×6 grid, 2×3 boxes. Three difficulties.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="tango/">
-      <div class="num">25</div><h3>Tango</h3><p>Suns and moons. No three in a row.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="queens/">
-      <div class="num">26</div><h3>Queens</h3><p>One per row, column, and region.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="zip/">
-      <div class="num">27</div><h3>Zip</h3><p>Draw one path. Visit the numbers in order.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="patches/">
-      <div class="num">28</div><h3>Patches</h3><p>Cover the grid with shaped rectangles.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="nonogram/">
-      <div class="num">29</div><h3>Nonogram</h3><p>Paint the picture from row and column clues.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="hashi/">
-      <div class="num">30</div><h3>Hashi</h3><p>Bridge every island. Never cross.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="akari/">
-      <div class="num">31</div><h3>Akari</h3><p>Light every cell. Bulbs can't see each other.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="slitherlink/">
-      <div class="num">32</div><h3>Slitherlink</h3><p>Draw one loop. Each number counts its sides.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="star-battle/">
-      <div class="num">33</div><h3>Star Battle</h3><p>Two stars per row, column, and region. No touching.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="kakuro/">
-      <div class="num">34</div><h3>Kakuro</h3><p>Cross sums. Each run adds up, no repeats.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="hitori/">
-      <div class="num">35</div><h3>Hitori</h3><p>Shade the repeats. Keep the rest connected.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="nurikabe/">
-      <div class="num">36</div><h3>Nurikabe</h3><p>Paint the sea. Every island matches its number.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="calcudoku/">
-      <div class="num">37</div><h3>Calcudoku</h3><p>Arithmetic cages on a Latin square.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="skyscrapers/">
-      <div class="num">38</div><h3>Skyscrapers</h3><p>Place the towers. Clues count what each edge sees.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="futoshiki/">
-      <div class="num">39</div><h3>Futoshiki</h3><p>Latin square held together by greater-than signs.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="tents/">
-      <div class="num">40</div><h3>Tents</h3><p>A tent beside every tree. Tents never touch.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="jigsaw-sudoku/">
-      <div class="num">41</div><h3>Jigsaw Sudoku</h3><p>Sudoku with irregular regions. Up to 9×9.</p><span class="arrow">→</span>
-    </a>
-    <a class="card" href="norinori/">
-      <div class="num">42</div><h3>Norinori</h3><p>Two shaded cells per region, in dominoes.</p><span class="badge">new</span><span class="arrow">→</span>
-    </a>
-    <a class="card" href="lits/">
-      <div class="num">43</div><h3>LITS</h3><p>One tetromino per region. All connected.</p><span class="badge">new</span><span class="arrow">→</span>
-    </a>
-  </nav>
+  <section class="group" id="daily" aria-labelledby="daily-h">
+    <h2 class="section-head" id="daily-h">Daily puzzles <span class="count">24</span></h2>
+    <p class="group-blurb">A fresh board every day at three levels, plus endless random ones.</p>
+    <nav class="grid" aria-label="Daily puzzles">
+      <a class="card" href="mini-sudoku/" data-daily>
+        <div class="num">01</div><h3>Mini Sudoku</h3><p>6×6 grid, 2×3 boxes. Three difficulties.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="tango/" data-daily>
+        <div class="num">02</div><h3>Tango</h3><p>Suns and moons. No three in a row.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="queens/" data-daily>
+        <div class="num">03</div><h3>Queens</h3><p>One per row, column, and region.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="zip/" data-daily>
+        <div class="num">04</div><h3>Zip</h3><p>Draw one path. Visit the numbers in order.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="patches/" data-daily>
+        <div class="num">05</div><h3>Patches</h3><p>Cover the grid with shaped rectangles.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="nonogram/" data-daily>
+        <div class="num">06</div><h3>Nonogram</h3><p>Paint the picture from row and column clues.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="hashi/" data-daily>
+        <div class="num">07</div><h3>Hashi</h3><p>Bridge every island. Never cross.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="akari/" data-daily>
+        <div class="num">08</div><h3>Akari</h3><p>Light every cell. Bulbs can't see each other.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="slitherlink/" data-daily>
+        <div class="num">09</div><h3>Slitherlink</h3><p>Draw one loop. Each number counts its sides.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="star-battle/" data-daily>
+        <div class="num">10</div><h3>Star Battle</h3><p>Two stars per row, column, and region. No touching.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="kakuro/" data-daily>
+        <div class="num">11</div><h3>Kakuro</h3><p>Cross sums. Each run adds up, no repeats.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="hitori/" data-daily>
+        <div class="num">12</div><h3>Hitori</h3><p>Shade the repeats. Keep the rest connected.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="nurikabe/" data-daily>
+        <div class="num">13</div><h3>Nurikabe</h3><p>Paint the sea. Every island matches its number.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="calcudoku/" data-daily>
+        <div class="num">14</div><h3>Calcudoku</h3><p>Arithmetic cages on a Latin square.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="skyscrapers/" data-daily>
+        <div class="num">15</div><h3>Skyscrapers</h3><p>Place the towers. Clues count what each edge sees.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="futoshiki/" data-daily>
+        <div class="num">16</div><h3>Futoshiki</h3><p>Latin square held together by greater-than signs.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="tents/" data-daily>
+        <div class="num">17</div><h3>Tents</h3><p>A tent beside every tree. Tents never touch.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="jigsaw-sudoku/" data-daily>
+        <div class="num">18</div><h3>Jigsaw Sudoku</h3><p>Sudoku with irregular regions. Up to 9×9.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="norinori/" data-daily>
+        <div class="num">19</div><h3>Norinori</h3><p>Two shaded cells per region, in dominoes.</p><span class="badge">new</span><span class="arrow">→</span>
+      </a>
+      <a class="card" href="lits/" data-daily>
+        <div class="num">20</div><h3>LITS</h3><p>One tetromino per region. All connected.</p><span class="badge">new</span><span class="arrow">→</span>
+      </a>
+      <a class="card" href="sokoban/" data-daily>
+        <div class="num">21</div><h3>Sokoban</h3><p>Push every box onto a goal. Beat the par.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="code-breaker/" data-daily>
+        <div class="num">22</div><h3>Code Breaker</h3><p>Crack the hidden color code. Daily puzzle.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="lights-out/" data-daily>
+        <div class="num">23</div><h3>Lights Out</h3><p>Toggle every light off. Fewer moves = better.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="slide-15/" data-daily>
+        <div class="num">24</div><h3>Slide 15</h3><p>Slide the tiles back into order. 3×3 to 5×5.</p><span class="arrow">→</span>
+      </a>
+    </nav>
+  </section>
+
+  <section class="group" id="versus" aria-labelledby="versus-h">
+    <h2 class="section-head" id="versus-h">Versus <span class="count">11</span></h2>
+    <p class="group-blurb">Strategy games against an AI at three strengths, most also for two players on one device.</p>
+    <nav class="grid" aria-label="Versus">
+      <a class="card" href="chess/">
+        <div class="num">25</div><h3>Chess</h3><p>vs. a small minimax engine.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="checkers/">
+        <div class="num">26</div><h3>Checkers</h3><p>Forced jumps, multi-jumps, kings. Three AI levels or 2P.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="reversi/">
+        <div class="num">27</div><h3>Reversi</h3><p>Outflank and flip. Three AI levels or 2P.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="connect-four/">
+        <div class="num">28</div><h3>Connect Four</h3><p>Drop four in a row. Three AI depths.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="gomoku/">
+        <div class="num">29</div><h3>Gomoku</h3><p>Five in a row on 15×15. Three AI levels or 2P.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="hex/">
+        <div class="num">30</div><h3>Hex</h3><p>Join your two sides. No draws, ever.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="morris/">
+        <div class="num">31</div><h3>Nine Men's Morris</h3><p>Form mills, take pieces. vs. AI or a friend.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="mancala/">
+        <div class="num">32</div><h3>Mancala</h3><p>Sow seeds, chain extra turns, capture. Three AI levels or 2P.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="dots-and-boxes/">
+        <div class="num">33</div><h3>Dots &amp; Boxes</h3><p>Close boxes, go again. Chain-aware AI.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="battleships/">
+        <div class="num">34</div><h3>Battleships</h3><p>Hunt the hidden fleet. Three AI levels.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="tic-tac-toe/">
+        <div class="num">35</div><h3>Tic-Tac-Toe</h3><p>Unbeatable minimax. Try to draw.</p><span class="arrow">→</span>
+      </a>
+    </nav>
+  </section>
+
+  <section class="group" id="cards" aria-labelledby="cards-h">
+    <h2 class="section-head" id="cards-h">Cards <span class="count">3</span></h2>
+    <p class="group-blurb">Solitaire with a daily deal.</p>
+    <nav class="grid" aria-label="Cards">
+      <a class="card" href="klondike/" data-daily>
+        <div class="num">36</div><h3>Klondike</h3><p>Solitaire. Draw one or three; every deal can be won.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="freecell/" data-daily>
+        <div class="num">37</div><h3>FreeCell</h3><p>Every card face up. The classic numbered deals.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="spider/" data-daily>
+        <div class="num">38</div><h3>Spider</h3><p>Two decks, ten columns. One, two, or four suits.</p><span class="badge">new</span><span class="arrow">→</span>
+      </a>
+    </nav>
+  </section>
+
+  <section class="group" id="arcade" aria-labelledby="arcade-h">
+    <h2 class="section-head" id="arcade-h">Arcade <span class="count">5</span></h2>
+    <p class="group-blurb">Quick games against the clock or the board.</p>
+    <nav class="grid" aria-label="Arcade">
+      <a class="card" href="2048/">
+        <div class="num">39</div><h3>2048</h3><p>Slide and merge. Reach the tile.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="minesweeper/">
+        <div class="num">40</div><h3>Minesweeper</h3><p>Tap to reveal, long-press to flag.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="memory/">
+        <div class="num">41</div><h3>Memory Match</h3><p>Flip pairs. Beat your best time.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="snake/">
+        <div class="num">42</div><h3>Snake</h3><p>Steer, eat, grow. Three speeds.</p><span class="arrow">→</span>
+      </a>
+      <a class="card" href="breakout/">
+        <div class="num">43</div><h3>Breakout</h3><p>Paddle, ball, wall of bricks. Endless levels.</p><span class="arrow">→</span>
+      </a>
+    </nav>
+  </section>
 
   <footer class="footer">
     <div>&copy; Tejas Wavde · MIT</div>
@@ -320,17 +394,64 @@
 </main>
 <script src="gamekit.js"></script>
 <script>
-  // Tick the cards whose daily puzzle was solved today, with the levels done.
+  // Tick the cards whose daily puzzle was solved today, with the levels done; sum up today
+  // and the streak; list recently opened games.
   (function () {
     const LEVELS = ["easy", "medium", "hard", "one", "three", "deal"];
     const LABEL = { one: "draw 1", three: "draw 3", deal: "deal" };
-    document.querySelectorAll("a.card").forEach((card) => {
-      const done = Gamekit.dailySolved(card.getAttribute("href").replace(/\/$/, ""));
+    const cards = Array.from(document.querySelectorAll("a.card"));
+    const byName = new Map(cards.map((c) => [c.getAttribute("href").replace(/\/$/, ""), c]));
+    let solved = 0;
+    byName.forEach((card, name) => {
+      const done = Gamekit.dailySolved(name);
       if (!done.length) return;
+      if (card.hasAttribute("data-daily")) solved++;
       const tag = document.createElement("span");
       tag.className = "daily";
       tag.textContent = "✓ today's " + LEVELS.filter((l) => done.includes(l)).map((l) => LABEL[l] || l).join(", ");
       card.querySelector("p").after(tag);
+    });
+
+    const total = cards.filter((c) => c.hasAttribute("data-daily")).length;
+    const streak = Gamekit.dailyStreak();
+    const line = document.getElementById("today-line");
+    if (solved || streak.days) {
+      line.innerHTML = "Today: <span class=\"hl\">" + solved + " of " + total + "</span> daily games solved" +
+        (streak.days ? " · streak <span class=\"hl\">" + streak.days + (streak.days === 1 ? " day" : " days") + "</span>" +
+          (streak.today ? "" : " — solve one today to keep it") : "") + ".";
+    } else line.textContent = total + " daily games have fresh boards today.";
+
+    const recent = Gamekit.recentGames().filter((g) => byName.has(g)).slice(0, 5);
+    if (recent.length) {
+      const el = document.getElementById("recent");
+      el.append("Recent: ");
+      recent.forEach((g, k) => {
+        if (k) el.append(" · ");
+        const a = document.createElement("a");
+        a.href = g + "/";
+        a.textContent = byName.get(g).querySelector("h3").textContent;
+        el.append(a);
+      });
+      el.hidden = false;
+    }
+
+    // Filter by name or description; "/" jumps to the box, Escape clears it.
+    const input = document.getElementById("filter"), none = document.getElementById("no-match");
+    const groups = Array.from(document.querySelectorAll(".group"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      let any = false;
+      cards.forEach((c) => { c.hidden = !!q && !c.textContent.toLowerCase().includes(q); });
+      groups.forEach((g) => { g.hidden = !g.querySelector("a.card:not([hidden])"); any = any || !g.hidden; });
+      none.hidden = any;
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && input.value) { input.value = ""; input.dispatchEvent(new Event("input")); }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || document.activeElement === input) return;
+      e.preventDefault();
+      input.focus();
     });
   })();
 

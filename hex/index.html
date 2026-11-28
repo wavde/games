@@ -80,6 +80,7 @@
         <option value="human-red" selected>You first (red) vs AI</option>
         <option value="human-blue">AI first (you blue)</option>
         <option value="local">2 players local</option>
+        <option value="online">Online with a friend</option>
       </select>
       <select id="size" aria-label="Board size">
         <option value="7">7×7</option>
@@ -110,6 +111,7 @@
   <ul>
     <li><strong>Tap</strong> an empty hexagon. The last move has a gold outline; the winning chain lights up.</li>
     <li><code>↶ undo</code> takes back to your last move (not after a finished game against the AI). Your win–loss record is kept per AI level and board size.</li>
+    <li><strong>Online with a friend</strong> shows an invite link to send; paste the reply code your friend sends back to connect. The inviter plays red and moves first; changing the size starts a new game on both boards.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move between cells, Enter or Space plays.</li>
   </ul>
 
@@ -125,6 +127,7 @@
 
 <script defer src="../manpage.js"></script>
 <script defer src="../gamekit.js"></script>
+<script defer src="../net.js"></script>
 <script defer src="game.js"></script>
 </body>
 </html>

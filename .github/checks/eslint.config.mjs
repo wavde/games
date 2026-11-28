@@ -10,7 +10,7 @@ export default [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "script",
-      globals: { ...globals.browser, Gamekit: "readonly", Manpage: "readonly" },
+      globals: { ...globals.browser, Gamekit: "readonly", Manpage: "readonly", Net: "readonly" },
     },
     rules: {
       eqeqeq: ["error", "smart"],
