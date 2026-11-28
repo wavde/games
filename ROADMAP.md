@@ -82,6 +82,7 @@ npm install --prefix .github/checks --no-save eslint @eslint/js globals html-val
 .github/checks/node_modules/.bin/html-validate --config .github/checks/htmlvalidate.json index.html */index.html
 node .github/checks/browser.mjs   # set CHROME_PATH if Chrome isn't in a standard location
 node .github/checks/logic.mjs     # puzzle uniqueness/grades, checkers perft, mancala vs. reference, AI legality
+node .github/checks/play.mjs      # every puzzle solved through its UI on every level; card games won by drag
 ```
 
 ```bash

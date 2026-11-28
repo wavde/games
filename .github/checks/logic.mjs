@@ -7,15 +7,11 @@
 //    the checkers, battleships, and mancala AIs only ever play legal moves; sokoban par is exact;
 //    every klondike deal's winning line replays as legal moves; freecell, morris, and hex rules
 // Usage (repo root): node .github/checks/logic.mjs   (CHROME_PATH overrides the Chrome binary)
-import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
 import vm from "node:vm";
+import { ROOT, startServer, launchBrowser } from "./lib.mjs";
 
-const require = createRequire(import.meta.url);
-const puppeteer = require("puppeteer-core");
-const ROOT = process.cwd();
 const SEEDS = 10;
 const LEVELS = ["easy", "medium", "hard"];
 
@@ -59,35 +55,8 @@ function hook(game) {
   return "\nwindow.__t = { " + parts.join(", ") + " };\n";
 }
 
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
-const server = http.createServer((req, res) => {
-  const rel = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  let file = path.join(ROOT, rel);
-  if (!file.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, "index.html");
-  fs.readFile(file, "utf8", (err, data) => {
-    if (err) { res.writeHead(404); res.end(); return; }
-    const m = /^\/([\w-]+)\/game\.js$/.exec(rel);
-    if (m && EXPOSE[m[1]]) {
-      const end = data.lastIndexOf("})();");
-      data = data.slice(0, end) + hook(m[1]) + data.slice(end);
-    }
-    res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream" });
-    res.end(data);
-  });
-});
-await new Promise((r) => server.listen(0, "127.0.0.1", r));
-const BASE = "http://127.0.0.1:" + server.address().port;
-
-const executablePath = [
-  process.env.CHROME_PATH,
-  "/usr/bin/google-chrome",
-  "/usr/bin/chromium-browser",
-  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-].filter(Boolean).find((p) => fs.existsSync(p));
-if (!executablePath) { console.error("No Chrome found; set CHROME_PATH."); process.exit(2); }
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ["--no-sandbox"] });
+const { server, base: BASE } = await startServer((game) => (EXPOSE[game] ? hook(game) : ""));
+const browser = await launchBrowser();
 
 // Each check runs in the page and returns { fails: [...], note }.
 const CHECKS = {

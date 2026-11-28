@@ -2,42 +2,14 @@
 //  - loads with no page errors and auto-opens its manpage
 //  - axe-core finds no WCAG 2.x A/AA or best-practice violations, fresh and with the manpage open
 // Usage (repo root): node .github/checks/browser.mjs   (CHROME_PATH overrides the Chrome binary)
-import http from "node:http";
 import fs from "node:fs";
-import path from "node:path";
 import { createRequire } from "node:module";
+import { startServer, launchBrowser } from "./lib.mjs";
 
 const require = createRequire(import.meta.url);
-const puppeteer = require("puppeteer-core");
 const axeSource = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
-
-const ROOT = process.cwd();
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
-
-const server = http.createServer((req, res) => {
-  let file = path.join(ROOT, decodeURIComponent(new URL(req.url, "http://x").pathname));
-  if (!file.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, "index.html");
-  fs.readFile(file, (err, data) => {
-    if (err) { res.writeHead(404); res.end(); return; }
-    res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream" });
-    res.end(data);
-  });
-});
-await new Promise((r) => server.listen(0, "127.0.0.1", r));
-const BASE = "http://127.0.0.1:" + server.address().port;
-
-const chromeCandidates = [
-  process.env.CHROME_PATH,
-  "/usr/bin/google-chrome",
-  "/usr/bin/chromium-browser",
-  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-].filter(Boolean);
-const executablePath = chromeCandidates.find((p) => fs.existsSync(p));
-if (!executablePath) { console.error("No Chrome found; set CHROME_PATH."); process.exit(2); }
-
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ["--no-sandbox"] });
+const { server, base: BASE } = await startServer();
+const browser = await launchBrowser();
 const failures = [];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

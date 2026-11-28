@@ -36,3 +36,6 @@ jobs:
 
       - name: Game logic checks
         run: node .github/checks/logic.mjs
+
+      - name: Play-through checks
+        run: node .github/checks/play.mjs
