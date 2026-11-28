@@ -47,8 +47,8 @@
     padding: 0;
     border: 0;
     border-radius: 3px;
-    background: #ede8e1;
-    color: #141210;
+    background: var(--paper);
+    color: var(--ink);
     font-size: clamp(0.95rem, 4.4vw, 1.4rem);
     font-weight: 700;
     line-height: 1;
@@ -65,11 +65,10 @@
     border-radius: 50%;
     background: #6b5e45;
   }
-  body.g-nurikabe .panel .nk-cell.err { color: #b3261e; }
+  body.g-nurikabe .panel .nk-cell.err { color: var(--ink-error); }
   body.g-nurikabe .panel .nk-cell.sea.err { background: #7a2e2e; }
-  body.g-nurikabe .panel .nk-cell.won { background: #cfe6c4; }
+  body.g-nurikabe .panel .nk-cell.won { background: var(--solved); }
   body.g-nurikabe .panel .nk-board.solved .nk-cell { cursor: default; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-nurikabe">

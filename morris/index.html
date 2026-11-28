@@ -58,8 +58,8 @@
   body.g-morris .panel .mm-pt:hover { background: rgba(255, 255, 255, 0.18); transform: translate(-50%, -50%); }
   body.g-morris .panel .mm-pt:active { transform: translate(-50%, -50%) scale(0.96); }
   body.g-morris .panel .mm-pt.w::before, body.g-morris .panel .mm-pt.k::before { inset: 4%; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); }
-  body.g-morris .panel .mm-pt.w::before { background: radial-gradient(circle at 35% 30%, #fffdf8, #e2dbcf); border: 1px solid #8f8576; }
-  body.g-morris .panel .mm-pt.k::before { background: radial-gradient(circle at 35% 30%, #4b4743, #141210); border: 1px solid #000; }
+  body.g-morris .panel .mm-pt.w::before { background: radial-gradient(circle at 35% 30%, var(--paper-light), #e2dbcf); border: 1px solid #8f8576; }
+  body.g-morris .panel .mm-pt.k::before { background: radial-gradient(circle at 35% 30%, #4b4743, var(--ink)); border: 1px solid #000; }
   body.g-morris .panel .mm-pt.mill::after {
     content: "";
     position: absolute;
@@ -69,15 +69,14 @@
   }
   body.g-morris .panel .mm-pt.last { box-shadow: 0 0 0 2px rgba(74, 53, 32, 0.55); }
   body.g-morris .panel .mm-pt.dest::before { inset: 30%; background: #2f7a4b; }
-  body.g-morris .panel .mm-pt.sel { box-shadow: 0 0 0 3px #f2b705; }
-  body.g-morris .panel .mm-pt.take { box-shadow: 0 0 0 3px #b3261e; animation: mm-pulse 1s ease-in-out infinite; }
+  body.g-morris .panel .mm-pt.sel { box-shadow: 0 0 0 3px var(--select-ring); }
+  body.g-morris .panel .mm-pt.take { box-shadow: 0 0 0 3px var(--ink-error); animation: mm-pulse 1s ease-in-out infinite; }
   @keyframes mm-pulse { 50% { box-shadow: 0 0 0 5px rgba(179, 38, 30, 0.45); } }
   @media (prefers-reduced-motion: reduce) { body.g-morris .panel .mm-pt.take { animation: none; } }
   body.g-morris .panel .mm-pt:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
   .mm-score .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; vertical-align: -0.08em; }
-  .mm-score .dot.w { background: #ede8e1; }
-  .mm-score .dot.k { background: #141210; border: 1px solid #6e6458; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+  .mm-score .dot.w { background: var(--paper); }
+  .mm-score .dot.k { background: var(--ink); border: 1px solid var(--ink-faint); }
 </style>
 </head>
 <body class="g-morris">

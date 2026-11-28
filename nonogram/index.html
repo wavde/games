@@ -32,14 +32,17 @@
     grid-template-rows: auto repeat(var(--n), var(--cell));
     width: max-content;
     margin: 8px auto;
+    padding: 8px 10px 10px 6px;
+    background: var(--paper);
+    border-radius: 6px;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
   }
   .ng-colclue, .ng-rowclue {
     font-size: clamp(9px, calc(var(--cell) * 0.48), 14px);
-    font-weight: 500;
-    color: var(--fg);
+    font-weight: 700;
+    color: var(--ink);
     line-height: 1.15;
   }
   .ng-colclue {
@@ -57,32 +60,31 @@
     padding-right: 6px;
     white-space: nowrap;
   }
-  .ng-colclue.done, .ng-rowclue.done { color: var(--dim); }
+  .ng-colclue.done, .ng-rowclue.done { color: #8f887d; font-weight: 500; }
   .ng-cell {
     box-sizing: border-box;
     width: var(--cell);
     height: var(--cell);
-    background: var(--bg-2);
-    border-right: 1px solid var(--border-hi);
-    border-bottom: 1px solid var(--border-hi);
+    background: var(--paper-light);
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
     display: grid;
     place-items: center;
-    color: var(--muted);
+    color: var(--ink-faint);
     font-size: calc(var(--cell) * 0.6);
     line-height: 1;
     cursor: pointer;
   }
-  .ng-cell.top  { border-top: 1px solid var(--border-hi); }
-  .ng-cell.left { border-left: 1px solid var(--border-hi); }
-  .ng-cell.t5r  { border-right: 2px solid var(--muted); }
-  .ng-cell.t5b  { border-bottom: 2px solid var(--muted); }
-  .ng-cell.fill { background: var(--fg); }
+  .ng-cell.top  { border-top: 2px solid var(--ink); }
+  .ng-cell.left { border-left: 2px solid var(--ink); }
+  .ng-cell.t5r  { border-right: 2px solid var(--ink-soft); }
+  .ng-cell.t5b  { border-bottom: 2px solid var(--ink-soft); }
+  .ng-cell.fill { background: var(--ink); }
   .ng-cell.mark::after { content: "×"; }
-  .ng-cell.hl:not(.fill) { background: #2c2922; }
+  .ng-cell.hl:not(.fill) { background: var(--select); }
   .ng-board.solved .ng-cell { cursor: default; }
-  .ng-board.solved .ng-cell.fill { background: var(--accent-2); }
+  .ng-board.solved .ng-cell.fill { background: #2f6b2a; }
   .ng-board.solved .ng-cell.mark::after { content: none; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
 </style>
 </head>
 <body class="g-nonogram">

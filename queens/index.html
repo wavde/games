@@ -124,7 +124,6 @@
   .qn-cell.br-l { border-left:   2px solid rgba(0,0,0,0.5); }
   .qn-cell.br-r { border-right:  2px solid rgba(0,0,0,0.5); }
 
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-queens">
@@ -143,9 +142,9 @@
     </div>
     <div class="game-controls">
       <div class="chips" id="chips" role="group" aria-label="Difficulty">
-        <button class="chip" data-diff="easy" type="button">Easy · 6</button>
-        <button class="chip" data-diff="medium" type="button">Med · 7</button>
-        <button class="chip" data-diff="hard" type="button">Hard · 8</button>
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
       </div>
       <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new</button>
     </div>
@@ -176,6 +175,12 @@
     <li><code>💡 hint</code> places one correct queen.</li>
     <li><code>↻ reset</code> clears your marks; <code>↻ new</code> generates a fresh puzzle.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space cycles the cell.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 6×6. <strong>Medium</strong> — 7×7. <strong>Hard</strong> — 8×8.</li>
+    <li>Every puzzle has exactly one solution.</li>
   </ul>
 
   <h2>Strategy</h2>

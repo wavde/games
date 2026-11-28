@@ -37,14 +37,14 @@
     height: calc(var(--cw) * 1.4);
     margin: 0;
     padding: 0;
-    border: 1px solid #b9b1a6;
+    border: 1px solid var(--rule);
     border-radius: calc(var(--cw) * 0.09);
-    background: #fdfbf7;
+    background: var(--card-face);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     font-family: inherit;
   }
-  .kl-card.red { color: #b3261e; }
-  .kl-card.black { color: #141210; }
+  .kl-card.red { color: var(--ink-error); }
+  .kl-card.black { color: var(--ink); }
   .kl-card::before {
     content: attr(data-r) attr(data-s);
     position: absolute;
@@ -67,19 +67,19 @@
   .kl-card.down::before, .kl-card.down::after { content: none; }
   body.g-klondike .panel .kl-card {
     min-height: 0;
-    border: 1px solid #b9b1a6;
+    border: 1px solid var(--rule);
     border-radius: calc(var(--cw) * 0.09);
-    background: #fdfbf7;
+    background: var(--card-face);
     cursor: pointer;
     touch-action: none;
     transition: none;
   }
   body.g-klondike .panel .kl-card.down { background: repeating-linear-gradient(45deg, #2d5a8a 0 4px, #24496f 4px 8px); border-color: #1b3552; cursor: default; }
-  body.g-klondike .panel .kl-card.red { color: #b3261e; }
-  body.g-klondike .panel .kl-card.black { color: #141210; }
-  body.g-klondike .panel .kl-card:hover { background: #fffdf8; transform: none; }
+  body.g-klondike .panel .kl-card.red { color: var(--ink-error); }
+  body.g-klondike .panel .kl-card.black { color: var(--ink); }
+  body.g-klondike .panel .kl-card:hover { background: var(--paper-light); transform: none; }
   body.g-klondike .panel .kl-card:active { transform: none; }
-  body.g-klondike .panel .kl-card.picked { box-shadow: 0 0 0 3px #f2b705; }
+  body.g-klondike .panel .kl-card.picked { box-shadow: 0 0 0 3px var(--select-ring); }
   body.g-klondike .panel .kl-card.lifted { opacity: 0.3; }
   body.g-klondike .panel .kl-card:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
   body.g-klondike .panel .kl-slot {
@@ -107,7 +107,6 @@
   body.g-klondike .panel .kl-slot:disabled { opacity: 0.45; }
   .kl-float { position: fixed; z-index: 1000; pointer-events: none; width: var(--cw); }
   .kl-float .kl-card { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-klondike">

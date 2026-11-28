@@ -23,36 +23,6 @@
 <link rel="stylesheet" href="../manpage.css">
 <link rel="stylesheet" href="../soft.css">
 <style>
-  /* Board theme (moved from soft.css) */
-  body.g-zip .panel .zp-grid {
-    background: var(--bg);
-    border: none;
-    border-radius: 16px;
-    padding: 4px;
-  }
-  body.g-zip .panel .zp-cell {
-    border: 1px solid var(--border);
-    color: var(--fg);
-  }
-  body.g-zip .panel .zp-cell.on {
-    background: rgba(245,184,0,0.1);
-  }
-  body.g-zip .panel .zp-cell .wp {
-    background: var(--grape);
-    color: #111;
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(167,139,250,0.35);
-  }
-  body.g-zip .panel .zp-cell.start .wp {
-    background: var(--forest);
-    box-shadow: 0 2px 6px rgba(109,213,140,0.35);
-  }
-  body.g-zip .panel .zp-cell.end .wp {
-    background: var(--coral);
-    box-shadow: 0 2px 6px rgba(255,107,107,0.35);
-  }
-  body.g-zip .panel .zp-wall-h,
-  body.g-zip .panel .zp-wall-v { background: var(--fg); }
   .zp-grid {
     position: relative;
     display: grid;
@@ -60,41 +30,50 @@
     width: min(480px, 92vw);
     aspect-ratio: 1;
     margin: 8px auto;
-    border: 2px solid var(--fg);
-    background: var(--bg-2);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: var(--paper);
     touch-action: none;
     user-select: none;
   }
   .zp-cell {
     position: relative;
-    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink);
     font-weight: 700;
     font-size: clamp(0.9rem, 4.2vw, 1.3rem);
-    color: var(--fg);
-    background: transparent;
   }
-  .zp-cell.on { background: rgba(245,197,66,0.18); }
+  .zp-cell.on { background: #f6e3a1; }
   .zp-cell .wp {
-    display: inline-flex; width: 2em; height: 2em;
-    border-radius: 999px; background: var(--fg); color: var(--bg);
-    align-items: center; justify-content: center; font-size: 0.9em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    width: 2em;
+    height: 2em;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--paper-light);
+    font-size: 0.9em;
+    font-weight: 700;
   }
-  .zp-cell.start .wp { background: var(--accent); }
-  .zp-cell.end .wp { background: var(--accent-2); color: #0a0a0a; }
+  .zp-cell.start .wp { background: #2f6b2a; }
+  .zp-cell.end .wp { background: var(--ink-error); }
   .zp-svg { position: absolute; inset: 0; pointer-events: none; }
-  .zp-wall-h, .zp-wall-v {
-    position: absolute; background: var(--danger); pointer-events: none; z-index: 2;
-  }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+  .zp-svg polyline { stroke: #d48a00; }
+  .zp-wall-h, .zp-wall-v { position: absolute; z-index: 2; background: var(--ink); pointer-events: none; }
   @keyframes zp-shake {
     0%,100% { transform: translateX(0); }
     20%,60% { transform: translateX(-3px); }
     40%,80% { transform: translateX(3px); }
   }
-  .zp-cell.invalid { animation: zp-shake 0.3s ease; background: rgba(255,107,107,0.15); }
+  .zp-cell.invalid { animation: zp-shake 0.3s ease; background: #f4d3cf; }
+  @media (prefers-reduced-motion: reduce) { .zp-cell.invalid { animation: none; } }
 </style>
 </head>
 <body class="g-zip">
@@ -113,9 +92,9 @@
     </div>
     <div class="game-controls">
       <div class="chips" id="chips" role="group" aria-label="Difficulty">
-        <button class="chip" data-diff="easy" type="button">Easy · 5×5</button>
-        <button class="chip" data-diff="medium" type="button">Med · 6×6</button>
-        <button class="chip" data-diff="hard" type="button">Hard · 7×7</button>
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
       </div>
       <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new</button>
     </div>

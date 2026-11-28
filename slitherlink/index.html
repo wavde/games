@@ -31,15 +31,15 @@
     margin: 8px auto;
     padding: 14px;
     box-sizing: border-box;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
     user-select: none;
   }
-  .sl-dot { background: var(--fg); border-radius: 50%; position: relative; z-index: 3; pointer-events: none; }
-  .sl-cell { display: grid; place-items: center; font-weight: 700; font-size: clamp(14px, 4.4vw, 21px); color: var(--fg); }
-  .sl-cell.ok { color: var(--dim); }
-  .sl-cell.over { color: var(--danger); }
+  .sl-dot { background: var(--ink); border-radius: 50%; position: relative; z-index: 3; pointer-events: none; }
+  .sl-cell { display: grid; place-items: center; font-weight: 700; font-size: clamp(14px, 4.4vw, 21px); color: var(--ink); }
+  .sl-cell.ok { color: #8f887d; }
+  .sl-cell.over { color: var(--ink-error); }
   body.g-slitherlink .panel .sl-line {
     position: relative;
     min-height: 0;
@@ -65,22 +65,21 @@
   .sl-v::before { top: -2px; bottom: -2px; left: 50%; width: 5px; transform: translateX(-50%); }
   .sl-h::after { left: 0; right: 0; top: -14px; bottom: -14px; }
   .sl-v::after { top: 0; bottom: 0; left: -14px; right: -14px; }
-  .sl-line:not(.on):not(.x):hover::before { background: var(--border-hi); }
-  .sl-line.on::before { background: var(--accent); }
-  .sl-line.bad::before { background: var(--danger); }
+  .sl-line:not(.on):not(.x):hover::before { background: var(--rule); }
+  .sl-line.on::before { background: var(--ink); }
+  .sl-line.bad::before { background: var(--ink-error); }
   .sl-line.x::before {
     left: 50%; right: auto; top: 50%; bottom: auto;
     width: 10px; height: 10px;
     transform: translate(-50%, -50%);
     border-radius: 0;
     background:
-      linear-gradient(45deg, transparent 42%, var(--muted) 42%, var(--muted) 58%, transparent 58%),
-      linear-gradient(-45deg, transparent 42%, var(--muted) 42%, var(--muted) 58%, transparent 58%);
+      linear-gradient(45deg, transparent 42%, var(--ink-faint) 42%, var(--ink-faint) 58%, transparent 58%),
+      linear-gradient(-45deg, transparent 42%, var(--ink-faint) 42%, var(--ink-faint) 58%, transparent 58%);
   }
-  .sl-board.solved .sl-line.on::before { background: var(--accent-2); }
+  .sl-board.solved .sl-line.on::before { background: #2f6b2a; }
   .sl-board.solved .sl-line { cursor: default; }
   @media (prefers-reduced-motion: reduce) { .sl-line::before { transition: none; } }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-slitherlink">

@@ -36,14 +36,14 @@
     height: calc(var(--cw) * 1.4);
     margin: 0;
     padding: 0;
-    border: 1px solid #b9b1a6;
+    border: 1px solid var(--rule);
     border-radius: calc(var(--cw) * 0.09);
-    background: #fdfbf7;
+    background: var(--card-face);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     font-family: inherit;
   }
-  .fc-card.red { color: #b3261e; }
-  .fc-card.black { color: #141210; }
+  .fc-card.red { color: var(--ink-error); }
+  .fc-card.black { color: var(--ink); }
   .fc-card::before {
     content: attr(data-r) attr(data-s);
     position: absolute;
@@ -64,18 +64,18 @@
   }
   body.g-freecell .panel .fc-card {
     min-height: 0;
-    border: 1px solid #b9b1a6;
+    border: 1px solid var(--rule);
     border-radius: calc(var(--cw) * 0.09);
-    background: #fdfbf7;
+    background: var(--card-face);
     cursor: pointer;
     touch-action: none;
     transition: none;
   }
-  body.g-freecell .panel .fc-card.red { color: #b3261e; }
-  body.g-freecell .panel .fc-card.black { color: #141210; }
-  body.g-freecell .panel .fc-card:hover { background: #fffdf8; transform: none; }
+  body.g-freecell .panel .fc-card.red { color: var(--ink-error); }
+  body.g-freecell .panel .fc-card.black { color: var(--ink); }
+  body.g-freecell .panel .fc-card:hover { background: var(--paper-light); transform: none; }
   body.g-freecell .panel .fc-card:active { transform: none; }
-  body.g-freecell .panel .fc-card.picked { box-shadow: 0 0 0 3px #f2b705; }
+  body.g-freecell .panel .fc-card.picked { box-shadow: 0 0 0 3px var(--select-ring); }
   body.g-freecell .panel .fc-card.lifted { opacity: 0.3; }
   body.g-freecell .panel .fc-card:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
   body.g-freecell .panel .fc-slot {
@@ -98,7 +98,6 @@
   body.g-freecell .panel .fc-free .fc-slot { border-style: solid; border-width: 1px; background: rgba(255, 255, 255, 0.04); }
   .fc-float { position: fixed; z-index: 1000; pointer-events: none; width: var(--cw); }
   .fc-float .fc-card { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-freecell">

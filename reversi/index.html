@@ -66,26 +66,15 @@
     box-shadow: 0 2px 3px rgba(0,0,0,0.45);
     transition: background .18s;
   }
-  .rv-disc.b { background: #141210; border: 1px solid #3a352c; }
-  .rv-disc.w { background: #ede8e1; border: 1px solid #c9c2b4; }
+  .rv-disc.b { background: var(--ink); border: 1px solid #3a352c; }
+  .rv-disc.w { background: var(--paper); border: 1px solid #c9c2b4; }
   .rv-cell.last .rv-disc { outline: 2px solid var(--accent); outline-offset: 1px; }
   .rv-cell.flip .rv-disc { animation: rv-flip .22s ease-out; }
   @keyframes rv-flip { from { transform: scaleX(0.1); } to { transform: scaleX(1); } }
   @media (prefers-reduced-motion: reduce) { .rv-cell.flip .rv-disc { animation: none; } .rv-disc { transition: none; } }
   .rv-score .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; vertical-align: -0.05em; }
-  .rv-score .dot.b { background: #141210; border: 1px solid var(--muted); }
-  .rv-score .dot.w { background: #ede8e1; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
-  select {
-    background: var(--panel-2);
-    color: var(--fg);
-    border: 1px solid var(--border-hi);
-    border-radius: var(--r-md);
-    padding: 8px 10px;
-    font-family: inherit;
-    font-size: var(--fs-sm);
-    min-height: var(--tap);
-  }
+  .rv-score .dot.b { background: var(--ink); border: 1px solid var(--muted); }
+  .rv-score .dot.w { background: var(--paper); }
 </style>
 </head>
 <body class="g-reversi">

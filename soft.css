@@ -51,6 +51,28 @@ body[class*="g-"] {
   --r-sm: 10px;
   --r-md: 14px;
 
+  /* Paper boards (logic puzzles, card faces): one palette for every page. */
+  --paper:        #ede8e1;
+  --paper-hover:  #f6f1e8;
+  --paper-given:  #d9d2c7;
+  --paper-light:  #fffdf8;
+  --card-face:    #fdfbf7;
+  --ink:          #141210;
+  --ink-soft:     #4a4440;
+  --ink-faint:    #6e6458;
+  --rule:         #b9b1a6;
+  --ink-error:    #b3261e;
+  --select:       #f7dd8a;
+  --select-ring:  #f2b705;
+  --solved:       #cfe6c4;
+  --shade:        #2b2622;
+  --tint-0: #f3ede4;
+  --tint-1: #e3ecd9;
+  --tint-2: #e6e1f0;
+  --tint-3: #f4e0d6;
+  --tint-4: #dcebef;
+  --tint-5: #efe6c8;
+
   background: var(--bg);
   color: var(--fg);
 }
@@ -144,6 +166,24 @@ body[class*="g-"] .panel button.ghost:hover {
 body[class*="g-"] .panel .tool-btn .glyph { color: var(--dim); }
 body[class*="g-"] .panel .tool-btn:hover .glyph { color: var(--fg); }
 
+/* ── Control bar: level chips, mode/size selects, new ────────── */
+body[class*="g-"] .panel .game-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 10px; }
+body[class*="g-"] .panel select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 40px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%239a938a' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+body[class*="g-"] .panel select:hover { border-color: var(--muted); }
+body[class*="g-"] .panel select option { background: var(--panel); color: var(--fg); }
+
 /* ── Chips ──────────────────────────────────────────────────── */
 body[class*="g-"] .panel .chip {
   background: transparent;
@@ -175,12 +215,6 @@ body[class*="g-"] .panel .kbd {
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 6px;
-}
-body[class*="g-"] .panel select {
-  background: var(--bg-2);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
 }
 body[class*="g-"] .panel :focus-visible {
   outline: 2px solid var(--accent);

@@ -34,8 +34,8 @@
     margin: 8px auto;
     padding: 2px;
     box-sizing: border-box;
-    background: #17150f;
-    border-radius: var(--r-md);
+    background: var(--ink);
+    border-radius: 6px;
     user-select: none;
     -webkit-user-select: none;
   }
@@ -48,42 +48,40 @@
     padding: 0;
     border: 0;
     border-radius: 2px;
-    background: #3d382f;
+    background: var(--paper);
     cursor: pointer;
   }
-  body.g-akari .panel .ak-cell:hover { background: #47413a; }
-  body.g-akari .panel .ak-cell.lit { background: #6e5b22; }
-  body.g-akari .panel .ak-cell.lit:hover { background: #786428; }
+  body.g-akari .panel .ak-cell:hover { background: var(--paper-hover); }
+  body.g-akari .panel .ak-cell.lit { background: #f6e3a1; }
+  body.g-akari .panel .ak-cell.lit:hover { background: #f9ebb8; }
   .ak-cell.bulb::after {
     content: "";
     position: absolute;
     inset: 22%;
     border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px rgba(245, 184, 0, 0.75);
+    background: radial-gradient(circle at 35% 30%, #ffe27a, #e09a00);
+    box-shadow: 0 0 0 1.5px var(--ink-soft), 0 0 10px rgba(224, 154, 0, 0.55);
   }
-  .ak-cell.bulb.clash::after { background: var(--danger); box-shadow: 0 0 10px rgba(255, 107, 107, 0.75); }
+  .ak-cell.bulb.clash::after { background: var(--ink-error); box-shadow: 0 0 0 1.5px var(--ink), 0 0 10px rgba(179, 38, 30, 0.5); }
   .ak-cell.mark::after {
     content: "";
     position: absolute;
     inset: 43%;
     border-radius: 50%;
-    background: var(--fg);
-    opacity: 0.6;
+    background: var(--ink-faint);
   }
   .ak-wall {
     display: grid;
     place-items: center;
     border-radius: 2px;
-    background: #0c0b09;
-    color: var(--fg);
+    background: var(--ink);
+    color: var(--paper);
     font: 700 clamp(11px, calc(min(440px, 92vw) / var(--n) * 0.45), 20px) var(--font-mono);
   }
-  .ak-wall.ok { color: var(--dim); }
-  .ak-wall.over { color: var(--danger); }
+  .ak-wall.ok { color: #8f887d; }
+  .ak-wall.over { color: #ff8f85; }
   .ak-board.solved .ak-cell { cursor: default; }
-  .ak-board.solved .ak-cell.lit { background: #3f5f3a; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
+  .ak-board.solved .ak-cell.lit { background: var(--solved); }
 </style>
 </head>
 <body class="g-akari">

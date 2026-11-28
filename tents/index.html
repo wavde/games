@@ -53,10 +53,10 @@
     padding: 0;
     border: 0;
     border-radius: 3px;
-    background: #ede8e1;
+    background: var(--paper);
   }
   body.g-tents .panel .tn-cell { cursor: pointer; }
-  body.g-tents .panel .tn-cell:hover { background: #f6f1e8; transform: none; }
+  body.g-tents .panel .tn-cell:hover { background: var(--paper-hover); transform: none; }
   .tn-tree { background: #dbe7cf; }
   .tn-tree::before, .tn-tree::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); }
   .tn-tree::before { bottom: 10%; width: 12%; height: 30%; background: #6b4a2b; }
@@ -83,10 +83,9 @@
     background: #c0602a;
     clip-path: polygon(50% 0, 100% 100%, 0 100%);
   }
-  body.g-tents .panel .tn-cell.tent.err::before { background: #b3261e; }
-  body.g-tents .panel .tn-cell.err { box-shadow: inset 0 0 0 2px #b3261e; }
-  body.g-tents .panel .tn-board.solved .tn-cell { background: #cfe6c4; cursor: default; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+  body.g-tents .panel .tn-cell.tent.err::before { background: var(--ink-error); }
+  body.g-tents .panel .tn-cell.err { box-shadow: inset 0 0 0 2px var(--ink-error); }
+  body.g-tents .panel .tn-board.solved .tn-cell { background: var(--solved); cursor: default; }
 </style>
 </head>
 <body class="g-tents">

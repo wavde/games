@@ -23,32 +23,6 @@
 <link rel="stylesheet" href="../manpage.css">
 <link rel="stylesheet" href="../soft.css">
 <style>
-  /* Board theme (moved from soft.css) */
-  body.g-patches .panel .pt-grid {
-    background: var(--bg);
-    border: none;
-    border-radius: 16px;
-    padding: 4px;
-  }
-  body.g-patches .panel .pt-cell {
-    border: 1px solid var(--border);
-    color: var(--fg);
-  }
-  body.g-patches .panel .pt-cell.clue {
-    color: var(--fg);
-    font-weight: 800;
-    background: rgba(255,255,255,0.06);
-  }
-  body.g-patches .panel .pt-cell.drag {
-    background: rgba(255,255,255,0.1);
-  }
-  body.g-patches .panel .pt-rect-overlay {
-    border-radius: 6px;
-  }
-  body.g-patches .panel .pt-rect-overlay.bad {
-    border-color: var(--coral);
-    background: rgba(255,107,107,0.12);
-  }
   .pt-grid {
     position: relative;
     display: grid;
@@ -56,50 +30,47 @@
     width: min(480px, 92vw);
     aspect-ratio: 1;
     margin: 8px auto;
-    border: 2px solid var(--fg);
-    background: var(--bg-2);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: var(--paper);
     touch-action: none;
     user-select: none;
   }
   .pt-cell {
     position: relative;
-    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    font-weight: 800;
     font-size: clamp(0.9rem, 4.2vw, 1.3rem);
-    color: var(--fg);
     cursor: crosshair;
   }
-  .pt-cell.clue { color: var(--accent); }
-  .pt-cell.drag { background: rgba(255,255,255,0.1); cursor: grabbing; }
+  .pt-cell.drag { background: var(--select); cursor: grabbing; }
   .pt-rect-overlay {
     position: absolute;
-    border: 2px solid var(--accent-2);
+    box-sizing: border-box;
+    border: 2px solid var(--ink);
+    border-radius: 4px;
     pointer-events: auto;
     cursor: pointer;
-    box-sizing: border-box;
     transition: opacity 0.15s;
   }
-  .pt-rect-overlay.bad {
-    border-color: var(--danger);
-    background: rgba(255,107,107,0.12) !important;
-  }
-  /* Patch region colour palette */
-  .pt-rect-overlay.pc0 { background: rgba(232,124,138,0.22); border-color: #e87c8a; }
-  .pt-rect-overlay.pc1 { background: rgba(232,165,90,0.22); border-color: #e8a55a; }
-  .pt-rect-overlay.pc2 { background: rgba(212,196,84,0.22); border-color: #d4c454; }
-  .pt-rect-overlay.pc3 { background: rgba(108,192,108,0.22); border-color: #6cc06c; }
-  .pt-rect-overlay.pc4 { background: rgba(76,202,160,0.22); border-color: #4ccaa0; }
-  .pt-rect-overlay.pc5 { background: rgba(90,158,232,0.22); border-color: #5a9ee8; }
-  .pt-rect-overlay.pc6 { background: rgba(160,124,232,0.22); border-color: #a07ce8; }
-  .pt-rect-overlay.pc7 { background: rgba(216,112,168,0.22); border-color: #d870a8; }
-  .pt-rect-overlay.pc8 { background: rgba(200,154,94,0.22); border-color: #c89a5e; }
-  .pt-rect-overlay.pc9 { background: rgba(139,156,247,0.22); border-color: #8b9cf7; }
-  .pt-rect-overlay.pc10 { background: rgba(77,217,172,0.22); border-color: #4dd9ac; }
-  .pt-rect-overlay.pc11 { background: rgba(245,184,0,0.22); border-color: #f5b800; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+  .pt-rect-overlay.bad { border-color: var(--ink-error); border-style: dashed; background: rgba(179, 38, 30, 0.14) !important; }
+  /* Patch colours: light fills that keep the clue numbers readable */
+  .pt-rect-overlay.pc0 { background: rgba(214, 96, 110, 0.30); }
+  .pt-rect-overlay.pc1 { background: rgba(222, 140, 60, 0.30); }
+  .pt-rect-overlay.pc2 { background: rgba(196, 176, 52, 0.32); }
+  .pt-rect-overlay.pc3 { background: rgba(92, 168, 92, 0.30); }
+  .pt-rect-overlay.pc4 { background: rgba(60, 170, 140, 0.30); }
+  .pt-rect-overlay.pc5 { background: rgba(80, 140, 214, 0.30); }
+  .pt-rect-overlay.pc6 { background: rgba(140, 106, 214, 0.30); }
+  .pt-rect-overlay.pc7 { background: rgba(200, 96, 156, 0.30); }
+  .pt-rect-overlay.pc8 { background: rgba(176, 134, 80, 0.30); }
+  .pt-rect-overlay.pc9 { background: rgba(110, 126, 220, 0.30); }
+  .pt-rect-overlay.pc10 { background: rgba(60, 190, 150, 0.30); }
+  .pt-rect-overlay.pc11 { background: rgba(226, 170, 0, 0.32); }
 </style>
 </head>
 <body class="g-patches">
@@ -118,9 +89,9 @@
     </div>
     <div class="game-controls">
       <div class="chips" id="chips" role="group" aria-label="Difficulty">
-        <button class="chip" data-diff="easy" type="button">Easy · 5×5</button>
-        <button class="chip" data-diff="medium" type="button">Med · 6×6</button>
-        <button class="chip" data-diff="hard" type="button">Hard · 7×7</button>
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
       </div>
       <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new</button>
     </div>
@@ -149,6 +120,12 @@
     <li><strong>Tap</strong> a drawn rectangle to remove it.</li>
     <li><code>↶ undo</code> removes the last drawn rectangle. <code>↻ reset</code> clears them all.</li>
     <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space marks one corner, move, then Enter again places the rectangle. <span class="kbd">X</span> removes the rectangle under the cursor, Esc cancels.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 5×5. <strong>Medium</strong> — 6×6. <strong>Hard</strong> — 7×7.</li>
+    <li>Every puzzle has exactly one solution.</li>
   </ul>
 
   <h2>Strategy</h2>

@@ -52,18 +52,18 @@
     padding: 0;
     border: 0;
     border-radius: 4px;
-    background: #ede8e1;
-    color: #141210;
+    background: var(--paper);
+    color: var(--ink);
     cursor: pointer;
   }
-  body.g-futoshiki .panel .ft-cell:hover { background: #f6f1e8; transform: none; }
-  body.g-futoshiki .panel .ft-cell.given { background: #d9d2c7; cursor: default; }
-  body.g-futoshiki .panel .ft-cell.sel { background: #f7dd8a; }
-  body.g-futoshiki .panel .ft-board.solved .ft-cell { background: #cfe6c4; cursor: default; }
+  body.g-futoshiki .panel .ft-cell:hover { background: var(--paper-hover); transform: none; }
+  body.g-futoshiki .panel .ft-cell.given { background: var(--paper-given); cursor: default; }
+  body.g-futoshiki .panel .ft-cell.sel { background: var(--select); }
+  body.g-futoshiki .panel .ft-board.solved .ft-cell { background: var(--solved); cursor: default; }
   .ft-v { font-size: clamp(1.05rem, 5vw, 1.6rem); font-weight: 500; line-height: 1; pointer-events: none; }
   .ft-cell.given .ft-v { font-weight: 700; }
   .ft-v::before { content: attr(data-d); }
-  body.g-futoshiki .panel .ft-cell.err .ft-v { color: #b3261e; }
+  body.g-futoshiki .panel .ft-cell.err .ft-v { color: var(--ink-error); }
   .ft-notes {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -71,7 +71,7 @@
     height: 66%;
     font-size: clamp(0.42rem, 1.6vw, 0.6rem);
     font-weight: 500;
-    color: #4a4440;
+    color: var(--ink-soft);
     pointer-events: none;
   }
   .ft-notes span { display: flex; align-items: center; justify-content: center; }
@@ -79,7 +79,6 @@
   .ft-pad { display: grid; gap: 6px; width: min(400px, 100%); margin: 8px auto 4px; }
   body.g-futoshiki .panel .ft-pad .btn { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
   body.g-futoshiki .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-futoshiki">

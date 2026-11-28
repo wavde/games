@@ -25,13 +25,13 @@
 <style>
   .hx-board { position: relative; width: min(560px, 100%); margin: 10px auto; user-select: none; }
   .hx-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .hx-hex { fill: #ede8e1; stroke: #6e6458; stroke-width: 0.04; }
+  .hx-hex { fill: var(--paper); stroke: var(--ink-faint); stroke-width: 0.04; }
   .hx-hex.red { fill: #c0392b; }
   .hx-hex.blue { fill: #2e6fb7; }
-  .hx-hex.last { stroke: #f2b705; stroke-width: 0.1; }
+  .hx-hex.last { stroke: var(--select-ring); stroke-width: 0.1; }
   .hx-hex.chain.red { fill: #e5533f; }
   .hx-hex.chain.blue { fill: #4d8fdb; }
-  .hx-hex.chain { stroke: #fffdf8; stroke-width: 0.08; }
+  .hx-hex.chain { stroke: var(--paper-light); stroke-width: 0.08; }
   .hx-edge { fill: none; stroke-width: 0.32; stroke-linejoin: round; stroke-linecap: round; }
   .hx-edge.red { stroke: #c0392b; }
   .hx-edge.blue { stroke: #2e6fb7; }
@@ -54,7 +54,6 @@
   .hx-key .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; vertical-align: -0.08em; }
   .hx-key .dot.r { background: #c0392b; }
   .hx-key .dot.b { background: #2e6fb7; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-hex">

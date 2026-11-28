@@ -28,10 +28,10 @@
     width: min(440px, 100%);
     aspect-ratio: 1;
     margin: 8px auto;
-    border: 3px solid #141210;
+    border: 3px solid var(--ink);
     border-radius: 4px;
     overflow: hidden;
-    background: #ede8e1;
+    background: var(--paper);
     user-select: none;
   }
   body.g-calcudoku .panel .cg-cell {
@@ -46,17 +46,17 @@
     padding: 0;
     border: 1px solid #c9c2b4;
     border-radius: 0;
-    background: #ede8e1;
-    color: #141210;
+    background: var(--paper);
+    color: var(--ink);
     cursor: pointer;
   }
-  body.g-calcudoku .panel .cg-cell:hover { background: #f6f1e8; transform: none; }
-  body.g-calcudoku .panel .cg-cell.sel { background: #f7dd8a; }
-  body.g-calcudoku .panel .cg-cell.br-t { border-top:    2px solid #141210; }
-  body.g-calcudoku .panel .cg-cell.br-b { border-bottom: 2px solid #141210; }
-  body.g-calcudoku .panel .cg-cell.br-l { border-left:   2px solid #141210; }
-  body.g-calcudoku .panel .cg-cell.br-r { border-right:  2px solid #141210; }
-  body.g-calcudoku .panel .cg-board.solved .cg-cell { background: #cfe6c4; cursor: default; }
+  body.g-calcudoku .panel .cg-cell:hover { background: var(--paper-hover); transform: none; }
+  body.g-calcudoku .panel .cg-cell.sel { background: var(--select); }
+  body.g-calcudoku .panel .cg-cell.br-t { border-top:    2px solid var(--ink); }
+  body.g-calcudoku .panel .cg-cell.br-b { border-bottom: 2px solid var(--ink); }
+  body.g-calcudoku .panel .cg-cell.br-l { border-left:   2px solid var(--ink); }
+  body.g-calcudoku .panel .cg-cell.br-r { border-right:  2px solid var(--ink); }
+  body.g-calcudoku .panel .cg-board.solved .cg-cell { background: var(--solved); cursor: default; }
   .cg-lab {
     position: absolute;
     top: 3px;
@@ -64,15 +64,15 @@
     font-size: clamp(0.55rem, 2.4vw, 0.8rem);
     font-weight: 700;
     line-height: 1;
-    color: #141210;
+    color: var(--ink);
     pointer-events: none;
   }
   .cg-lab::before { content: attr(data-t); }
   .cg-lab.ok { color: #6a6460; }
-  .cg-lab.bad { color: #b3261e; }
+  .cg-lab.bad { color: var(--ink-error); }
   .cg-v { font-size: clamp(1.1rem, 5.4vw, 1.7rem); font-weight: 700; line-height: 1; pointer-events: none; }
   .cg-v::before { content: attr(data-d); }
-  body.g-calcudoku .panel .cg-cell.err .cg-v { color: #b3261e; }
+  body.g-calcudoku .panel .cg-cell.err .cg-v { color: var(--ink-error); }
   .cg-notes {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -81,7 +81,7 @@
     margin-top: 22%;
     font-size: clamp(0.45rem, 1.8vw, 0.65rem);
     font-weight: 500;
-    color: #4a4440;
+    color: var(--ink-soft);
     pointer-events: none;
   }
   .cg-notes span { display: flex; align-items: center; justify-content: center; }
@@ -89,7 +89,6 @@
   .cg-pad { display: grid; gap: 6px; width: min(360px, 100%); margin: 8px auto 4px; }
   body.g-calcudoku .panel .cg-pad .btn { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
   body.g-calcudoku .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-calcudoku">

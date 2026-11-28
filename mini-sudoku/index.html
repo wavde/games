@@ -23,66 +23,6 @@
 <link rel="stylesheet" href="../manpage.css">
 <link rel="stylesheet" href="../soft.css">
 <style>
-  /* Board theme (moved from soft.css) */
-  body.g-mini-sudoku .panel .sk-grid {
-    background: var(--bg);
-    border: 2px solid var(--border-hi);
-    border-radius: 14px;
-    overflow: hidden;
-  }
-  body.g-mini-sudoku .panel .sk-cell {
-    background: var(--bg-2);
-    border-color: var(--border);
-    color: var(--teal);
-    font-weight: 600;
-  }
-  body.g-mini-sudoku .panel .sk-cell.given {
-    background: rgba(255,255,255,0.06);
-    color: var(--fg);
-    font-weight: 800;
-  }
-  body.g-mini-sudoku .panel .sk-cell.sel {
-    background: rgba(90,158,232,0.18);
-    box-shadow: inset 0 0 0 2px rgba(90,158,232,0.6);
-  }
-  body.g-mini-sudoku .panel .sk-cell.peer {
-    background: rgba(255,255,255,0.04);
-  }
-  body.g-mini-sudoku .panel .sk-cell.same-num,
-  body.g-mini-sudoku .panel .sk-cell.same {
-    background: rgba(90,158,232,0.10);
-  }
-  body.g-mini-sudoku .panel .sk-cell.error,
-  body.g-mini-sudoku .panel .sk-cell.conflict {
-    color: var(--coral);
-  }
-  body.g-mini-sudoku .panel .sk-note,
-  body.g-mini-sudoku .panel .sk-cell .notes { color: var(--muted); }
-  body.g-mini-sudoku .panel .sk-cell.box-b { border-right:  2px solid var(--border-hi); }
-  body.g-mini-sudoku .panel .sk-cell.box-t { border-bottom: 2px solid var(--border-hi); }
-  body.g-mini-sudoku .panel .sk-cell[data-r="1"],
-  body.g-mini-sudoku .panel .sk-cell[data-r="3"] { border-bottom: 2px solid var(--border-hi); }
-  body.g-mini-sudoku .panel .sk-cell[data-c="2"] { border-right: 2px solid var(--border-hi); }
-  body.g-mini-sudoku .panel .pad-btn,
-  body.g-mini-sudoku .panel .sk-pad button {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    color: var(--fg);
-    border-radius: 10px;
-  }
-  body.g-mini-sudoku .panel .pad-btn:hover,
-  body.g-mini-sudoku .panel .sk-pad button:hover {
-    background: var(--border);
-    border-color: var(--border-hi);
-  }
-  body.g-mini-sudoku .panel .pad-btn.active,
-  body.g-mini-sudoku .panel .sk-pad button.active,
-  body.g-mini-sudoku .panel .sk-pad button[aria-pressed="true"] {
-    background: var(--fg);
-    color: var(--bg);
-    border-color: var(--fg);
-  }
-  body.g-mini-sudoku .panel .sk-pad button { min-width: 0; padding-left: 0; padding-right: 0; }
   .sk-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -91,31 +31,33 @@
     width: min(420px, 92vw);
     aspect-ratio: 1;
     margin: 8px auto;
-    border: 2px solid var(--accent);
-    background: var(--bg-2);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
   }
-  .sk-cell {
+  body.g-mini-sudoku .panel .sk-cell {
     position: relative;
-    border: 1px solid var(--border);
-    background: var(--panel);
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 0;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: #24507a;
     font-size: clamp(1.4rem, 6.5vw, 2rem);
     font-weight: 500;
-    color: var(--fg);
     cursor: pointer;
     user-select: none;
-    min-width: 0;
   }
-  /* Thick box boundaries (2×3 boxes: rows 0,1,2 break between 1-2, 3-4; cols 0..5 break at 2-3). */
-  .sk-cell[data-r="1"], .sk-cell[data-r="3"] { border-bottom: 2px solid var(--accent); }
-  .sk-cell[data-c="2"] { border-right: 2px solid var(--accent); }
-  .sk-cell.given { color: var(--muted); background: var(--bg-2); font-weight: 700; }
-  .sk-cell.sel { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 1; }
-  .sk-cell.peer { background: var(--panel-2); }
-  .sk-cell.same-num { color: var(--accent); }
-  .sk-cell.conflict { color: var(--danger); }
+  /* 2×3 boxes: thick lines under rows 2 and 4 and right of column 3. */
+  body.g-mini-sudoku .panel .sk-cell[data-r="1"], body.g-mini-sudoku .panel .sk-cell[data-r="3"] { border-bottom: 2px solid var(--ink); }
+  body.g-mini-sudoku .panel .sk-cell[data-c="2"] { border-right: 2px solid var(--ink); }
+  body.g-mini-sudoku .panel .sk-cell.given { background: var(--paper-given); color: var(--ink); font-weight: 700; }
+  body.g-mini-sudoku .panel .sk-cell.peer { background: var(--paper-hover); }
+  body.g-mini-sudoku .panel .sk-cell.same-num { background: #e8dcb0; }
+  body.g-mini-sudoku .panel .sk-cell.sel { background: var(--select); }
+  body.g-mini-sudoku .panel .sk-cell.conflict { color: var(--ink-error); }
   .sk-cell .notes {
     position: absolute;
     inset: 3px;
@@ -123,7 +65,7 @@
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(2, 1fr);
     font-size: clamp(0.55rem, 2vw, 0.75rem);
-    color: var(--muted);
+    color: var(--ink-soft);
     pointer-events: none;
   }
   .sk-cell .notes span { display: flex; align-items: center; justify-content: center; }
@@ -135,17 +77,9 @@
     width: min(420px, 92vw);
     margin: 8px auto 0;
   }
-  .sk-pad button {
-    aspect-ratio: 1;
-    padding: 0;
-    min-height: var(--tap);
-    font-size: 1.1rem;
-    font-weight: 500;
-  }
-  .sk-pad button.done { opacity: 0.35; }
-  .sk-pad .pencil-on { color: var(--accent); border-color: var(--accent); background: rgba(245,197,66,0.08); }
-
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+  body.g-mini-sudoku .panel .sk-pad button { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
+  body.g-mini-sudoku .panel .sk-pad button.done { opacity: 0.35; }
+  body.g-mini-sudoku .panel .sk-pad .pencil-on { color: var(--accent); border-color: var(--accent); }
 </style>
 </head>
 <body class="g-mini-sudoku">

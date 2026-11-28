@@ -47,8 +47,8 @@
     padding: 0;
     border: 0;
     border-radius: 3px;
-    background: #ede8e1;
-    color: #141210;
+    background: var(--paper);
+    color: var(--ink);
     font-size: clamp(0.95rem, 4.4vw, 1.4rem);
     font-weight: 700;
     line-height: 1;
@@ -64,11 +64,10 @@
     border: 2px solid #2e6b4a;
     border-radius: 50%;
   }
-  body.g-hitori .panel .ht-cell.err { color: #b3261e; }
+  body.g-hitori .panel .ht-cell.err { color: var(--ink-error); }
   body.g-hitori .panel .ht-cell.shade.err { background: #5a1d1d; color: #ffb4ab; }
-  body.g-hitori .panel .ht-cell.won { background: #cfe6c4; }
+  body.g-hitori .panel .ht-cell.won { background: var(--solved); }
   body.g-hitori .panel .ht-board.solved .ht-cell { cursor: default; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-hitori">

@@ -65,7 +65,7 @@
   .cb-peg.c5 { background: #5c9cff; border-color: #5c9cff; }
   .cb-peg.c6 { background: #a78bfa; border-color: #a78bfa; }
   .cb-peg.c7 { background: #ff7ac6; border-color: #ff7ac6; }
-  .cb-peg.c8 { background: #ede8e1; border-color: #ede8e1; }
+  .cb-peg.c8 { background: var(--paper); border-color: var(--paper); }
   body.g-code-breaker .panel .cb-peg.c1 { background: #ff6b6b; color: #1a1715; }
   body.g-code-breaker .panel .cb-peg.c2 { background: #ff9f43; color: #1a1715; }
   body.g-code-breaker .panel .cb-peg.c3 { background: #f5d400; color: #1a1715; }
@@ -73,7 +73,7 @@
   body.g-code-breaker .panel .cb-peg.c5 { background: #5c9cff; color: #1a1715; }
   body.g-code-breaker .panel .cb-peg.c6 { background: #a78bfa; color: #1a1715; }
   body.g-code-breaker .panel .cb-peg.c7 { background: #ff7ac6; color: #1a1715; }
-  body.g-code-breaker .panel .cb-peg.c8 { background: #ede8e1; color: #1a1715; }
+  body.g-code-breaker .panel .cb-peg.c8 { background: var(--paper); color: #1a1715; }
   .cb-fb {
     display: grid;
     grid-template-columns: repeat(3, 10px);
@@ -86,7 +86,6 @@
   .cb-palette { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
   body.g-code-breaker .panel .cb-palette .cb-peg { width: var(--tap); height: var(--tap); cursor: pointer; }
   .cb-palette .cb-peg:disabled { opacity: 0.4; cursor: default; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
 </style>
 </head>
 <body class="g-code-breaker">

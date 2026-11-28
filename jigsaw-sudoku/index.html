@@ -28,11 +28,11 @@
     width: min(460px, 100%);
     aspect-ratio: 1;
     margin: 8px auto;
-    border: 2px solid #141210;
+    border: 2px solid var(--ink);
     border-radius: 6px;
     overflow: hidden;
     user-select: none;
-    background: #141210;
+    background: var(--ink);
   }
   body.g-jigsaw-sudoku .panel .jg-cell {
     position: relative;
@@ -45,29 +45,29 @@
     min-width: 0;
     min-height: 0;
     padding: 0;
-    border: 1px solid #b9b1a6;
+    border: 1px solid var(--rule);
     border-radius: 0;
-    color: #141210;
+    color: var(--ink);
     cursor: pointer;
   }
-  body.g-jigsaw-sudoku .panel .jg-cell[data-t="0"] { background: #f3ede4; }
-  body.g-jigsaw-sudoku .panel .jg-cell[data-t="1"] { background: #e3ecd9; }
-  body.g-jigsaw-sudoku .panel .jg-cell[data-t="2"] { background: #e6e1f0; }
-  body.g-jigsaw-sudoku .panel .jg-cell[data-t="3"] { background: #f4e0d6; }
-  body.g-jigsaw-sudoku .panel .jg-cell[data-t="4"] { background: #dcebef; }
-  body.g-jigsaw-sudoku .panel .jg-cell[data-t="5"] { background: #efe6c8; }
-  body.g-jigsaw-sudoku .panel .jg-cell.et { border-top: 3px solid #141210; }
-  body.g-jigsaw-sudoku .panel .jg-cell.eb { border-bottom: 3px solid #141210; }
-  body.g-jigsaw-sudoku .panel .jg-cell.el { border-left: 3px solid #141210; }
-  body.g-jigsaw-sudoku .panel .jg-cell.er { border-right: 3px solid #141210; }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="0"] { background: var(--tint-0); }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="1"] { background: var(--tint-1); }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="2"] { background: var(--tint-2); }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="3"] { background: var(--tint-3); }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="4"] { background: var(--tint-4); }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="5"] { background: var(--tint-5); }
+  body.g-jigsaw-sudoku .panel .jg-cell.et { border-top: 3px solid var(--ink); }
+  body.g-jigsaw-sudoku .panel .jg-cell.eb { border-bottom: 3px solid var(--ink); }
+  body.g-jigsaw-sudoku .panel .jg-cell.el { border-left: 3px solid var(--ink); }
+  body.g-jigsaw-sudoku .panel .jg-cell.er { border-right: 3px solid var(--ink); }
   body.g-jigsaw-sudoku .panel .jg-cell:hover { filter: brightness(1.04); transform: none; }
-  body.g-jigsaw-sudoku .panel .jg-cell.sel { background: #f7dd8a; }
-  body.g-jigsaw-sudoku .panel .jg-board.solved .jg-cell { background: #cfe6c4; cursor: default; }
+  body.g-jigsaw-sudoku .panel .jg-cell.sel { background: var(--select); }
+  body.g-jigsaw-sudoku .panel .jg-board.solved .jg-cell { background: var(--solved); cursor: default; }
   body.g-jigsaw-sudoku .panel .jg-cell:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
   .jg-v { font-size: clamp(1rem, 4.6vw, 1.5rem); font-weight: 500; line-height: 1; pointer-events: none; }
   .jg-cell.given .jg-v { font-weight: 700; }
   .jg-v::before { content: attr(data-d); }
-  body.g-jigsaw-sudoku .panel .jg-cell.err .jg-v { color: #b3261e; }
+  body.g-jigsaw-sudoku .panel .jg-cell.err .jg-v { color: var(--ink-error); }
   .jg-notes {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -75,7 +75,7 @@
     height: 80%;
     font-size: clamp(0.4rem, 1.5vw, 0.58rem);
     font-weight: 500;
-    color: #4a4440;
+    color: var(--ink-soft);
     pointer-events: none;
   }
   .jg-notes span { display: flex; align-items: center; justify-content: center; }
@@ -83,7 +83,6 @@
   .jg-pad { display: grid; gap: 6px; width: min(440px, 100%); margin: 8px auto 4px; }
   body.g-jigsaw-sudoku .panel .jg-pad .btn { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
   body.g-jigsaw-sudoku .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-jigsaw-sudoku">

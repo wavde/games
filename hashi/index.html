@@ -29,9 +29,9 @@
     margin: 8px auto;
     padding: 6px;
     box-sizing: border-box;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
   }
   .hs-board {
     --n: 7;
@@ -46,9 +46,9 @@
     -webkit-user-select: none;
   }
   .hs-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .hs-dot { fill: var(--border-hi); }
-  .hs-bridge { stroke: var(--fg); stroke-width: 0.075; stroke-linecap: round; }
-  .hs-board.solved .hs-bridge { stroke: var(--accent-2); }
+  .hs-dot { fill: var(--rule); }
+  .hs-bridge { stroke: var(--ink); stroke-width: 0.075; stroke-linecap: round; }
+  .hs-board.solved .hs-bridge { stroke: #2f6b2a; }
   body.g-hashi .panel .hs-island {
     position: relative;
     z-index: 1;
@@ -59,20 +59,19 @@
     min-height: 0;
     padding: 0;
     border-radius: 50%;
-    border: 2px solid var(--border-hi);
-    background: var(--panel);
-    color: var(--fg);
+    border: 2px solid var(--ink);
+    background: var(--paper-light);
+    color: var(--ink);
     font: 700 clamp(11px, calc(min(440px, 92vw) / var(--n) * 0.42), 20px) var(--font-mono);
     line-height: 1;
     cursor: pointer;
   }
-  body.g-hashi .panel .hs-island:hover { background: var(--panel); border-color: var(--muted); }
-  body.g-hashi .panel .hs-island.target { border-color: var(--accent); border-style: dashed; }
-  body.g-hashi .panel .hs-island.sel { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245, 184, 0, 0.3); }
-  body.g-hashi .panel .hs-island.done { background: color-mix(in srgb, var(--accent-2) 22%, var(--panel)); border-color: var(--accent-2); color: var(--accent-2); }
-  body.g-hashi .panel .hs-island.over { border-color: var(--danger); color: var(--danger); }
+  body.g-hashi .panel .hs-island:hover { background: var(--paper-light); border-color: var(--ink-soft); }
+  body.g-hashi .panel .hs-island.target { border-color: #9a6a00; border-style: dashed; }
+  body.g-hashi .panel .hs-island.sel { background: var(--select); border-color: var(--ink); box-shadow: 0 0 0 3px var(--select-ring); }
+  body.g-hashi .panel .hs-island.done { background: var(--solved); border-color: #2f6b2a; color: #1f4d1c; }
+  body.g-hashi .panel .hs-island.over { border-color: var(--ink-error); color: var(--ink-error); }
   body.g-hashi .panel .hs-board.solved .hs-island { cursor: default; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 4px; }
 </style>
 </head>
 <body class="g-hashi">

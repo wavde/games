@@ -73,25 +73,14 @@
     line-height: 1;
     box-shadow: 0 2px 3px rgba(0,0,0,0.5), inset 0 0 0 3px rgba(255,255,255,0.08);
   }
-  .ck-piece.b { background: #141210; border: 1px solid #3a352c; color: #f5c542; }
-  .ck-piece.w { background: #ede8e1; border: 1px solid #c9c2b4; color: #6b4e00; }
+  .ck-piece.b { background: var(--ink); border: 1px solid #3a352c; color: #f5c542; }
+  .ck-piece.w { background: var(--paper); border: 1px solid #c9c2b4; color: #6b4e00; }
   .ck-cell.can .ck-piece { outline: 2px solid rgba(245, 197, 66, 0.6); outline-offset: 1px; }
   .ck-cell.sel .ck-piece { outline: 3px solid var(--accent); outline-offset: 1px; }
   .ck-cell.cap .ck-piece { opacity: 0.35; }
   .ck-score .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; vertical-align: -0.05em; }
-  .ck-score .dot.b { background: #141210; border: 1px solid var(--muted); }
-  .ck-score .dot.w { background: #ede8e1; }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
-  select {
-    background: var(--panel-2);
-    color: var(--fg);
-    border: 1px solid var(--border-hi);
-    border-radius: var(--r-md);
-    padding: 8px 10px;
-    font-family: inherit;
-    font-size: var(--fs-sm);
-    min-height: var(--tap);
-  }
+  .ck-score .dot.b { background: var(--ink); border: 1px solid var(--muted); }
+  .ck-score .dot.w { background: var(--paper); }
 </style>
 </head>
 <body class="g-checkers">

@@ -53,16 +53,16 @@
     padding: 0;
     border: 0;
     border-radius: 4px;
-    background: #ede8e1;
-    color: #141210;
+    background: var(--paper);
+    color: var(--ink);
     cursor: pointer;
   }
-  body.g-skyscrapers .panel .sc-cell:hover { background: #f6f1e8; transform: none; }
-  body.g-skyscrapers .panel .sc-cell.sel { background: #f7dd8a; }
-  body.g-skyscrapers .panel .sc-board.solved .sc-cell { background: #cfe6c4; cursor: default; }
+  body.g-skyscrapers .panel .sc-cell:hover { background: var(--paper-hover); transform: none; }
+  body.g-skyscrapers .panel .sc-cell.sel { background: var(--select); }
+  body.g-skyscrapers .panel .sc-board.solved .sc-cell { background: var(--solved); cursor: default; }
   .sc-v { font-size: clamp(1.1rem, 5.4vw, 1.7rem); font-weight: 700; line-height: 1; pointer-events: none; }
   .sc-v::before { content: attr(data-d); }
-  body.g-skyscrapers .panel .sc-cell.err .sc-v { color: #b3261e; }
+  body.g-skyscrapers .panel .sc-cell.err .sc-v { color: var(--ink-error); }
   .sc-notes {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -70,7 +70,7 @@
     height: 70%;
     font-size: clamp(0.45rem, 1.8vw, 0.65rem);
     font-weight: 500;
-    color: #4a4440;
+    color: var(--ink-soft);
     pointer-events: none;
   }
   .sc-notes span { display: flex; align-items: center; justify-content: center; }
@@ -78,7 +78,6 @@
   .sc-pad { display: grid; gap: 6px; width: min(360px, 100%); margin: 8px auto 4px; }
   body.g-skyscrapers .panel .sc-pad .btn { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
   body.g-skyscrapers .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
 </style>
 </head>
 <body class="g-skyscrapers">
