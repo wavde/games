@@ -5,7 +5,7 @@
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 [![checks](https://github.com/wavde/games/actions/workflows/checks.yml/badge.svg)](https://github.com/wavde/games/actions/workflows/checks.yml)
 
-Twenty-five classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Twenty-six classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -51,6 +51,7 @@ Every logic puzzle ships with an in-browser generator + solver and three difficu
 | ✺ | **[akari](akari/)** | Light Up: place bulbs so every cell is lit, no bulb sees another, numbered walls get their count. |
 | ➰ | **[slitherlink](slitherlink/)** | Draw one closed loop through the dots; each number counts how many of its sides the loop uses. |
 | ★ | **[star-battle](star-battle/)** | Two stars in every row, column, and region; stars never touch, not even diagonally. |
+| ∑ | **[kakuro](kakuro/)** | Cross sums: fill each run with distinct digits 1–9 adding up to its clue. Number pad, pencil notes. |
 
 ---
 
@@ -113,7 +114,8 @@ games/
 ├── hashi/
 ├── akari/
 ├── slitherlink/
-└── star-battle/
+├── star-battle/
+└── kakuro/
 ```
 
 Each game folder is self-contained: `index.html` + `game.js`. Styling inherits from `shared.css`, `soft.css`, and `manpage.css`.
@@ -142,10 +144,11 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | akari | 7×7, direct rules | 9×9, look-ahead | 11×11, fewer clues, look-ahead |
 | slitherlink | 6×6, direct rules | 7×7, look-ahead | 8×8, fewer clues, deeper look-ahead |
 | star-battle | 8×8, one unit at a time | 9×9, look-ahead | 10×10, look-ahead |
+| kakuro | 6×6, runs ≤ 4, sums alone | 7×7, runs ≤ 5, look-ahead | 8×8, runs ≤ 5, look-ahead |
 | code-breaker | 4 pegs, 6 colors, 10 guesses | 4 / 6 / 8 | 5 / 8 / 10 |
 | slide-15 | 3×3 | 4×4 | 5×5 |
 
-Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, and star-battle are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable.
+Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, star-battle, and kakuro are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable.
 
 ## Tech
 

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>kakuro · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Kakuro — cross sums: fill each run with distinct digits 1–9 that add up to its clue. Daily puzzle, three difficulties, every puzzle has a unique answer.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .kk-board {
+    display: grid;
+    gap: 2px;
+    width: min(460px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    padding: 2px;
+    box-sizing: border-box;
+    background: #141210;
+    border-radius: 4px;
+    user-select: none;
+  }
+  .kk-block { position: relative; background: #2a2622; }
+  .kk-block.clue { background: linear-gradient(to top right, #2a2622 calc(50% - 1px), #6a6460 50%, #2a2622 calc(50% + 1px)); }
+  .kk-block span {
+    position: absolute;
+    font-size: clamp(0.6rem, 2.4vw, 0.85rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #ede8e1;
+  }
+  .kk-block .ac { top: 12%; right: 10%; }
+  .kk-block .dn { bottom: 12%; left: 10%; }
+  .kk-block .ok { color: #9a938a; }
+  .kk-block .bad { color: #ff6b6b; }
+  body.g-kakuro .panel .kk-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #ede8e1;
+    color: #141210;
+    font-size: clamp(1rem, 4.6vw, 1.5rem);
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+  body.g-kakuro .panel .kk-cell:hover { background: #f6f1e8; transform: none; }
+  body.g-kakuro .panel .kk-cell.sel { background: #f7dd8a; }
+  body.g-kakuro .panel .kk-cell.err { color: #b3261e; }
+  body.g-kakuro .panel .kk-board.solved .kk-cell { background: #cfe6c4; cursor: default; }
+  .kk-notes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 90%;
+    height: 90%;
+    font-size: clamp(0.4rem, 1.6vw, 0.6rem);
+    font-weight: 500;
+    color: #4a4440;
+    pointer-events: none;
+  }
+  .kk-notes span { display: flex; align-items: center; justify-content: center; }
+  .kk-notes span::before { content: attr(data-d); }
+  .kk-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: min(340px, 100%); margin: 8px auto 4px; }
+  body.g-kakuro .panel .kk-pad .btn { min-height: var(--tap); padding: 0; font-size: 1.05rem; }
+  body.g-kakuro .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-kakuro">
+<main class="wrap">
+  <div class="topbar">
+    <h1>kakuro</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Each run adds up to its clue.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="kakuro" data-man-title="KAKURO(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="kk-board" id="board" role="group" aria-label="Kakuro board"></div>
+    <div class="kk-pad" id="pad" role="group" aria-label="Digits"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="notes-btn" type="button" aria-pressed="false"><span class="glyph">✎</span> notes</button>
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-kakuro">
+  <h2>Name</h2>
+  <p>kakuro — cross sums, a crossword made of numbers.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Fill every light cell with a digit from 1 to 9.</li>
+    <li>A <strong>run</strong> is an unbroken line of light cells. The clue before it gives the run's total: the number above the diagonal is for the run to the right, the number below it is for the run going down.</li>
+    <li>No digit may repeat within a run.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a cell, then a digit on the pad (or type 1–9). <code>⌫</code>, Backspace, or 0 clears it; entering the same digit again clears it too.</li>
+    <li><code>✎ notes</code> (or <span class="kbd">N</span>) switches to pencil marks: digits toggle as small candidates instead.</li>
+    <li>Repeated digits turn red. A clue dims once its run is full and correct, and turns red if the run overshoots.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears the board. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the board and use the arrow keys to move between cells; type digits directly.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 6×6, runs up to 4 long, solvable from the sums alone. <strong>Medium</strong> — 7×7, runs up to 5, needs look-ahead ("if this were a 7…"). <strong>Hard</strong> — 8×8, runs up to 5, look-ahead across more of the board.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Some totals allow only one set of digits: 3 in two cells is 1+2, 4 in two is 1+3, 16 in two is 7+9, 6 in three is 1+2+3, 24 in three is 7+8+9. Where an across and a down run cross, the cell must hold a digit both allow.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
