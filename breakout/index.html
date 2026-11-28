@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>breakout · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Breakout — bounce the ball off your paddle and clear every brick. Three speeds, endless levels, best score per speed.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .bo-board {
+    display: block;
+    width: min(360px, 100%);
+    aspect-ratio: 3 / 4;
+    margin: 8px auto;
+    border-radius: 8px;
+    touch-action: none;
+    user-select: none;
+  }
+  .bo-pad { display: flex; justify-content: center; gap: 10px; margin: 4px 0 2px; }
+  body.g-breakout .panel .bo-pad .btn { min-width: 88px; font-size: 1.2rem; touch-action: none; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-breakout">
+<main class="wrap">
+  <div class="topbar">
+    <h1>breakout</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Move the paddle, then tap or press Space to launch.</p>
+      <p class="status">Score: <span id="score">0</span> · Lives: <span id="lives">3</span> · Level: <span id="level">1</span> · Best: <span id="best">0</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="breakout" data-man-title="BREAKOUT(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Speed">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="play-btn" class="btn ghost tool-btn" type="button">▶ play</button>
+    </div>
+    <canvas class="bo-board" id="board" role="img" aria-label="Breakout board"></canvas>
+    <div class="bo-pad" role="group" aria-label="Move paddle">
+      <button class="btn" type="button" id="left-btn" aria-label="Move left">◀</button>
+      <button class="btn" type="button" id="right-btn" aria-label="Move right">▶</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-breakout">
+  <h2>Name</h2>
+  <p>breakout — knock down the wall, one bounce at a time.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Bounce the ball off your paddle to break the bricks. Higher rows are worth more points.</li>
+    <li>Where the ball meets the paddle sets its angle: near the middle sends it straight up, near the ends sends it off steeply sideways.</li>
+    <li>Let the ball past the paddle and you lose a life. Clear every brick to start the next level, a little faster.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Mouse or touch</strong>: move along the board to steer the paddle; tap or click to launch.</li>
+    <li><strong>Keyboard</strong>: <span class="kbd">←</span><span class="kbd">→</span> or <span class="kbd">A</span><span class="kbd">D</span> move, <span class="kbd">Space</span> launches, <span class="kbd">P</span> pauses.</li>
+    <li>The ◀ ▶ buttons below the board move the paddle while held. The game pauses itself if you switch tabs.</li>
+    <li>Your best score per speed is kept on this device.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 4 rows, wide paddle, slow ball, 5 lives. <strong>Medium</strong> — 5 rows, 3 lives. <strong>Hard</strong> — 6 rows, narrow paddle, fast ball.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Aim for a gap at the side of the wall: once the ball gets above the bricks it clears them from the top. Use the paddle ends to change angle, and stay under the ball rather than chasing it.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

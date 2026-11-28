@@ -27,6 +27,8 @@ const EXPOSE = {
   hitori:        { names: ["generate", "countSolutions", "fits", "DIFFS"] },
   nurikabe:      { names: ["generate", "countSolutions", "fits", "DIFFS"] },
   calcudoku:     { names: ["generate", "findSolutions", "fits", "DIFFS"] },
+  skyscrapers:   { names: ["generate", "findSolutions", "fits", "DIFFS"] },
+  breakout:      { names: ["createGame", "update", "launch", "DIFFS", "W"] },
   zip:           { names: ["generate", "findSolutions"], extra: "setDiff: (d) => { diff = d; }" },
   nonogram:      { names: ["generate", "lineSolvable", "clueOf", "DIFFS"], extra: "setDiff: (d) => { diff = d; }" },
   queens:        { names: ["generate", "countSolutions"], extra: "setDiff: (d) => { diff = d; N = DIFFS[d]; }" },
@@ -306,6 +308,38 @@ const CHECKS = {
     }
     return { fails, note: "rules + 300 random games" };
   },
+  // Breakout: a jittery tracking paddle clears three levels with exact brick and score counts,
+  // the ball never leaves the arena or goes flat, and a paddle that never moves loses.
+  breakout: () => {
+    const t = window.__t, fails = [];
+    let seed = 3;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (const d of ["easy", "medium", "hard"]) {
+      const cfg = t.DIFFS[d], g = t.createGame(cfg), perLevel = cfg.rows * 8;
+      let off = 0, bricks = 0, levels = 0, time = 0, wantScore = 0;
+      for (let r = 0; r < cfg.rows; r++) wantScore += 8 * 10 * (cfg.rows - r);
+      t.launch(g);
+      while (levels < 3 && time < 900 && !g.over) {
+        for (const e of t.update(g, 1 / 60, g.ball.x + off)) {
+          if (e === "paddle") off = (rand() - 0.5) * g.paddle.w * 0.8;
+          if (e === "brick") bricks++;
+          if (e === "level") levels++;
+        }
+        time += 1 / 60;
+        if (g.ball.stuck) t.launch(g);
+        const b = g.ball;
+        if (b.x < 4.99 || b.x > t.W - 4.99 || b.y < 4.99) { fails.push(d + ": ball left the arena"); break; }
+        if (!b.stuck && Math.abs(b.vy) < g.speed * 0.49) { fails.push(d + ": ball went flat"); break; }
+      }
+      if (levels < 3) fails.push(d + ": tracker cleared only " + levels + " levels");
+      if (bricks !== 3 * perLevel || g.score !== 3 * wantScore) fails.push(d + ": " + bricks + " bricks / score " + g.score + ", expected " + 3 * perLevel + " / " + 3 * wantScore);
+      const still = t.createGame(cfg);
+      t.launch(still);
+      for (let k = 0; k < 60 * 600 && !still.over; k++) { t.update(still, 1 / 60, 0); if (still.ball.stuck) t.launch(still); }
+      if (!still.over) fails.push(d + ": a still paddle never lost");
+    }
+    return { fails, note: "3 levels per speed, physics invariants" };
+  },
   battleships: () => {
     const t = window.__t, fails = [];
     for (let k = 0; k < 500; k++) {
@@ -336,6 +370,7 @@ const PLAN = [
   ["hitori", "graded", [LEVELS, SEEDS, "countSolutions", "fits"]],
   ["nurikabe", "graded", [LEVELS, SEEDS, "countSolutions", "fits"]],
   ["calcudoku", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
+  ["skyscrapers", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
   ["zip", "zip", [LEVELS, SEEDS]],
   ["nonogram", "nonogram", [LEVELS, SEEDS]],
   ["queens", "simpleUnique", [LEVELS, SEEDS, "queens"]],
@@ -347,6 +382,7 @@ const PLAN = [
   ["battleships", "battleships", []],
   ["sokoban", "sokoban", [LEVELS, 4]],
   ["snake", "snake", []],
+  ["breakout", "breakout", []],
 ];
 
 const failures = [];

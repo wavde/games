@@ -5,7 +5,7 @@
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 [![checks](https://github.com/wavde/games/actions/workflows/checks.yml/badge.svg)](https://github.com/wavde/games/actions/workflows/checks.yml)
 
-Thirty-one classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Thirty-three classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -36,6 +36,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 | ⚓ | **[battleships](battleships/)** | Hunt the AI's hidden fleet before it sinks yours. Hunt/target, checkerboard, or heat-map AI; W–L record and fewest shots. |
 | 📦 | **[sokoban](sokoban/)** | Push every box onto a goal. Generated rooms, always solvable, with a solver-computed par. Keys, swipe, or tap. |
 | 🐍 | **[snake](snake/)** | The arcade classic on a canvas. Wrap-around easy, walls and speed-ups on medium/hard; keys, swipe, or on-screen pad; best score per speed. |
+| 🧱 | **[breakout](breakout/)** | Paddle, ball, and a wall of bricks; endless levels that speed up. Mouse/touch, keys, or buttons; best score per speed. |
 
 ### Logic puzzles
 
@@ -57,6 +58,7 @@ Every logic puzzle ships with an in-browser generator + solver and three difficu
 | ▦ | **[hitori](hitori/)** | Shade cells so no number repeats in a row or column; shaded cells never touch and the rest stay connected. |
 | 🏝 | **[nurikabe](nurikabe/)** | Shade the sea so each island matches its number, the sea stays connected, and no 2×2 pool forms. |
 | ➗ | **[calcudoku](calcudoku/)** | Latin square with arithmetic cages (+ − × ÷). Number pad, pencil notes. |
+| 🏙 | **[skyscrapers](skyscrapers/)** | Latin square of tower heights; edge clues count how many towers each side can see. |
 
 ---
 
@@ -112,6 +114,7 @@ games/
 ├── battleships/
 ├── sokoban/
 ├── snake/
+├── breakout/
 ├── mini-sudoku/
 ├── tango/
 ├── queens/
@@ -125,7 +128,8 @@ games/
 ├── kakuro/
 ├── hitori/
 ├── nurikabe/
-└── calcudoku/
+├── calcudoku/
+└── skyscrapers/
 ```
 
 Each game folder is self-contained: `index.html` + `game.js`. Styling inherits from `shared.css`, `soft.css`, and `manpage.css`.
@@ -158,11 +162,12 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | hitori | 6×6, opening patterns + direct rules | 8×8, look-ahead | 10×10, look-ahead |
 | nurikabe | 6×6, direct rules | 8×8, look-ahead | 10×10, look-ahead |
 | calcudoku | 4×4, cages + lines | 5×5, look-ahead | 6×6, cages up to 4, look-ahead |
+| skyscrapers | 4×4, a line at a time | 5×5, look-ahead | 6×6, fewest clues that stay unique |
 | sokoban | 7×7 room, 2 boxes (par ~10) | 8×8, 3 boxes (par ~18) | 9×9, 4 boxes (par ~27) |
 | code-breaker | 4 pegs, 6 colors, 10 guesses | 4 / 6 / 8 | 5 / 8 / 10 |
 | slide-15 | 3×3 | 4×4 | 5×5 |
 
-Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, star-battle, kakuro, hitori, nurikabe, and calcudoku are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable; sokoban rooms are searched backwards from the solved position, so they are always solvable and the start chosen is the one needing the most pushes.
+Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, star-battle, kakuro, hitori, nurikabe, calcudoku, and skyscrapers are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable; sokoban rooms are searched backwards from the solved position, so they are always solvable and the start chosen is the one needing the most pushes.
 
 ## Tech
 
