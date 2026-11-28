@@ -297,6 +297,7 @@
 
   function renderWalls() {
     Array.from(boardEl.querySelectorAll(".zp-wall-h, .zp-wall-v")).forEach(w => w.remove());
+    if (cellEls.length !== N * N) return; // a frame queued for an older board
     const brect = boardEl.getBoundingClientRect();
     for (const w of walls) {
       const [a, b] = w.split("-").map(Number);
