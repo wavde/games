@@ -5,7 +5,7 @@
 //    graded ones still need the technique their level promises
 //  - checkers matches published perft counts; mancala matches an independent Kalah model;
 //    the checkers, battleships, and mancala AIs only ever play legal moves; sokoban par is exact;
-//    every klondike deal's winning line replays as legal moves
+//    every klondike deal's winning line replays as legal moves; freecell, morris, and hex rules
 // Usage (repo root): node .github/checks/logic.mjs   (CHROME_PATH overrides the Chrome binary)
 import http from "node:http";
 import fs from "node:fs";
@@ -31,6 +31,10 @@ const EXPOSE = {
   skyscrapers:   { names: ["generate", "findSolutions", "fits", "DIFFS"] },
   futoshiki:     { names: ["generate", "findSolutions", "fits", "DIFFS"] },
   tents:         { names: ["generate", "findSolutions", "fits", "DIFFS"] },
+  "jigsaw-sudoku": { names: ["generate", "findSolutions", "fits", "DIFFS"] },
+  freecell:      { names: ["deal", "clone", "legal", "apply", "autoplay", "cardsOf", "capacity"] },
+  morris:        { names: ["initial", "clone", "legalMoves", "applyMove", "outcome", "pickMove", "onBoard", "MILLS"] },
+  hex:           { names: ["connected", "pickMove"] },
   klondike:      { names: ["deal", "solve", "clone", "legal", "apply", "draw", "autoplay", "won", "MODES"] },
   breakout:      { names: ["createGame", "update", "launch", "DIFFS", "W"] },
   zip:           { names: ["generate", "findSolutions"], extra: "setDiff: (d) => { diff = d; }" },
@@ -380,6 +384,84 @@ const CHECKS = {
     if (!L({ w: true }, { f: true }) || L({ t: 0, k: 0 }, { f: true })) fails.push("foundation order wrong");
     return { fails, note: 2 * seeds + " deals replayed + rules" };
   },
+  // FreeCell: deal #1 matches the published layout; random legal play keeps all 52 cards and
+  // never moves a run longer than the free cells and empty columns allow.
+  freecell: () => {
+    const t = window.__t, fails = [];
+    const R = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"], SU = "SHDC";
+    const name = (c) => R[c % 13 + 1] + SU[Math.floor(c / 13)];
+    const d1 = t.deal(1), row1 = d1.t.map((p) => name(p[0])).join(" ");
+    if (row1 !== "JD 2D 9H JC 5D 7H 7C 5H") fails.push("deal #1 first row " + row1);
+    let seed = 1;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let g = 0; g < 40; g++) {
+      const S = t.deal(1 + Math.floor(rand() * 32000));
+      for (let k = 0; k < 150; k++) {
+        const moves = [];
+        const froms = [];
+        for (let q = 0; q < 4; q++) if (S.c[q] >= 0) froms.push({ c: q });
+        for (let p = 0; p < 8; p++) for (let i = 0; i < S.t[p].length; i++) if (t.cardsOf(S, { t: p, k: i }).length) froms.push({ t: p, k: i });
+        for (const from of froms) for (const to of [{ f: true }, { c: S.c.indexOf(-1) }, ...[0, 1, 2, 3, 4, 5, 6, 7].map((p) => ({ t: p }))]) {
+          if (to.c === -1) continue;
+          const mv = { from, to };
+          if (!t.legal(S, mv)) continue;
+          if (to.t !== undefined && t.cardsOf(S, from).length > t.capacity(S, to.t)) fails.push("over-long run allowed");
+          moves.push(mv);
+        }
+        if (!moves.length) break;
+        t.apply(S, moves[Math.floor(rand() * moves.length)]);
+        t.autoplay(S);
+        const all = [...S.t.flat(), ...S.c.filter((c) => c >= 0)];
+        if (new Set(all).size !== all.length || all.length + S.f.reduce((a, b) => a + b, 0) !== 52) { fails.push("cards lost or duplicated"); break; }
+      }
+      if (fails.length) break;
+    }
+    return { fails, note: "deal #1 layout + 40 random games" };
+  },
+  // Morris: random games keep piece counts consistent, mills take exactly one piece, and the AI
+  // at each level only plays legal moves and finishes games.
+  morris: () => {
+    const t = window.__t, fails = [];
+    let seed = 2;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const key = (m) => m.from + "," + m.to + "," + m.take;
+    for (let g = 0; g < 200 && !fails.length; g++) {
+      const S = t.initial();
+      for (let ply = 0; ply < 300 && !t.outcome(S); ply++) {
+        const moves = t.legalMoves(S), m = moves[Math.floor(rand() * moves.length)], o = 3 - S.turn;
+        const before = t.onBoard(S, o);
+        t.applyMove(S, m);
+        if (t.onBoard(S, o) !== before - (m.take >= 0 ? 1 : 0)) { fails.push("capture count wrong"); break; }
+        if (S.hand[1] + t.onBoard(S, 1) > 9 || S.hand[2] + t.onBoard(S, 2) > 9) { fails.push("piece count over nine"); break; }
+      }
+    }
+    for (const level of [["easy", 2, 60, 5000], ["medium", 4, 0, 5000], ["hard", 14, 0, 300]]) {
+      const S = t.initial();
+      for (let ply = 0; ply < 120 && !t.outcome(S); ply++) {
+        const m = S.turn === 1 ? t.pickMove(S, level[1], level[2], level[3], rand) : t.legalMoves(S)[Math.floor(rand() * t.legalMoves(S).length)];
+        if (!t.legalMoves(S).some((x) => key(x) === key(m))) { fails.push(level[0] + ": illegal AI move"); break; }
+        t.applyMove(S, m);
+      }
+    }
+    return { fails, note: "200 random games, AI legality" };
+  },
+  // Hex: a full board always has exactly one winner; the AI takes a winning cell and blocks one.
+  hex: () => {
+    const t = window.__t, fails = [];
+    let seed = 3;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let k = 0; k < 1000; k++) {
+      const n = 3 + (k % 9), b = new Int8Array(n * n).map(() => 1 + (rand() < 0.5));
+      if (!!t.connected(b, n, 1) === !!t.connected(b, n, 2)) { fails.push("full board without exactly one winner"); break; }
+    }
+    const n = 7, b = new Int8Array(n * n);
+    // Red runs down column 3 to the last-but-one row; blue holds one of the two cells below.
+    for (let r = 0; r < n - 1; r++) b[r * n + 3] = 1;
+    b[(n - 1) * n + 2] = 2;
+    if (t.pickMove(b, n, 1, "easy", rand) !== (n - 1) * n + 3) fails.push("AI missed a winning cell");
+    if (t.pickMove(b, n, 2, "easy", rand) !== (n - 1) * n + 3) fails.push("AI missed a block");
+    return { fails, note: "1000 full boards, win/block" };
+  },
   battleships: () => {
     const t = window.__t, fails = [];
     for (let k = 0; k < 500; k++) {
@@ -413,6 +495,7 @@ const PLAN = [
   ["skyscrapers", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
   ["futoshiki", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
   ["tents", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
+  ["jigsaw-sudoku", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
   ["zip", "zip", [LEVELS, SEEDS]],
   ["nonogram", "nonogram", [LEVELS, SEEDS]],
   ["queens", "simpleUnique", [LEVELS, SEEDS, "queens"]],
@@ -426,6 +509,9 @@ const PLAN = [
   ["snake", "snake", []],
   ["breakout", "breakout", []],
   ["klondike", "klondike", [SEEDS]],
+  ["freecell", "freecell", []],
+  ["morris", "morris", []],
+  ["hex", "hex", []],
 ];
 
 const failures = [];

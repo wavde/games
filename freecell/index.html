@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>freecell · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="FreeCell solitaire — every card face up, four free cells, the classic numbered deals. Tap or drag, multi-card moves, unlimited undo, a daily deal.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .fc-board { --cw: 50px; --gap: clamp(2px, 1vw, 7px); width: min(560px, 100%); margin: 8px auto; user-select: none; -webkit-user-select: none; }
+  .fc-row { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--gap); align-items: start; }
+  .fc-tab { margin-top: calc(var(--cw) * 0.24); min-height: calc(var(--cw) * 3); }
+  .fc-free, .fc-found, .fc-pile { position: relative; height: calc(var(--cw) * 1.4); }
+  .fc-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.4);
+    margin: 0;
+    padding: 0;
+    border: 1px solid #b9b1a6;
+    border-radius: calc(var(--cw) * 0.09);
+    background: #fdfbf7;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-family: inherit;
+  }
+  .fc-card.red { color: #b3261e; }
+  .fc-card.black { color: #141210; }
+  .fc-card::before {
+    content: attr(data-r) attr(data-s);
+    position: absolute;
+    top: 4%;
+    left: 6%;
+    font-size: max(10px, calc(var(--cw) * 0.27));
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+  .fc-card::after {
+    content: attr(data-s);
+    position: absolute;
+    right: 8%;
+    bottom: 5%;
+    font-size: calc(var(--cw) * 0.5);
+    line-height: 1;
+  }
+  body.g-freecell .panel .fc-card {
+    min-height: 0;
+    border: 1px solid #b9b1a6;
+    border-radius: calc(var(--cw) * 0.09);
+    background: #fdfbf7;
+    cursor: pointer;
+    touch-action: none;
+    transition: none;
+  }
+  body.g-freecell .panel .fc-card.red { color: #b3261e; }
+  body.g-freecell .panel .fc-card.black { color: #141210; }
+  body.g-freecell .panel .fc-card:hover { background: #fffdf8; transform: none; }
+  body.g-freecell .panel .fc-card:active { transform: none; }
+  body.g-freecell .panel .fc-card.picked { box-shadow: 0 0 0 3px #f2b705; }
+  body.g-freecell .panel .fc-card.lifted { opacity: 0.3; }
+  body.g-freecell .panel .fc-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; z-index: 5; }
+  body.g-freecell .panel .fc-slot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.4);
+    min-height: 0;
+    padding: 0;
+    border: 2px dashed var(--border-hi);
+    border-radius: calc(var(--cw) * 0.09);
+    background: transparent;
+    color: var(--muted);
+    font-size: calc(var(--cw) * 0.42);
+  }
+  body.g-freecell .panel .fc-slot::before { content: attr(data-s); }
+  body.g-freecell .panel .fc-slot.cover { border: 0; }
+  body.g-freecell .panel .fc-free .fc-slot { border-style: solid; border-width: 1px; background: rgba(255, 255, 255, 0.04); }
+  .fc-float { position: fixed; z-index: 1000; pointer-events: none; width: var(--cw); }
+  .fc-float .fc-card { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-freecell">
+<main class="wrap">
+  <div class="topbar">
+    <h1>freecell</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Build each suit up from ace to king.</p>
+      <p class="status">Deal <span id="deal">—</span> · Time: <span id="time">0:00</span> · Moves: <span id="moves">0</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="freecell" data-man-title="FREECELL(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="fc-board" id="board" role="group" aria-label="FreeCell table">
+      <div class="fc-row">
+        <div class="fc-free" data-drop="c0"></div>
+        <div class="fc-free" data-drop="c1"></div>
+        <div class="fc-free" data-drop="c2"></div>
+        <div class="fc-free" data-drop="c3"></div>
+        <div class="fc-found" data-drop="f"></div>
+        <div class="fc-found" data-drop="f"></div>
+        <div class="fc-found" data-drop="f"></div>
+        <div class="fc-found" data-drop="f"></div>
+      </div>
+      <div class="fc-row fc-tab">
+        <div class="fc-pile" data-drop="0" role="group"></div>
+        <div class="fc-pile" data-drop="1" role="group"></div>
+        <div class="fc-pile" data-drop="2" role="group"></div>
+        <div class="fc-pile" data-drop="3" role="group"></div>
+        <div class="fc-pile" data-drop="4" role="group"></div>
+        <div class="fc-pile" data-drop="5" role="group"></div>
+        <div class="fc-pile" data-drop="6" role="group"></div>
+        <div class="fc-pile" data-drop="7" role="group"></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> restart</button>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-freecell">
+  <h2>Name</h2>
+  <p>freecell — the patience game where every card is face up and almost every deal can be won.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Move all 52 cards to the four foundations at the top right, each suit from ace up to king.</li>
+    <li>In the eight columns, build <strong>down</strong> in alternating colours: a red 6 on a black 7. Any card can start an empty column.</li>
+    <li>The four free cells at the top left hold one card each, as long as you like.</li>
+    <li>You move one card at a time, but a run in order moves together when there's room to shuffle it card by card: one more card than there are empty free cells, doubled for each empty column.</li>
+    <li>Cards that nothing still needs go home on their own.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a card to send it to the best spot: its foundation, a column that takes it, an empty column, then a free cell. Tap a card in a run to move the run from there. <strong>Drag</strong> to choose the spot yourself.</li>
+    <li><code>↶ undo</code> takes back one move, as far as you like; <code>↻ restart</code> replays the same deal. <code>↻ new</code> picks another numbered deal; the daily deal loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the table, arrow keys move between cards, Enter plays a card like a tap, <span class="kbd">X</span> picks it up and Enter on a column, free cell, or foundation puts it there (<span class="kbd">Esc</span> lets go).</li>
+  </ul>
+
+  <h2>Deals</h2>
+  <ul>
+    <li>Deals are the classic numbered set 1 to 32,000 from the Windows game, so deal #1 here is the same deal #1 anyone else plays.</li>
+    <li>All but one of them (#11982) can be won, and that one is skipped.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Free cells are precious: fill one only to release something useful. Dig out the aces and twos first. An empty column is worth more than a free cell, since it doubles how far a run can move.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

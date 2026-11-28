@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hex · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Hex — join your two sides of a diamond of hexagons before your opponent joins theirs. There are no draws. Three AI levels or two players, three board sizes.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .hx-board { position: relative; width: min(560px, 100%); margin: 10px auto; user-select: none; }
+  .hx-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hx-hex { fill: #ede8e1; stroke: #6e6458; stroke-width: 0.04; }
+  .hx-hex.red { fill: #c0392b; }
+  .hx-hex.blue { fill: #2e6fb7; }
+  .hx-hex.last { stroke: #f2b705; stroke-width: 0.1; }
+  .hx-hex.chain.red { fill: #e5533f; }
+  .hx-hex.chain.blue { fill: #4d8fdb; }
+  .hx-hex.chain { stroke: #fffdf8; stroke-width: 0.08; }
+  .hx-edge { fill: none; stroke-width: 0.32; stroke-linejoin: round; stroke-linecap: round; }
+  .hx-edge.red { stroke: #c0392b; }
+  .hx-edge.blue { stroke: #2e6fb7; }
+  body.g-hex .panel .hx-cell {
+    position: absolute;
+    aspect-ratio: 1;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+  }
+  body.g-hex .panel .hx-cell:hover { background: rgba(255, 255, 255, 0.25); transform: translate(-50%, -50%); }
+  body.g-hex .panel .hx-cell:active { transform: translate(-50%, -50%); }
+  body.g-hex .panel .hx-cell[aria-disabled="true"] { cursor: default; background: transparent; }
+  body.g-hex .panel .hx-cell:focus-visible { outline: 3px solid var(--accent); outline-offset: 0; }
+  .hx-key .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; vertical-align: -0.08em; }
+  .hx-key .dot.r { background: #c0392b; }
+  .hx-key .dot.b { background: #2e6fb7; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-hex">
+<main class="wrap">
+  <div class="topbar">
+    <h1>hex</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Your move — join top and bottom (red edges).</p>
+      <p class="status hx-key"><span class="dot r"></span> top–bottom · <span class="dot b"></span> left–right · <span id="record">W–L 0–0</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="hex" data-man-title="HEX(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="AI difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <select id="mode" aria-label="Mode">
+        <option value="human-red" selected>You first (red) vs AI</option>
+        <option value="human-blue">AI first (you blue)</option>
+        <option value="local">2 players local</option>
+      </select>
+      <select id="size" aria-label="Board size">
+        <option value="7">7×7</option>
+        <option value="9" selected>9×9</option>
+        <option value="11">11×11</option>
+      </select>
+    </div>
+    <div class="hx-board" id="board" role="group" aria-label="Hex board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="new-btn" type="button"><span class="glyph">↻</span> new game</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-hex">
+  <h2>Name</h2>
+  <p>hex — the connection game invented by Piet Hein and, independently, John Nash.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Take turns colouring one empty hexagon. Red moves first.</li>
+    <li><strong>Red</strong> wins by joining the top and bottom edges with an unbroken chain of red cells; <strong>Blue</strong> by joining left and right.</li>
+    <li>Hex can't end in a draw: once the board is full, exactly one side has a chain.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> an empty hexagon. The last move has a gold outline; the winning chain lights up.</li>
+    <li><code>↶ undo</code> takes back to your last move (not after a finished game against the AI). Your win–loss record is kept per AI level and board size.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move between cells, Enter or Space plays.</li>
+  </ul>
+
+  <h2>AI levels</h2>
+  <ul>
+    <li>The AI fills the rest of the board at random thousands of times and favours the cells it owned in the fills it won. It always takes a winning cell and blocks one that would win for you.</li>
+    <li><strong>Easy</strong> uses 150 fills and picks among its top five. <strong>Medium</strong> uses 2,500. <strong>Hard</strong> fills for 1.2 s.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">The centre is strongest. Two of your cells with two shared empty neighbours form a <em>bridge</em>: if your opponent takes one gap, take the other, and they stay joined. Blocking right in front of a chain rarely works; block from a distance.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

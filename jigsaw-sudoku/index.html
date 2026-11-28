@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>jigsaw sudoku · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Jigsaw sudoku — sudoku with irregular regions: every row, column, and jigsaw piece holds 1 to n once. Daily puzzle, three difficulties, unique answers.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .jg-board {
+    display: grid;
+    width: min(460px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    border: 2px solid #141210;
+    border-radius: 6px;
+    overflow: hidden;
+    user-select: none;
+    background: #141210;
+  }
+  body.g-jigsaw-sudoku .panel .jg-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 1px solid #b9b1a6;
+    border-radius: 0;
+    color: #141210;
+    cursor: pointer;
+  }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="0"] { background: #f3ede4; }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="1"] { background: #e3ecd9; }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="2"] { background: #e6e1f0; }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="3"] { background: #f4e0d6; }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="4"] { background: #dcebef; }
+  body.g-jigsaw-sudoku .panel .jg-cell[data-t="5"] { background: #efe6c8; }
+  body.g-jigsaw-sudoku .panel .jg-cell.et { border-top: 3px solid #141210; }
+  body.g-jigsaw-sudoku .panel .jg-cell.eb { border-bottom: 3px solid #141210; }
+  body.g-jigsaw-sudoku .panel .jg-cell.el { border-left: 3px solid #141210; }
+  body.g-jigsaw-sudoku .panel .jg-cell.er { border-right: 3px solid #141210; }
+  body.g-jigsaw-sudoku .panel .jg-cell:hover { filter: brightness(1.04); transform: none; }
+  body.g-jigsaw-sudoku .panel .jg-cell.sel { background: #f7dd8a; }
+  body.g-jigsaw-sudoku .panel .jg-board.solved .jg-cell { background: #cfe6c4; cursor: default; }
+  body.g-jigsaw-sudoku .panel .jg-cell:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .jg-v { font-size: clamp(1rem, 4.6vw, 1.5rem); font-weight: 500; line-height: 1; pointer-events: none; }
+  .jg-cell.given .jg-v { font-weight: 700; }
+  .jg-v::before { content: attr(data-d); }
+  body.g-jigsaw-sudoku .panel .jg-cell.err .jg-v { color: #b3261e; }
+  .jg-notes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 84%;
+    height: 80%;
+    font-size: clamp(0.4rem, 1.5vw, 0.58rem);
+    font-weight: 500;
+    color: #4a4440;
+    pointer-events: none;
+  }
+  .jg-notes span { display: flex; align-items: center; justify-content: center; }
+  .jg-notes span::before { content: attr(data-d); }
+  .jg-pad { display: grid; gap: 6px; width: min(440px, 100%); margin: 8px auto 4px; }
+  body.g-jigsaw-sudoku .panel .jg-pad .btn { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
+  body.g-jigsaw-sudoku .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-jigsaw-sudoku">
+<main class="wrap">
+  <div class="topbar">
+    <h1>jigsaw sudoku</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Each row, column, and region holds 1 to n once.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="jigsaw-sudoku" data-man-title="JIGSAW-SUDOKU(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="jg-board" id="board" role="group" aria-label="Jigsaw sudoku board"></div>
+    <div class="jg-pad" id="pad" role="group" aria-label="Numbers"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="notes-btn" type="button" aria-pressed="false"><span class="glyph">✎</span> notes</button>
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-jigsaw-sudoku">
+  <h2>Name</h2>
+  <p>jigsaw sudoku — sudoku whose boxes are irregular pieces.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Fill the n×n grid with 1 to n. Each number appears once in every row, every column, and every region (the shapes outlined in bold).</li>
+    <li>Bold numbers are given and can't be changed.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a cell, then a number on the pad (or type it). <code>⌫</code>, Backspace, or 0 clears; entering the same number again clears it too.</li>
+    <li><code>✎ notes</code> (or <span class="kbd">N</span>) switches to pencil marks. Repeated numbers turn red.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears your entries. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move between cells, type numbers directly. Screen readers announce each cell's region.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 6×6, solvable with singles (a cell with one candidate, or a number with one place in a row, column, or region). <strong>Medium</strong> — 8×8, needs look-ahead. <strong>Hard</strong> — 9×9, fewest givens that stay unique.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Where a region pokes into a row, compare them: if a row and a region overlap in all but one cell each, those two leftover cells must hold the same number. Scan each number across rows, columns, and regions for its last possible place.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
