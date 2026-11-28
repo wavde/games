@@ -6,16 +6,79 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0a">
 <meta name="description" content="2048 — slide tiles, merge matching numbers, reach the 2048 tile.">
+<link rel="canonical" href="https://wavde.github.io/games/2048/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://wavde.github.io/games/2048/">
+<meta property="og:title" content="2048 · games">
+<meta property="og:description" content="2048 — slide tiles, merge matching numbers, reach the 2048 tile.">
+<meta property="og:image" content="https://wavde.github.io/games/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <link rel="manifest" href="../manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="preload" href="../fonts/fira-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../shared.css">
 <link rel="stylesheet" href="../manpage.css">
 <link rel="stylesheet" href="../soft.css">
 <style>
+  /* Board theme (moved from soft.css) */
+  body.g-2048 .panel .board2048 {
+    background: var(--bg);
+    border: none;
+    border-radius: 16px;
+    padding: 10px;
+    gap: 10px;
+  }
+  body.g-2048 .panel .tile {
+    background: #2a2520;
+    border: none;
+    color: var(--muted);
+    border-radius: 12px;
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  body.g-2048 .panel .t2    { background: #3a3428; color: #c8c0b0; }
+  body.g-2048 .panel .t4    { background: #4a4030; color: #d8d0c0; }
+  body.g-2048 .panel .t8    { background: #7a5528; color: #fff; }
+  body.g-2048 .panel .t16   { background: #a8632d; color: #fff; }
+  body.g-2048 .panel .t32   { background: #b8562d; color: #fff; }
+  body.g-2048 .panel .t64   { background: var(--coral); color: #111; }
+  body.g-2048 .panel .t128  {
+    background: #a08a20;
+    color: #111;
+    box-shadow: 0 0 16px rgba(160,138,32,0.4);
+  }
+  body.g-2048 .panel .t256  {
+    background: #c8a820;
+    color: #111;
+    box-shadow: 0 0 18px rgba(200,168,32,0.45);
+  }
+  body.g-2048 .panel .t512  {
+    background: var(--sun);
+    color: #1a1210;
+    box-shadow: 0 0 20px rgba(245,184,0,0.5);
+  }
+  body.g-2048 .panel .t1024 {
+    background: #e8a000;
+    color: #1a1210;
+    box-shadow: 0 0 24px rgba(232,160,0,0.5);
+    font-size: clamp(0.9rem, 4vw, 1.5rem);
+  }
+  body.g-2048 .panel .t2048 {
+    background: linear-gradient(145deg, #f5c800, #e8a000);
+    color: #1a1210;
+    box-shadow: 0 0 30px rgba(245,200,0,0.55);
+    font-size: clamp(0.9rem, 4vw, 1.5rem);
+  }
+  body.g-2048 .panel .t4096,
+  body.g-2048 .panel .t8192 {
+    background: var(--grape);
+    color: #111;
+    box-shadow: 0 0 26px rgba(167,139,250,0.45);
+    font-size: clamp(0.9rem, 4vw, 1.5rem);
+  }
   .board2048 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

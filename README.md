@@ -74,7 +74,7 @@ Every logic puzzle has a solver-checked unique answer and three difficulty tiers
 
 ## Design system
 
-- **Retro terminal**: Fira Mono, amber + mint on near-black, 1px hairline borders, ASCII banners, subtle scanline overlay.
+- **Retro terminal**: Fira Mono (self-hosted in `fonts/`, no third-party requests), amber + mint on near-black, 1px hairline borders, ASCII banners, subtle scanline overlay.
 - **Light mode** (hub): follows `prefers-color-scheme`, plus a footer toggle that cycles **dark → light → system**. Preference persists in `localStorage`. Game pages use `soft.css`'s warm-dark palette.
 - **Manpage help**: every game has a `? man` button that opens a Unix-style manpage overlay (NAME · RULES · CONTROLS · STRATEGY). Auto-opens on first visit per game; quick to dismiss with ESC / `q` / tap-outside.
 - **Accessibility**: every control has an accessible name, toggles expose `aria-pressed`, long help text is keyboard-scrollable; axe-core automated checks pass on every page.
@@ -106,7 +106,8 @@ games/
 ├── manpage.js          shared help-overlay controller
 ├── gamekit.js          shared helpers (PRNG, daily seed + solved-today record, storage, chips, puzzle clock, keyboard grid, digit-puzzle solver)
 ├── manifest.json       PWA manifest (iOS/Android home screen)
-├── favicon.svg
+├── favicon.svg         app mark; icons/ holds the PNG install icons and the link-preview image
+├── fonts/              Fira Mono subsets (SIL OFL)
 ├── tic-tac-toe/        each game: index.html + game.js
 ├── 2048/
 ├── minesweeper/

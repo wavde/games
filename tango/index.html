@@ -6,16 +6,84 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0a">
 <meta name="description" content="Tango — suns and moons on a 6×6 grid. No three in a row; three of each per row/column; respect the = and × edges.">
+<link rel="canonical" href="https://wavde.github.io/games/tango/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://wavde.github.io/games/tango/">
+<meta property="og:title" content="tango · games">
+<meta property="og:description" content="Tango — suns and moons on a 6×6 grid. No three in a row; three of each per row/column; respect the = and × edges.">
+<meta property="og:image" content="https://wavde.github.io/games/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <link rel="manifest" href="../manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="preload" href="../fonts/fira-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../shared.css">
 <link rel="stylesheet" href="../manpage.css">
 <link rel="stylesheet" href="../soft.css">
 <style>
+  /* Board theme (moved from soft.css) */
+  body.g-tango .panel .tg-grid {
+    background: var(--bg);
+    border: none;
+    border-radius: 16px;
+    padding: 10px;
+    gap: 8px;
+  }
+  body.g-tango .panel .tg-cell {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--dim);
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  body.g-tango .panel .tg-cell.given {
+    border-color: var(--border-hi);
+  }
+  /* ☀ Sun — warm golden glow */
+  body.g-tango .panel .tg-cell.sun {
+    color: var(--sun);
+    text-shadow: 0 0 12px rgba(245,184,0,0.45);
+    background: rgba(245,184,0,0.08);
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+  }
+  body.g-tango .panel .tg-cell.given.sun {
+    background: rgba(245,184,0,0.14);
+  }
+  /* ☾ Moon — cool indigo glow */
+  body.g-tango .panel .tg-cell.moon {
+    color: var(--moon);
+    text-shadow: 0 0 12px rgba(139,156,247,0.45);
+    background: rgba(139,156,247,0.08);
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+  }
+  body.g-tango .panel .tg-cell.given.moon {
+    background: rgba(139,156,247,0.14);
+  }
+  body.g-tango .panel .tg-cell.error {
+    border-color: var(--coral);
+    box-shadow: inset 0 0 0 2px rgba(255,107,107,0.3);
+  }
+  /* Edge constraint badges */
+  body.g-tango .panel .tg-edge {
+    background: var(--panel);
+    color: var(--fg);
+    border: 1px solid var(--border-hi);
+    border-radius: 6px;
+    font-weight: 700;
+  }
+  body.g-tango .panel .tg-edge.eq {
+    color: var(--teal);
+    border-color: var(--teal);
+    background: rgba(77,217,172,0.12);
+  }
+  body.g-tango .panel .tg-edge.neq {
+    color: var(--sun);
+    border-color: var(--sun);
+    background: rgba(245,184,0,0.10);
+  }
   .tg-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);

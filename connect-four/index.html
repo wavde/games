@@ -6,16 +6,71 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0a">
 <meta name="description" content="Connect Four — drop checkers, get four in a row. Play vs AI at three depths or locally with a friend.">
+<link rel="canonical" href="https://wavde.github.io/games/connect-four/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://wavde.github.io/games/connect-four/">
+<meta property="og:title" content="connect-four · games">
+<meta property="og:description" content="Connect Four — drop checkers, get four in a row. Play vs AI at three depths or locally with a friend.">
+<meta property="og:image" content="https://wavde.github.io/games/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <link rel="manifest" href="../manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="preload" href="../fonts/fira-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../shared.css">
 <link rel="stylesheet" href="../manpage.css">
 <link rel="stylesheet" href="../soft.css">
 <style>
+  /* Board theme (moved from soft.css) */
+  body.g-connect-four .panel .c4-board,
+  body.g-connect-four .panel .board {
+    background: #2a4a7a;
+    border: none;
+    border-radius: 18px;
+    padding: 8px;
+    gap: 6px;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.06);
+  }
+  body.g-connect-four .panel .c4-slot {
+    background: var(--bg);
+    border: 2px solid #2a4a7a;
+    border-radius: 999px;
+  }
+  body.g-connect-four .panel .c4-slot.p1 {
+    background: var(--coral);
+    border-color: #c04838;
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,0.2),
+      0 0 10px rgba(255,107,107,0.3);
+  }
+  body.g-connect-four .panel .c4-slot.p2 {
+    background: #f5c800;
+    border-color: #d4aa00;
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,0.3),
+      0 0 10px rgba(245,200,0,0.3);
+  }
+  body.g-connect-four .panel .c4-slot.win {
+    outline: 3px solid #fff;
+    outline-offset: -4px;
+  }
+  body.g-connect-four .panel .c4-col-btn {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    border-radius: 10px;
+  }
+  body.g-connect-four .panel .c4-col-btn:hover:not([aria-disabled="true"]) {
+    background: rgba(245,184,0,0.08);
+    color: var(--accent);
+  }
+  body.g-connect-four .panel .c4-board {
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,0.06),
+      0 4px 20px rgba(0,0,0,0.3);
+  }
   .c4-wrap {
     width: min(560px, 94vw);
     margin: 8px auto 0;
