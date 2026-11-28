@@ -5,7 +5,7 @@
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 [![checks](https://github.com/wavde/games/actions/workflows/checks.yml/badge.svg)](https://github.com/wavde/games/actions/workflows/checks.yml)
 
-Forty-one classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Forty-three classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -45,7 +45,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 
 ### Logic puzzles
 
-Every logic puzzle ships with an in-browser generator + solver and three difficulty tiers. A **daily puzzle** seed (hash of the UTC date + difficulty + game) means everyone sees the same board each day; **↻ new** rolls a fresh one. Solving a daily ticks its card on the hub (*✓ today's easy, hard*) until the UTC day ends.
+Every logic puzzle has a solver-checked unique answer and three difficulty tiers; all but norinori and lits generate their boards in the browser (those two draw from a bank built offline). A **daily puzzle** seed (hash of the UTC date + difficulty + game) means everyone sees the same board each day; **↻ new** rolls a fresh one. Solving a daily ticks its card on the hub (*✓ today's easy, hard*) until the UTC day ends.
 
 | | Game | Highlights |
 |---|---|---|
@@ -67,6 +67,8 @@ Every logic puzzle ships with an in-browser generator + solver and three difficu
 | ＞ | **[futoshiki](futoshiki/)** | Latin square with greater-than signs between neighbours. Number pad, pencil notes. |
 | ⛺ | **[tents](tents/)** | One tent beside each tree; tents never touch; row and column counts. |
 | ⧉ | **[jigsaw-sudoku](jigsaw-sudoku/)** | Sudoku with irregular regions, 6×6 / 8×8 / 9×9. Number pad, pencil notes. |
+| ▚ | **[norinori](norinori/)** | Shade two cells per region so the shading forms dominoes that never touch side-on. |
+| ⧈ | **[lits](lits/)** | Shade an L, I, T, or S in every region: all connected, no 2×2, matching shapes never touch. |
 
 ---
 
@@ -145,14 +147,16 @@ games/
 ├── skyscrapers/
 ├── futoshiki/
 ├── tents/
-└── jigsaw-sudoku/
+├── jigsaw-sudoku/
+├── norinori/
+└── lits/
 ```
 
 Each game folder is self-contained: `index.html` + `game.js`. Styling inherits from `shared.css`, `soft.css`, and `manpage.css`.
 
 ## Generators & difficulty
 
-Every logic puzzle generates uniquely-solvable boards in the browser:
+Logic puzzles generate uniquely-solvable boards in the browser (norinori and lits use an offline-built bank):
 
 | Game | Easy | Medium | Hard |
 |---|---|---|---|
@@ -184,11 +188,13 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | futoshiki | 5×5, direct deduction | 6×6, look-ahead | 7×7, fewest clues that stay unique |
 | tents | 6×6, direct rules | 8×8, look-ahead | 10×10, never direct-rules-only |
 | jigsaw-sudoku | 6×6, singles | 8×8, look-ahead | 9×9, fewest givens that stay unique |
+| norinori | 6×6, direct rules | 7×7, look-ahead | 8×8, never direct-rules-only |
+| lits | 6×6, direct rules | 8×8, look-ahead | 9×9, never direct-rules-only |
 | sokoban | 7×7 room, 2 boxes (par ~10) | 8×8, 3 boxes (par ~18) | 9×9, 4 boxes (par ~27) |
 | code-breaker | 4 pegs, 6 colors, 10 guesses | 4 / 6 / 8 | 5 / 8 / 10 |
 | slide-15 | 3×3 | 4×4 | 5×5 |
 
-Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, star-battle, kakuro, hitori, nurikabe, calcudoku, skyscrapers, futoshiki, tents, and jigsaw-sudoku are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable; sokoban rooms are searched backwards from the solved position, so they are always solvable and the start chosen is the one needing the most pushes.
+Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, star-battle, kakuro, hitori, nurikabe, calcudoku, skyscrapers, futoshiki, tents, jigsaw-sudoku, norinori, and lits are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. norinori and lits boards take seconds to make unique, so they come from a bank of 150 per level built offline by `.github/tools/` and re-checked in CI. slide-15 scrambles by legal moves, so it is always solvable; sokoban rooms are searched backwards from the solved position, so they are always solvable and the start chosen is the one needing the most pushes.
 
 ## Tech
 

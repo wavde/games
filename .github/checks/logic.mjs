@@ -11,6 +11,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import vm from "node:vm";
 
 const require = createRequire(import.meta.url);
 const puppeteer = require("puppeteer-core");
@@ -560,6 +561,29 @@ for (const [game, check, args] of PLAN) {
 
 await browser.close();
 server.close();
+
+// Banked boards (norinori, LITS): made offline because finding a unique board takes seconds.
+// Every one must have exactly one answer and meet its level, checked with the tool's solver.
+for (const [game, global] of [["norinori", "NORINORI_PUZZLES"], ["lits", "LITS_PUZZLES"]]) {
+  const t0 = Date.now(), tool = await import("../tools/" + game + ".mjs"), sandbox = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, game, "puzzles.js"), "utf8"), sandbox);
+  const bank = sandbox.window[global], fails = [];
+  let count = 0;
+  for (const level of LEVELS) {
+    const seen = new Set();
+    for (const code of bank[level]) {
+      count++;
+      const { n, reg } = tool.decode(code), P = tool.puzzle(n, reg);
+      if (n !== tool.LEVELS[level].n) fails.push(level + " " + code.slice(0, 12) + ": wrong size");
+      if (seen.has(code)) fails.push(level + ": duplicate board");
+      seen.add(code);
+      if (!tool.unique(P)) fails.push(level + " " + code.slice(0, 12) + ": not unique");
+      else if (!tool.fits(P, tool.LEVELS[level].grade)) fails.push(level + " " + code.slice(0, 12) + ": wrong grade");
+    }
+  }
+  for (const f of fails) failures.push(game + " bank: " + f);
+  console.log((fails.length ? "FAIL " : "ok   ") + game + " bank — " + count + " boards (" + ((Date.now() - t0) / 1000).toFixed(1) + " s)");
+}
 if (failures.length) {
   console.error("\n" + failures.length + " failure(s):\n" + failures.join("\n"));
   process.exit(1);
