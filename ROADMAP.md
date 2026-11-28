@@ -4,12 +4,12 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 
 ## Current inventory
 
-- **27 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
+- **28 games**, each a self-contained folder with `index.html` + `game.js`, linked from the hub (`index.html`).
   - Classics: tic-tac-toe, 2048, minesweeper, memory, chess, connect-four, lights-out, code-breaker, slide-15, reversi, dots-and-boxes, gomoku, checkers, mancala, battleships.
-  - Logic puzzles: mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink, star-battle, kakuro, hitori.
-- **Shared layer** (all 27 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
-  - `gamekit.js` (`window.Gamekit`): mulberry32 PRNG, `dailySeed`, `storage(prefix)`, `wireDifficultyChips`, `fmtTime`, `onLongPress`, `shuffle`, `gridKeys` (keyboard play), `puzzleClock` (timer + best time for the 11 timed puzzles), `markDailySolved`/`dailySolved` (today's solved dailies, shown on the hub). Loaded by all 27 games and the hub.
-  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink, star-battle, kakuro, hitori. connect-four, reversi, dots-and-boxes, gomoku, checkers, mancala, and battleships use chips for AI level.
+  - Logic puzzles: mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink, star-battle, kakuro, hitori, nurikabe.
+- **Shared layer** (all 28 games load `shared.css`, `soft.css`, `manpage.css`, `manpage.js`):
+  - `gamekit.js` (`window.Gamekit`): mulberry32 PRNG, `dailySeed`, `storage(prefix)`, `wireDifficultyChips`, `fmtTime`, `onLongPress`, `shuffle`, `gridKeys` (keyboard play), `puzzleClock` (timer + best time for the 11 timed puzzles), `markDailySolved`/`dailySolved` (today's solved dailies, shown on the hub). Loaded by all 28 games and the hub.
+  - Daily-seed + easy/medium/hard chip pattern: lights-out, code-breaker, slide-15, mini-sudoku, tango, queens, zip, patches, nonogram, hashi, akari, slitherlink, star-battle, kakuro, hitori, nurikabe. connect-four, reversi, dots-and-boxes, gomoku, checkers, mancala, and battleships use chips for AI level.
   - Help: a `<template id="man-<game>">` + `.man-trigger` button per game.
   - Game pages (`body.g-<name>`) always use soft.css's warm-dark palette; the dark/light toggle only affects the hub.
 - **No build, no runtime dependencies.** CI checks (below) install their tools only in CI.
@@ -17,17 +17,17 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 ## Proposed improvements
 
 1. **Cheap syntax check** — run `node --check` over all JS before committing (see commands below). No tooling added; a portable Node works fine.
-2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently star-battle, kakuro, hitori).
+2. **Hub freshness** — keep the `new` badge on the three most recent games only (currently kakuro, hitori, nurikabe).
 3. **zip uniqueness** ✅ — every board is unique. A pruned path solver (degree, connectivity, colour-parity, and forced-move checks) lists alternative paths; the generator greedily adds whichever number or wall rules out the most, within per-tier caps. ~5 ms easy, ~20 ms medium, ~170 ms hard (worst ~0.6 s); 120/120 boards confirmed unique by an independent solver.
 
 4. **Keyboard play** ✅ — every game is playable by keyboard: shared `Gamekit.gridKeys` gives each board one Tab stop, arrow-key movement (by on-screen position, so sparse boards like hashi work; dots-and-boxes walks its line lattice), Enter/Space to play, and F/X for flag/mark. Board buttons use `aria-disabled` instead of `disabled` so focus survives AI turns.
 5. **CI checks** ✅ — `.github/workflows/checks.yml` runs `node --check`, ESLint, html-validate, a headless-Chrome pass (page errors, manpage auto-open, axe-core), and logic checks on every push and PR. Tools install only in CI; the site stays dependency-free.
-6. **Logic checks in CI** ✅ — `.github/checks/logic.mjs` loads each game in headless Chrome with a test-only hook that exposes its internals, then checks (fixed seeds): every board of the 12 generated puzzles has exactly one solution, graded puzzles still meet their grade, checkers matches perft 1–7, mancala matches an independent Kalah model, and the checkers/mancala/battleships AIs only play legal moves. It caught that queens boards were almost never unique; queens now repairs regions until one answer remains (150/150 confirmed by CP-SAT).
+6. **Logic checks in CI** ✅ — `.github/checks/logic.mjs` loads each game in headless Chrome with a test-only hook that exposes its internals, then checks (fixed seeds): every board of the 13 generated puzzles has exactly one solution, graded puzzles still meet their grade, checkers matches perft 1–7, mancala matches an independent Kalah model, and the checkers/mancala/battleships AIs only play legal moves. It caught that queens boards were almost never unique; queens now repairs regions until one answer remains (150/150 confirmed by CP-SAT).
 
 ## Code-quality audit (latest)
 
 - **ESLint** (`recommended` + `eqeqeq`, `no-var`, `prefer-const`, `no-unused-vars`, `no-implicit-globals`, `no-use-before-define`): 0 errors, 0 warnings across all JS. Every script is an IIFE in strict mode; no globals leak besides `Gamekit` and `Manpage`.
-- **html-validate** (`recommended`): 0 messages on all 28 pages (hub + 27 games).
+- **html-validate** (`recommended`): 0 messages on all 29 pages (hub + 28 games).
 - **axe-core** (WCAG 2.0/2.1 A+AA + best practices): 0 violations on every page freshly loaded, after random play, with the manpage open, and on the hub in light mode.
 - No `console`/`debugger`/TODO leftovers; `innerHTML` only ever receives fixed strings and numbers (no user input).
 
@@ -50,6 +50,7 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 | ✅ | **star-battle** | Two stars per row/column/region, no touching; 8×8/9×9/10×10. Random valid star layout → nearby stars paired and joined into regions → border cells shifted between regions until a solver finds no rival solution. Graded with the standard human techniques (unit counting, per-unit placement enumeration, region-confinement across consecutive rows/columns): easy = solvable by those alone, medium/hard = need single-cell look-ahead. 120/120 sampled boards confirmed unique (with the intended answer) by an independent OR-Tools CP-SAT model; hard generates in ~150 ms median (≤0.7 s). |
 | ✅ | **kakuro** | Cross sums on 6×6/7×7/8×8 (plus the clue row/column). Symmetric layout repaired so no run is 1 long or longer than the level's cap (4/5/5); random repeat-free fill; then, while a solver finds a rival answer, one differing cell gets the digit whose two run sums allow the fewest digit sets. Solver uses per-run digit-set filtering and required-digit placement; easy = solvable by that alone, medium/hard = need single-digit look-ahead. 90/90 sampled boards confirmed unique (with the intended answer) by an independent OR-Tools CP-SAT model; generation ~7/25/32 ms median, ≤0.5 s. Number pad + typing, pencil notes, repeated digits and overshooting clues in red. |
 | ✅ | **hitori** | 6×6/8×8/10×10. Random shading (no shaded neighbours, unshaded cells connected) over a random Latin square; each shaded cell copies a number from its row or column, so the unshaded numbers are distinct by construction. Solver: shaded → neighbours unshaded, unshaded → same-number cells in its lines shaded, connectivity (cells whose shading would split the unshaded area stay unshaded); lone numbers are kept unshaded and uniqueness then checks none of them could be shaded instead. Graded with the opening patterns (sandwich X Y X, adjacent pair) + direct rules for easy, single-cell look-ahead for medium/hard. 120/120 sampled boards confirmed unique by an independent CP-SAT model with lazy connectivity cuts; generation ≤30 ms. |
+| ✅ | **nurikabe** | 6×6/8×8/10×10. Starts all sea and, while a 2×2 pool remains, turns one of its cells to land (joining the one island it touches — preferred, so islands aren't all tiny — or starting a new one, islands kept apart and capped at 5/7/9 cells, sea kept connected); one random cell per island gets its size. Solver: finished islands walled with sea, cells that would merge numbered islands or overfill one are sea, 2×2 pools, reach (cells no unfinished island can still reach are sea; an island with one way out takes it), sea connectivity with cut cells. Easy = those rules alone, medium/hard = single-cell look-ahead. 120/120 sampled boards confirmed unique by an independent CP-SAT model (one-hot island membership, lazy island/sea connectivity cuts); generation ~2/12/110 ms median, hard ≤1.4 s. |
 
 ## Next build
 

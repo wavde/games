@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>nurikabe · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Nurikabe — shade the sea so every island matches its number, the sea stays connected, and no 2×2 pool forms. Daily puzzle, three difficulties, every puzzle has a unique answer.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .nk-board {
+    display: grid;
+    gap: 2px;
+    width: min(440px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    padding: 2px;
+    box-sizing: border-box;
+    background: #3a352c;
+    border-radius: 6px;
+    user-select: none;
+  }
+  body.g-nurikabe .panel .nk-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: #ede8e1;
+    color: #141210;
+    font-size: clamp(0.95rem, 4.4vw, 1.4rem);
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+  body.g-nurikabe .panel .nk-cell:hover { background: #f8f3ea; transform: none; }
+  body.g-nurikabe .panel .nk-cell.clue { cursor: default; background: #e6d9b8; }
+  body.g-nurikabe .panel .nk-cell.sea,
+  body.g-nurikabe .panel .nk-cell.sea:hover { background: #1f4766; }
+  body.g-nurikabe .panel .nk-cell.dot::after {
+    content: "";
+    width: 22%;
+    height: 22%;
+    border-radius: 50%;
+    background: #6b5e45;
+  }
+  body.g-nurikabe .panel .nk-cell.err { color: #b3261e; }
+  body.g-nurikabe .panel .nk-cell.sea.err { background: #7a2e2e; }
+  body.g-nurikabe .panel .nk-cell.won { background: #cfe6c4; }
+  body.g-nurikabe .panel .nk-board.solved .nk-cell { cursor: default; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-nurikabe">
+<main class="wrap">
+  <div class="topbar">
+    <h1>nurikabe</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Islands match their numbers.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="nurikabe" data-man-title="NURIKABE(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="nk-board" id="board" role="group" aria-label="Nurikabe board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-nurikabe">
+  <h2>Name</h2>
+  <p>nurikabe — paint the sea between the islands.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Shade cells as <strong>sea</strong>. The cells you leave unshaded form <strong>islands</strong>.</li>
+    <li>Every island holds exactly one number, and has exactly that many cells.</li>
+    <li>All the sea is connected, side by side, in one piece.</li>
+    <li>No 2×2 block may be all sea.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a cell to cycle: empty → sea → dot (island) → empty. Numbered cells are always island.</li>
+    <li><strong>Right-click</strong> toggles a dot directly.</li>
+    <li>2×2 pools turn red, as do numbers whose dotted island already has too many cells or joins another number.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears the board. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space cycles, <span class="kbd">X</span> toggles a dot.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 6×6, solvable with direct rules. <strong>Medium</strong> — 8×8, needs look-ahead ("if this were sea…"). <strong>Hard</strong> — 10×10, look-ahead across a bigger board.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Islands of 1 are surrounded by sea. A cell touching two numbered islands is sea. Cells too far from every number to be reached are sea. Three sea cells of a 2×2 force the fourth to be island, and the sea must never be walled off.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
