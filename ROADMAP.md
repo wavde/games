@@ -14,12 +14,12 @@ The site audit's plan, end to end:
 - **Original five**: 2048, chess, memory, minesweeper, and tic-tac-toe brought up to the standard controls, levels, and stored records.
 - **Offline**: service worker with a CI-checked precache list (`offline.mjs`).
 - **Online two-player**: WebRTC with copy-paste invites, no server (`net.js`, `online.mjs`).
+- **Bigger norinori and LITS banks**: 365 boards per level, all CP-SAT-confirmed; the daily steps through the bank by day, so it doesn't repeat for a year.
 
 ## Proposals
 
-1. **Bigger norinori and LITS banks**: grow each level from 150 to 365+ boards so dailies don't repeat within a year. Acceptance: `node .github/tools/norinori.mjs` / `lits.mjs` output, every board CP-SAT-confirmed unique, `logic.mjs` re-checks them, `puzzles.js` stays small enough to precache.
-2. **Daily cache for slow generators**: keep today's generated board in localStorage for jigsaw-sudoku, star-battle, and zip so a revisit is instant. Acceptance: same board as generating fresh (checked in CI), no stale board after midnight UTC.
-3. **Shareable results**: a "copy result" line after a daily (time and level, no spoilers).
+1. **Daily cache for slow generators**: keep today's generated board in localStorage for jigsaw-sudoku, star-battle, and zip so a revisit is instant. Acceptance: same board as generating fresh (checked in CI), no stale board after midnight UTC.
+2. **Shareable results**: a "copy result" line after a daily (time and level, no spoilers).
 
 ## Adding a game
 

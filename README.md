@@ -141,7 +141,7 @@ CI (`.github/workflows/checks.yml`) runs all of these on every push and pull req
 |---|---|
 | `node --check`, ESLint, html-validate | Syntax, lint rules (`no-var`, `eqeqeq`, `no-implicit-globals`, …), and valid HTML on all 44 pages. |
 | `browser.mjs` | Every page loads without errors, opens its manual, and passes axe-core, fresh and with the manual open. |
-| `logic.mjs` | Every generated puzzle (3 levels × 10 seeds) has exactly one answer and meets its grade; all 900 banked norinori/lits boards are unique; checkers matches perft 1–7; mancala matches an independent Kalah model; the AIs only play legal moves; card, snake, breakout, morris, and hex rules hold. |
+| `logic.mjs` | Every generated puzzle (3 levels × 10 seeds) has exactly one answer and meets its grade; all 2,190 banked norinori/lits boards are unique; checkers matches perft 1–7; mancala matches an independent Kalah model; the AIs only play legal moves; card, snake, breakout, morris, and hex rules hold. |
 | `play.mjs` | Every puzzle is solved through its real UI (clicks, keys, drags) on every level; klondike is won by replaying its solver's line, three FreeCell deals by a best-first solver, and a spider near-win by dragging; New and Reset give a fresh board. |
 | `online.mjs` | Two browsers connect through the real invite and reply-code flow, play each of the ten online-capable versus games to the end with both boards identical after every move, start a new game, and handle a player leaving. |
 | `offline.mjs` | `sw.js` lists every site file, and with the server stopped the hub and every game still load from the cache. |
