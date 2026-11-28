@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>klondike · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Klondike solitaire — build each suit from ace to king. Draw one or draw three, tap or drag, unlimited undo. Every deal has a winning line.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .kl-board { --cw: 60px; --gap: clamp(3px, 1.2vw, 8px); width: min(560px, 100%); margin: 8px auto; user-select: none; -webkit-user-select: none; }
+  .kl-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--gap); align-items: start; }
+  .kl-tab { margin-top: calc(var(--cw) * 0.22); min-height: calc(var(--cw) * 3); }
+  .kl-stock, .kl-found, .kl-waste, .kl-pile { position: relative; height: calc(var(--cw) * 1.4); }
+  .kl-waste { grid-column: span 2; }
+  .kl-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.4);
+    margin: 0;
+    padding: 0;
+    border: 1px solid #b9b1a6;
+    border-radius: calc(var(--cw) * 0.09);
+    background: #fdfbf7;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-family: inherit;
+  }
+  .kl-card.red { color: #b3261e; }
+  .kl-card.black { color: #141210; }
+  .kl-card::before {
+    content: attr(data-r) attr(data-s);
+    position: absolute;
+    top: 5%;
+    left: 7%;
+    font-size: max(10px, calc(var(--cw) * 0.26));
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+  .kl-card::after {
+    content: attr(data-s);
+    position: absolute;
+    right: 9%;
+    bottom: 5%;
+    font-size: calc(var(--cw) * 0.52);
+    line-height: 1;
+  }
+  .kl-card.down { background: repeating-linear-gradient(45deg, #2d5a8a 0 4px, #24496f 4px 8px); border-color: #1b3552; }
+  .kl-card.down::before, .kl-card.down::after { content: none; }
+  body.g-klondike .panel .kl-card {
+    min-height: 0;
+    border: 1px solid #b9b1a6;
+    border-radius: calc(var(--cw) * 0.09);
+    background: #fdfbf7;
+    cursor: pointer;
+    touch-action: none;
+    transition: none;
+  }
+  body.g-klondike .panel .kl-card.red { color: #b3261e; }
+  body.g-klondike .panel .kl-card.black { color: #141210; }
+  body.g-klondike .panel .kl-card:hover { background: #fffdf8; transform: none; }
+  body.g-klondike .panel .kl-card:active { transform: none; }
+  body.g-klondike .panel .kl-card.picked { box-shadow: 0 0 0 3px #f2b705; }
+  body.g-klondike .panel .kl-card.lifted { opacity: 0.3; }
+  body.g-klondike .panel .kl-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; z-index: 5; }
+  body.g-klondike .panel .kl-slot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.4);
+    min-height: 0;
+    padding: 0;
+    border: 2px dashed var(--border-hi);
+    border-radius: calc(var(--cw) * 0.09);
+    background: transparent;
+    color: var(--muted);
+    font-size: calc(var(--cw) * 0.42);
+  }
+  body.g-klondike .panel .kl-slot::before { content: attr(data-s); }
+  body.g-klondike .panel .kl-slot.back {
+    border: 1px solid #1b3552;
+    background: repeating-linear-gradient(45deg, #2d5a8a 0 4px, #24496f 4px 8px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+  }
+  body.g-klondike .panel .kl-slot:disabled { opacity: 0.45; }
+  .kl-float { position: fixed; z-index: 1000; pointer-events: none; width: var(--cw); }
+  .kl-float .kl-card { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-klondike">
+<main class="wrap">
+  <div class="topbar">
+    <h1>klondike</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Build each suit up from ace to king.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Moves: <span id="moves">0</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="klondike" data-man-title="KLONDIKE(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Draw">
+        <button class="chip" data-diff="one" type="button">Draw 1</button>
+        <button class="chip" data-diff="three" type="button">Draw 3</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="kl-board" id="board" role="group" aria-label="Klondike table">
+      <div class="kl-row">
+        <div class="kl-stock" id="stock"></div>
+        <div class="kl-waste" id="waste"></div>
+        <div class="kl-found" data-drop="f"></div>
+        <div class="kl-found" data-drop="f"></div>
+        <div class="kl-found" data-drop="f"></div>
+        <div class="kl-found" data-drop="f"></div>
+      </div>
+      <div class="kl-row kl-tab">
+        <div class="kl-pile" data-drop="0" role="group"></div>
+        <div class="kl-pile" data-drop="1" role="group"></div>
+        <div class="kl-pile" data-drop="2" role="group"></div>
+        <div class="kl-pile" data-drop="3" role="group"></div>
+        <div class="kl-pile" data-drop="4" role="group"></div>
+        <div class="kl-pile" data-drop="5" role="group"></div>
+        <div class="kl-pile" data-drop="6" role="group"></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> restart</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-klondike">
+  <h2>Name</h2>
+  <p>klondike — the classic patience game, named for the 1890s gold rush.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Move all 52 cards to the four foundations at the top right, each suit in order from ace up to king.</li>
+    <li>In the seven columns, build <strong>down</strong> in alternating colours: a red 6 on a black 7. You can move a whole face-up run at once. Only a king (or a run headed by one) fills an empty column.</li>
+    <li>When a face-down card is uncovered, it turns over.</li>
+    <li>Tap the stock (top left) to turn one or three cards onto the waste; only the top waste card plays. When the stock runs out, tap it to turn the waste back over, as many times as you like.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a card to send it to the best spot: its foundation if it can go there, otherwise the next column that takes it. <strong>Drag</strong> a card (and everything on it) to choose the spot yourself.</li>
+    <li>Once the stock is empty and every card is face up, the rest plays itself home.</li>
+    <li><code>↶ undo</code> takes back one move, as far as you like; <code>↻ restart</code> redeals the same cards. <code>↻ new</code> deals fresh; the daily deal loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the table, arrow keys move between cards, Enter plays a card like a tap, <span class="kbd">X</span> picks it up and Enter on a column or foundation puts it there (<span class="kbd">Esc</span> lets go), <span class="kbd">D</span> turns the stock.</li>
+  </ul>
+
+  <h2>Modes</h2>
+  <ul>
+    <li><strong>Draw 1</strong> turns one card at a time. <strong>Draw 3</strong> turns three, and you can only reach the top one, so the stock's order matters.</li>
+    <li>Every deal has at least one winning line: before dealing, a solver that can see the face-down cards finds one. You can't see them, so a deal can still be lost; undo is there for that.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Turn over face-down cards first, starting with the tallest columns. Don't empty a column unless a king is ready to fill it. Hold back low cards from the foundations if you may still need them to move a run.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

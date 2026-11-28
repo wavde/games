@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>futoshiki · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Futoshiki — fill the grid with 1 to n so no number repeats in a row or column and every greater-than sign holds. Daily puzzle, three difficulties, unique answers.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .ft-board {
+    display: grid;
+    width: min(440px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    user-select: none;
+  }
+  .ft-sign {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.85rem, 3.6vw, 1.2rem);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--fg);
+  }
+  .ft-sign.bad { color: var(--danger); }
+  body.g-futoshiki .panel .ft-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: #ede8e1;
+    color: #141210;
+    cursor: pointer;
+  }
+  body.g-futoshiki .panel .ft-cell:hover { background: #f6f1e8; transform: none; }
+  body.g-futoshiki .panel .ft-cell.given { background: #d9d2c7; cursor: default; }
+  body.g-futoshiki .panel .ft-cell.sel { background: #f7dd8a; }
+  body.g-futoshiki .panel .ft-board.solved .ft-cell { background: #cfe6c4; cursor: default; }
+  .ft-v { font-size: clamp(1.05rem, 5vw, 1.6rem); font-weight: 500; line-height: 1; pointer-events: none; }
+  .ft-cell.given .ft-v { font-weight: 700; }
+  .ft-v::before { content: attr(data-d); }
+  body.g-futoshiki .panel .ft-cell.err .ft-v { color: #b3261e; }
+  .ft-notes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 86%;
+    height: 66%;
+    font-size: clamp(0.42rem, 1.6vw, 0.6rem);
+    font-weight: 500;
+    color: #4a4440;
+    pointer-events: none;
+  }
+  .ft-notes span { display: flex; align-items: center; justify-content: center; }
+  .ft-notes span::before { content: attr(data-d); }
+  .ft-pad { display: grid; gap: 6px; width: min(400px, 100%); margin: 8px auto 4px; }
+  body.g-futoshiki .panel .ft-pad .btn { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
+  body.g-futoshiki .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-futoshiki">
+<main class="wrap">
+  <div class="topbar">
+    <h1>futoshiki</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Every row and column holds 1 to n once; obey the signs.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="futoshiki" data-man-title="FUTOSHIKI(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="ft-board" id="board" role="group" aria-label="Futoshiki board"></div>
+    <div class="ft-pad" id="pad" role="group" aria-label="Numbers"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="notes-btn" type="button" aria-pressed="false"><span class="glyph">✎</span> notes</button>
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-futoshiki">
+  <h2>Name</h2>
+  <p>futoshiki — 不等式, "inequality": a Latin square held together by greater-than signs.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Fill the n×n grid with the numbers 1 to n. Each number appears once in every row and every column.</li>
+    <li>A sign between two cells must hold: <code>&lt;</code> and <code>&gt;</code> across, <code>∧</code> and <code>∨</code> down. The point always faces the smaller number.</li>
+    <li>Shaded cells are given and can't be changed.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a cell, then a number on the pad (or type it). <code>⌫</code>, Backspace, or 0 clears; entering the same number again clears it too.</li>
+    <li><code>✎ notes</code> (or <span class="kbd">N</span>) switches to pencil marks.</li>
+    <li>Repeated numbers and broken signs turn red.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears your entries. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move between cells, type numbers directly. Screen readers announce each cell's signs.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 5×5, solvable by direct deduction. <strong>Medium</strong> — 6×6, needs look-ahead ("if this were a 4…"). <strong>Hard</strong> — 7×7.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">A cell bigger than a neighbour can't be 1; a chain of k signs going up needs room for k + 1 different numbers, so its ends are pushed toward 1 and n. When a number has only one place left in a row or column, it goes there.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

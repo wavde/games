@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>tents · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Tents — pitch one tent beside every tree so no two tents touch and each row and column holds its number of tents. Daily puzzle, three difficulties, unique answers.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .tn-board {
+    display: grid;
+    gap: 2px;
+    width: min(460px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    user-select: none;
+  }
+  .tn-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.85rem, 3.6vw, 1.15rem);
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .tn-count.ok { color: var(--muted); }
+  .tn-count.bad { color: var(--danger); }
+  .tn-tree, body.g-tents .panel .tn-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: #ede8e1;
+  }
+  body.g-tents .panel .tn-cell { cursor: pointer; }
+  body.g-tents .panel .tn-cell:hover { background: #f6f1e8; transform: none; }
+  .tn-tree { background: #dbe7cf; }
+  .tn-tree::before, .tn-tree::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); }
+  .tn-tree::before { bottom: 10%; width: 12%; height: 30%; background: #6b4a2b; }
+  .tn-tree::after {
+    top: 10%;
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    background: #2f6b2a;
+    box-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.18);
+  }
+  body.g-tents .panel .tn-cell.grass { background: #cfe0b8; }
+  body.g-tents .panel .tn-cell.grass::before {
+    content: "";
+    width: 14%;
+    height: 14%;
+    border-radius: 50%;
+    background: #5b7f3a;
+  }
+  body.g-tents .panel .tn-cell.tent::before {
+    content: "";
+    width: 66%;
+    height: 58%;
+    background: #c0602a;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  body.g-tents .panel .tn-cell.tent.err::before { background: #b3261e; }
+  body.g-tents .panel .tn-cell.err { box-shadow: inset 0 0 0 2px #b3261e; }
+  body.g-tents .panel .tn-board.solved .tn-cell { background: #cfe6c4; cursor: default; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-tents">
+<main class="wrap">
+  <div class="topbar">
+    <h1>tents</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">One tent beside each tree; tents never touch.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="tents" data-man-title="TENTS(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="tn-board" id="board" role="group" aria-label="Tents board"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-tents">
+  <h2>Name</h2>
+  <p>tents — a campsite where every tree gets exactly one tent.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Pitch one tent for each tree, directly above, below, left, or right of it. Each tent belongs to its own tree.</li>
+    <li>Tents never touch each other, not even diagonally.</li>
+    <li>The numbers along the top and left say how many tents stand in that column or row.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a square to cycle empty → tent → grass. <strong>Right-click</strong> toggles grass directly. Grass is just a note to yourself: "no tent here".</li>
+    <li>Touching tents turn red. A count dims when it's met and turns red when it's exceeded.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears the field. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move, Enter or Space cycles, <span class="kbd">X</span> toggles grass.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 6×6, solvable by direct deduction. <strong>Medium</strong> — 8×8, needs look-ahead ("if a tent went here…"). <strong>Hard</strong> — 10×10.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Start with the zeros, and with squares that touch no tree: all grass. A tree with only one open side gets its tent there. A row whose open squares exactly fill its count is all tents. Every tent turns its eight neighbours to grass.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

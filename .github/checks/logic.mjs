@@ -4,7 +4,8 @@
 //  - every generated logic puzzle (3 levels × SEEDS boards) has exactly one solution, and the
 //    graded ones still need the technique their level promises
 //  - checkers matches published perft counts; mancala matches an independent Kalah model;
-//    the checkers, battleships, and mancala AIs only ever play legal moves; sokoban par is exact
+//    the checkers, battleships, and mancala AIs only ever play legal moves; sokoban par is exact;
+//    every klondike deal's winning line replays as legal moves
 // Usage (repo root): node .github/checks/logic.mjs   (CHROME_PATH overrides the Chrome binary)
 import http from "node:http";
 import fs from "node:fs";
@@ -28,6 +29,9 @@ const EXPOSE = {
   nurikabe:      { names: ["generate", "countSolutions", "fits", "DIFFS"] },
   calcudoku:     { names: ["generate", "findSolutions", "fits", "DIFFS"] },
   skyscrapers:   { names: ["generate", "findSolutions", "fits", "DIFFS"] },
+  futoshiki:     { names: ["generate", "findSolutions", "fits", "DIFFS"] },
+  tents:         { names: ["generate", "findSolutions", "fits", "DIFFS"] },
+  klondike:      { names: ["deal", "solve", "clone", "legal", "apply", "draw", "autoplay", "won", "MODES"] },
   breakout:      { names: ["createGame", "update", "launch", "DIFFS", "W"] },
   zip:           { names: ["generate", "findSolutions"], extra: "setDiff: (d) => { diff = d; }" },
   nonogram:      { names: ["generate", "lineSolvable", "clueOf", "DIFFS"], extra: "setDiff: (d) => { diff = d; }" },
@@ -340,6 +344,42 @@ const CHECKS = {
     }
     return { fails, note: "3 levels per speed, physics invariants" };
   },
+  // Klondike: each deal's solver line replays as legal moves to a win with all 52 cards
+  // accounted for at every step, and the rules refuse the classic illegal moves.
+  klondike: (seeds) => {
+    const t = window.__t, fails = [];
+    const count = (S) => {
+      const seen = new Set([...S.t.flat(), ...S.s, ...S.w]);
+      return seen.size === S.t.flat().length + S.s.length + S.w.length ? seen.size + S.f.reduce((a, b) => a + b, 0) : -1;
+    };
+    for (const mode of ["one", "three"]) {
+      const n = t.MODES[mode];
+      for (let seed = 1; seed <= seeds; seed++) {
+        const S = t.deal(seed, n), r = t.solve(S, n, 1e6), T = t.clone(S);
+        if (!r.won) { fails.push(mode + " seed " + seed + ": solver found no win"); continue; }
+        let ok = true;
+        for (const mv of r.line) {
+          t.autoplay(T);
+          if (mv === "draw") t.draw(T, n);
+          else if (!t.legal(T, mv)) { fails.push(mode + " seed " + seed + ": illegal move in line"); ok = false; break; }
+          else t.apply(T, mv);
+          if (count(T) !== 52) { fails.push(mode + " seed " + seed + ": cards lost or duplicated"); ok = false; break; }
+        }
+        t.autoplay(T);
+        if (ok && !t.won(T)) fails.push(mode + " seed " + seed + ": line does not finish the game");
+      }
+    }
+    // Spot rules on a hand-built table: 0 = A♠, 13 = A♥, 11 = Q♠, 25 = K♥, 23 = J♥, 10 = J♠.
+    const R = { t: [[11], [25], [], [23], [10], [], []], d: [0, 0, 0, 0, 0, 0, 0], s: [], w: [0], f: [0, 0, 0, 0] };
+    const L = (from, to) => t.legal(R, { from, to });
+    if (!L({ t: 0, k: 0 }, { t: 1 })) fails.push("Q♠ onto K♥ refused");
+    if (L({ t: 4, k: 0 }, { t: 0 })) fails.push("J♠ onto Q♠ allowed");
+    if (!L({ t: 3, k: 0 }, { t: 0 })) fails.push("J♥ onto Q♠ refused");
+    if (L({ t: 0, k: 0 }, { t: 2 })) fails.push("queen into an empty column allowed");
+    if (!L({ t: 1, k: 0 }, { t: 2 })) fails.push("king into an empty column refused");
+    if (!L({ w: true }, { f: true }) || L({ t: 0, k: 0 }, { f: true })) fails.push("foundation order wrong");
+    return { fails, note: 2 * seeds + " deals replayed + rules" };
+  },
   battleships: () => {
     const t = window.__t, fails = [];
     for (let k = 0; k < 500; k++) {
@@ -371,6 +411,8 @@ const PLAN = [
   ["nurikabe", "graded", [LEVELS, SEEDS, "countSolutions", "fits"]],
   ["calcudoku", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
   ["skyscrapers", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
+  ["futoshiki", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
+  ["tents", "graded", [LEVELS, SEEDS, "findSolutions", "fits"]],
   ["zip", "zip", [LEVELS, SEEDS]],
   ["nonogram", "nonogram", [LEVELS, SEEDS]],
   ["queens", "simpleUnique", [LEVELS, SEEDS, "queens"]],
@@ -383,6 +425,7 @@ const PLAN = [
   ["sokoban", "sokoban", [LEVELS, 4]],
   ["snake", "snake", []],
   ["breakout", "breakout", []],
+  ["klondike", "klondike", [SEEDS]],
 ];
 
 const failures = [];
