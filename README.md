@@ -37,7 +37,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 
 ### Logic puzzles
 
-Every logic puzzle ships with an in-browser generator + solver and three difficulty tiers. A **daily puzzle** seed (hash of the UTC date + difficulty + game) means everyone sees the same board each day; **↻ new** rolls a fresh one.
+Every logic puzzle ships with an in-browser generator + solver and three difficulty tiers. A **daily puzzle** seed (hash of the UTC date + difficulty + game) means everyone sees the same board each day; **↻ new** rolls a fresh one. Solving a daily ticks its card on the hub (*✓ today's easy, hard*) until the UTC day ends.
 
 | | Game | Highlights |
 |---|---|---|
@@ -87,7 +87,7 @@ games/
 ├── shared.css          design tokens, buttons, panels, light mode
 ├── manpage.css         shared help-overlay styles
 ├── manpage.js          shared help-overlay controller
-├── gamekit.js          shared helpers (PRNG, daily seed, storage, chips, etc.)
+├── gamekit.js          shared helpers (PRNG, daily seed + solved-today record, storage, chips, puzzle clock, keyboard grid)
 ├── manifest.json       PWA manifest (iOS/Android home screen)
 ├── favicon.svg
 ├── tic-tac-toe/        each game: index.html + game.js

@@ -105,6 +105,13 @@
     transition: color 0.15s, transform 0.15s;
     font-size: 14px;
   }
+  .card .daily {
+    display: block;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--accent-2);
+  }
+  .card .daily + .badge { margin-top: 4px; }
   .card .badge {
     display: inline-block;
     margin-top: 10px;
@@ -258,7 +265,21 @@
     </div>
   </footer>
 </main>
+<script src="gamekit.js"></script>
 <script>
+  // Tick the cards whose daily puzzle was solved today, with the levels done.
+  (function () {
+    const LEVELS = ["easy", "medium", "hard"];
+    document.querySelectorAll("a.card").forEach((card) => {
+      const done = Gamekit.dailySolved(card.getAttribute("href").replace(/\/$/, ""));
+      if (!done.length) return;
+      const tag = document.createElement("span");
+      tag.className = "daily";
+      tag.textContent = "✓ today's " + LEVELS.filter((l) => done.includes(l)).join(", ");
+      card.querySelector("p").after(tag);
+    });
+  })();
+
   // Theme toggle: cycles dark → light → system
   (function () {
     const KEY = "games:theme";

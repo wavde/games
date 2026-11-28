@@ -16,6 +16,7 @@
   const chipsEl  = document.getElementById("chips");
 
   const store = Gamekit.storage("mini-sudoku:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
   let diff = store.get("diff", "medium");
   if (!DIFFS[diff]) diff = "medium";
@@ -28,8 +29,7 @@
   let sel = -1;                          // selected index
   let pencil = false;
   let won = false;
-  let timerStart = 0;
-  let timerInterval = null;
+  let dailyDate = null;
 
   let cellEls = [];
 
@@ -118,6 +118,7 @@
 
   function newPuzzle(seedOverride) {
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("mini-sudoku", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     givens = generate(seed);
     grid = new Uint8Array(givens);
     notes = [];
@@ -126,11 +127,9 @@
     sel = -1;
     pencil = false;
     won = false;
-    timerStart = Date.now();
-    startTimer();
+    clock.start();
     renderShell();
     renderAll();
-    updateStatus();
     updatePencilBtn();
   }
 
@@ -275,21 +274,6 @@
     checkWin();
   }
 
-  function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (won) return;
-      const s = Math.floor((Date.now() - timerStart) / 1000);
-      timeEl.textContent = Gamekit.fmtTime(s);
-    }, 500);
-  }
-
-  function updateStatus() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
-  }
-
   function checkWin() {
     for (let i = 0; i < N * N; i++) if (!grid[i]) return;
     // Validate
@@ -298,12 +282,8 @@
       return;
     }
     won = true;
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) {
-      store.set("best:" + diff, s);
-      bestEl.textContent = Gamekit.fmtTime(s);
-    }
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("mini-sudoku", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
   }
 
@@ -347,8 +327,7 @@
     history = [];
     won = false;
     sel = -1;
-    timerStart = Date.now();
-    startTimer();
+    clock.start();
     statusEl.textContent = "Fill each row, column, and 2×3 box with 1–6.";
     renderAll();
   });
@@ -360,13 +339,12 @@
     initial: diff,
     storage: store,
     storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); updateStatus(); },
+    onChange: (d) => { diff = d; newPuzzle(); },
   });
   diff = store.get("diff", diff);
   if (!DIFFS[diff]) diff = "medium";
 
   renderPad();
   newPuzzle();
-  updateStatus();
   window.addEventListener("load", () => Manpage.autoOpen("mini-sudoku"));
 })();

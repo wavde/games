@@ -290,21 +290,22 @@
   const STATUS = "Draw one closed loop.";
   const EMPTY = 0, LINE = 1, CROSS = 2;
   const store = Gamekit.storage("slitherlink:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
   let diff = "medium";
   let P = null, state = null, history = [], won = false, lineEls = [], cellEls = [];
-  let timerStart = 0, timerInterval = null;
+  let dailyDate = null;
 
   function newPuzzle(seedOverride) {
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("slitherlink", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     P = generate(diff, seed);
     state = new Uint8Array(P.E);
     history = [];
     won = false;
     build();
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
-    updateBest();
   }
 
   function edgeLabel(e) {
@@ -386,28 +387,10 @@
   function checkWin() {
     if (!isSolution(P, lines())) return;
     won = true;
-    clearInterval(timerInterval);
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    timeEl.textContent = Gamekit.fmtTime(s);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) store.set("best:" + diff, s);
-    updateBest();
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("slitherlink", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Loop closed in ' + Gamekit.fmtTime(s) + '.</span>';
     render();
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    timerStart = Date.now();
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (!won) timeEl.textContent = Gamekit.fmtTime(Math.floor((Date.now() - timerStart) / 1000));
-    }, 500);
-  }
-
-  function updateBest() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
   }
 
   boardEl.addEventListener("click", (e) => {
@@ -434,7 +417,7 @@
     state = new Uint8Array(P.E);
     history = [];
     won = false;
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
     render();
   });

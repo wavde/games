@@ -20,6 +20,7 @@
   let history = [];
   let moves = 0;
   let won = false;
+  let dailyDate = null;
   let cellEls = [];
 
   function idx(r, c) { return r * N + c; }
@@ -54,6 +55,7 @@
 
   function newPuzzle(seedOverride) {
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("lights-out", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     initial = generate(seed, DIFFS[diff]);
     board = new Uint8Array(initial);
     history = [];
@@ -104,6 +106,7 @@
     const anyOn = board.some(x => x);
     if (!anyOn && !won) {
       won = true;
+      if (dailyDate) Gamekit.markDailySolved("lights-out", diff, dailyDate);
       statusEl.innerHTML = '<span class="ok">Solved in ' + moves + ' moves.</span>';
       if (best === null || moves < best) {
         store.set("best:" + diff, moves);

@@ -228,11 +228,12 @@
   const STATUS = "Connect every island.";
   const SVGNS = "http://www.w3.org/2000/svg";
   const store = Gamekit.storage("hashi:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
   let diff = "medium";
   let P = null, val = [], history = [], won = false, sel = -1, dragFrom = -1;
   let islandEls = [], svgEl = null;
-  let timerStart = 0, timerInterval = null;
+  let dailyDate = null;
 
   function edgeBetween(a, b) {
     for (const e of P.adj[a]) if (P.edges[e].a === b || P.edges[e].b === b) return e;
@@ -242,15 +243,15 @@
 
   function newPuzzle(seedOverride) {
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("hashi", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     P = generate(diff, seed);
     val = new Array(P.edges.length).fill(0);
     history = [];
     won = false;
     sel = -1;
     build();
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
-    updateBest();
   }
 
   function build() {
@@ -336,28 +337,10 @@
     }
     won = true;
     sel = -1;
-    clearInterval(timerInterval);
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    timeEl.textContent = Gamekit.fmtTime(s);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) store.set("best:" + diff, s);
-    updateBest();
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("hashi", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
     render();
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    timerStart = Date.now();
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (!won) timeEl.textContent = Gamekit.fmtTime(Math.floor((Date.now() - timerStart) / 1000));
-    }, 500);
-  }
-
-  function updateBest() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
   }
 
   // ---------- input: tap island → tap island, drag island → island, or tap a gap ----------
@@ -420,7 +403,7 @@
     history = [];
     won = false;
     sel = -1;
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
     render();
   });

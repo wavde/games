@@ -203,21 +203,22 @@
   const STATUS = "Light every white cell.";
   const EMPTY = 0, BULB = 1, MARK = 2;
   const store = Gamekit.storage("akari:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
   let diff = "medium";
   let P = null, state = null, history = [], won = false, cellEls = [];
-  let timerStart = 0, timerInterval = null;
+  let dailyDate = null;
 
   function newPuzzle(seedOverride) {
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("akari", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     P = generate(diff, seed);
     state = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
     build();
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
-    updateBest();
   }
 
   function build() {
@@ -281,28 +282,10 @@
     for (const w of P.numbered) { let b = 0; for (const c of P.adj.get(w)) b += v[c]; if (b !== P.cell[w]) return; }
     if (!P.whites.every(c => isLit(P, v, c))) return;
     won = true;
-    clearInterval(timerInterval);
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    timeEl.textContent = Gamekit.fmtTime(s);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) store.set("best:" + diff, s);
-    updateBest();
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("akari", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
     render();
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    timerStart = Date.now();
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (!won) timeEl.textContent = Gamekit.fmtTime(Math.floor((Date.now() - timerStart) / 1000));
-    }, 500);
-  }
-
-  function updateBest() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
   }
 
   boardEl.addEventListener("click", (e) => {
@@ -329,7 +312,7 @@
     state = new Uint8Array(P.n * P.n);
     history = [];
     won = false;
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
     render();
   });

@@ -27,6 +27,7 @@
   let current = [];    // active row; 0 = empty, 1..colors = color
   let over = false;
   let won = false;
+  let dailyDate = null;
 
   function makeSecret(seed) {
     const rng = Gamekit.mulberry32(seed);
@@ -51,6 +52,7 @@
   function newGame(seedOverride) {
     cfg = DIFFS[diff];
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("code-breaker", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     secret = makeSecret(seed);
     rows = [];
     current = new Array(cfg.pegs).fill(0);
@@ -189,6 +191,7 @@
     current = new Array(cfg.pegs).fill(0);
     if (r.exact === cfg.pegs) {
       won = true;
+      if (dailyDate) Gamekit.markDailySolved("code-breaker", diff, dailyDate);
       over = true;
       const best = store.getInt("best:" + diff, null);
       if (best === null || rows.length < best) store.set("best:" + diff, rows.length);

@@ -19,6 +19,7 @@
   const EMPTY = 0, FILL = 1, MARK = 2;
   const STATUS = "Fill cells to match the clues.";
   const store = Gamekit.storage("nonogram:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
   let diff = "medium";
   let N = DIFFS[diff].n;
@@ -28,7 +29,7 @@
   let won = false;
   let mode = "fill";
   let cellEls = [], rowClueEls = [], colClueEls = [];
-  let timerStart = 0, timerInterval = null;
+  let dailyDate = null;
 
   // ---------- Clues + line solver ----------
 
@@ -132,15 +133,15 @@
   function newPuzzle(seedOverride) {
     N = DIFFS[diff].n;
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("nonogram", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     const p = generate(seed);
     sol = p.s; rowClues = p.rows; colClues = p.cols;
     grid = new Array(N * N).fill(EMPTY);
     history = [];
     won = false;
     buildBoard();
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
-    updateBest();
   }
 
   function clueSpans(el, clue) {
@@ -233,28 +234,10 @@
   function checkWin() {
     for (let i = 0; i < N * N; i++) if ((grid[i] === FILL) !== (sol[i] === 1)) return;
     won = true;
-    clearInterval(timerInterval);
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    timeEl.textContent = Gamekit.fmtTime(s);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) store.set("best:" + diff, s);
-    updateBest();
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("nonogram", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
     syncAll();
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    timerStart = Date.now();
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (!won) timeEl.textContent = Gamekit.fmtTime(Math.floor((Date.now() - timerStart) / 1000));
-    }, 500);
-  }
-
-  function updateBest() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
   }
 
   // ---------- Painting (tap or straight-line drag) ----------
@@ -363,7 +346,7 @@
     grid = new Array(N * N).fill(EMPTY);
     history = [];
     won = false;
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
     syncAll();
   });

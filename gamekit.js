@@ -260,6 +260,52 @@
     return { refresh: sync };
   }
 
+  // Timer + best time for the timed puzzles. opts = { timeEl, bestEl, store, key: () => storage key }.
+  // start() on every new or reset board, stop() on a win (records a new best, returns seconds),
+  // showBest() when the key changes without a new board.
+  function puzzleClock(opts) {
+    let t0 = 0, iv = null;
+    const secs = () => Math.floor((Date.now() - t0) / 1000);
+    function showBest() {
+      const b = opts.store.getInt(opts.key(), null);
+      opts.bestEl.textContent = b === null ? "—" : fmtTime(b);
+    }
+    return {
+      start() {
+        clearInterval(iv);
+        t0 = Date.now();
+        opts.timeEl.textContent = fmtTime(0);
+        iv = setInterval(() => { opts.timeEl.textContent = fmtTime(secs()); }, 500);
+        showBest();
+      },
+      stop() {
+        clearInterval(iv);
+        iv = null;
+        const s = secs(), b = opts.store.getInt(opts.key(), null);
+        opts.timeEl.textContent = fmtTime(s);
+        if (b === null || s < b) opts.store.set(opts.key(), s);
+        showBest();
+        return s;
+      },
+      showBest,
+      seconds: secs,
+    };
+  }
+
+  // Which of today's daily puzzles were solved; the hub reads this to tick its cards.
+  // `date` is the day the puzzle was dealt, so a board finished after midnight UTC doesn't count.
+  const dailyStore = storage("daily:");
+  function dailySolved(game) {
+    const d = dailyStore.getJSON(game, null);
+    return d && d.date === todayISO() && Array.isArray(d.diffs) ? d.diffs : [];
+  }
+  function markDailySolved(game, diff, date) {
+    if (!date || date !== todayISO()) return;
+    const diffs = dailySolved(game);
+    if (diffs.indexOf(diff) < 0) diffs.push(diff);
+    dailyStore.setJSON(game, { date: date, diffs: diffs });
+  }
+
   global.Gamekit = {
     mulberry32,
     hashStr,
@@ -272,5 +318,8 @@
     wireDifficultyChips,
     onLongPress,
     gridKeys,
+    puzzleClock,
+    dailySolved,
+    markDailySolved,
   };
 })(window);

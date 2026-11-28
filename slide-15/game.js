@@ -20,6 +20,7 @@
   let history = [];    // [{ tiles, moves }]
   let moves = 0;
   let won = false;
+  let dailyDate = null;
 
   function solvedBoard(n) {
     const a = [];
@@ -62,6 +63,7 @@
   function newPuzzle(seedOverride) {
     N = DIFFS[diff];
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("slide-15", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     initial = scramble(seed);
     tiles = initial.slice();
     history = [];
@@ -114,6 +116,7 @@
     }
     if (isSolved(tiles)) {
       won = true;
+      if (dailyDate) Gamekit.markDailySolved("slide-15", diff, dailyDate);
       const best = store.getInt("best:" + diff, null);
       if (best === null || moves < best) store.set("best:" + diff, moves);
     }

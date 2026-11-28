@@ -15,6 +15,7 @@
   const chipsEl = document.getElementById("chips");
 
   const store = Gamekit.storage("queens:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
   let diff = store.get("diff", "medium");
   if (!DIFFS[diff]) diff = "medium";
   let N = DIFFS[diff];
@@ -24,8 +25,7 @@
   let grid = [];         // length N*N, EMPTY | MARK | QUEEN
   let history = [];
   let won = false;
-  let timerStart = 0;
-  let timerInterval = null;
+  let dailyDate = null;
   let cellEls = [];
 
   function idx(r, c) { return r * N + c; }
@@ -205,17 +205,16 @@
   function newPuzzle(seedOverride) {
     N = DIFFS[diff];
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("queens", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     const p = generate(seed);
     regions = p.regions;
     solution = p.solution;
     grid = new Array(N * N).fill(EMPTY);
     history = [];
     won = false;
-    timerStart = Date.now();
-    startTimer();
+    clock.start();
     renderShell();
     renderAll();
-    updateStatus();
   }
 
   function renderShell() {
@@ -307,32 +306,13 @@
       return;
     }
     won = true;
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) {
-      store.set("best:" + diff, s);
-      bestEl.textContent = Gamekit.fmtTime(s);
-    }
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("queens", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + '.</span>';
     // Golden blink on all queen cells
     for (let i = 0; i < N * N; i++) {
       if (grid[i] === QUEEN) cellEls[i].classList.add("won");
     }
-  }
-
-  function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (won) return;
-      const s = Math.floor((Date.now() - timerStart) / 1000);
-      timeEl.textContent = Gamekit.fmtTime(s);
-    }, 500);
-  }
-
-  function updateStatus() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
   }
 
   undoBtn.addEventListener("click", () => {
@@ -347,8 +327,7 @@
     grid = new Array(N * N).fill(EMPTY);
     history = [];
     won = false;
-    timerStart = Date.now();
-    startTimer();
+    clock.start();
     statusEl.textContent = "One queen per row, column, and color.";
     renderAll();
   });
@@ -374,14 +353,13 @@
     initial: diff,
     storage: store,
     storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); updateStatus(); },
+    onChange: (d) => { diff = d; newPuzzle(); },
   });
   diff = store.get("diff", diff);
   if (!DIFFS[diff]) diff = "medium";
   N = DIFFS[diff];
 
   newPuzzle();
-  updateStatus();
   window.addEventListener("load", () => Manpage.autoOpen("queens"));
 
   Gamekit.gridKeys(boardEl, { selector: ".qn-cell" });

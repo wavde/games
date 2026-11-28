@@ -276,14 +276,16 @@
   const chipsEl  = document.getElementById("chips");
   const STATUS = "Each run adds up to its clue.";
   const store = Gamekit.storage("kakuro:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
 
   let diff = "medium";
   let P = null, val = null, notes = null, history = [], won = false, sel = -1, noteMode = false;
   let cellEls = [], clueEls = [];
-  let timerStart = 0, timerInterval = null;
+  let dailyDate = null;
 
   function newPuzzle(seedOverride) {
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("kakuro", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     P = generate(diff, seed);
     val = new Uint8Array(P.n * P.n);
     notes = new Uint16Array(P.n * P.n);
@@ -291,9 +293,8 @@
     won = false;
     sel = -1;
     build();
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
-    updateBest();
   }
 
   function build() {
@@ -397,28 +398,10 @@
       if (sum !== run.sum || bits(mask) !== run.cells.length) return;
     }
     won = true;
-    clearInterval(timerInterval);
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    timeEl.textContent = Gamekit.fmtTime(s);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) store.set("best:" + diff, s);
-    updateBest();
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("kakuro", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Solved in ' + Gamekit.fmtTime(s) + ".</span>";
     render();
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    timerStart = Date.now();
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (!won) timeEl.textContent = Gamekit.fmtTime(Math.floor((Date.now() - timerStart) / 1000));
-    }, 500);
-  }
-
-  function updateBest() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
   }
 
   function select(i) {
@@ -476,7 +459,7 @@
     notes = new Uint16Array(P.n * P.n);
     history = [];
     won = false;
-    startTimer();
+    clock.start();
     statusEl.textContent = STATUS;
     render();
   });

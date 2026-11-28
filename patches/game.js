@@ -13,6 +13,7 @@
   const chipsEl = document.getElementById("chips");
 
   const store = Gamekit.storage("patches:");
+  const clock = Gamekit.puzzleClock({ timeEl, bestEl, store, key: () => "best:" + diff });
   let diff = store.get("diff", "medium");
   if (!DIFFS[diff]) diff = "medium";
 
@@ -20,8 +21,7 @@
   let clues = []; // {r, c, v} — clue position + area value
   let userRects = []; // {r0, c0, r1, c1}
   let won = false;
-  let timerStart = 0;
-  let timerInterval = null;
+  let dailyDate = null;
   let cellEls = [];
 
   // Drag state
@@ -171,15 +171,14 @@
 
   function newPuzzle(seedOverride) {
     const seed = seedOverride !== undefined ? seedOverride : Gamekit.dailySeed("patches", diff);
+    dailyDate = seedOverride === undefined ? Gamekit.todayISO() : null;
     generate(seed);
     userRects = [];
     won = false;
-    timerStart = Date.now();
-    startTimer();
+    clock.start();
     renderShell();
     renderRects();
     statusEl.textContent = "Draw rectangles — each clue's number = its rectangle's area.";
-    updateStatus();
   }
 
   function renderShell() {
@@ -317,28 +316,9 @@
       if (cluesInside.length !== 1 || cluesInside[0].v !== area) return;
     }
     won = true;
-    const s = Math.floor((Date.now() - timerStart) / 1000);
-    const best = store.getInt("best:" + diff, null);
-    if (best === null || s < best) {
-      store.set("best:" + diff, s);
-      bestEl.textContent = Gamekit.fmtTime(s);
-    }
+    const s = clock.stop();
+    if (dailyDate) Gamekit.markDailySolved("patches", diff, dailyDate);
     statusEl.innerHTML = '<span class="ok">Sewn up in ' + Gamekit.fmtTime(s) + '.</span>';
-  }
-
-  function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    timeEl.textContent = Gamekit.fmtTime(0);
-    timerInterval = setInterval(() => {
-      if (won) return;
-      const s = Math.floor((Date.now() - timerStart) / 1000);
-      timeEl.textContent = Gamekit.fmtTime(s);
-    }, 500);
-  }
-
-  function updateStatus() {
-    const best = store.getInt("best:" + diff, null);
-    bestEl.textContent = best === null ? "—" : Gamekit.fmtTime(best);
   }
 
   undoBtn.addEventListener("click", () => {
@@ -349,7 +329,7 @@
   });
   resetBtn.addEventListener("click", () => {
     userRects = []; won = false;
-    timerStart = Date.now(); startTimer();
+    clock.start();
     renderRects();
     statusEl.textContent = "Draw rectangles — each clue's number = its rectangle's area.";
   });
@@ -361,7 +341,7 @@
     initial: diff,
     storage: store,
     storageKey: "diff",
-    onChange: (d) => { diff = d; newPuzzle(); updateStatus(); },
+    onChange: (d) => { diff = d; newPuzzle(); },
   });
   diff = store.get("diff", diff);
   if (!DIFFS[diff]) diff = "medium";
@@ -399,6 +379,5 @@
   });
 
   newPuzzle();
-  updateStatus();
   window.addEventListener("load", () => Manpage.autoOpen("patches"));
 })();
