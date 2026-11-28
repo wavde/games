@@ -33,3 +33,6 @@ jobs:
 
       - name: Browser + accessibility checks
         run: node .github/checks/browser.mjs
+
+      - name: Game logic checks
+        run: node .github/checks/logic.mjs

@@ -21,7 +21,8 @@ Proposals for growing the collection. Nothing here is committed scope until pick
 3. **zip uniqueness** ✅ — every board is unique. A pruned path solver (degree, connectivity, colour-parity, and forced-move checks) lists alternative paths; the generator greedily adds whichever number or wall rules out the most, within per-tier caps. ~5 ms easy, ~20 ms medium, ~170 ms hard (worst ~0.6 s); 120/120 boards confirmed unique by an independent solver.
 
 4. **Keyboard play** ✅ — every game is playable by keyboard: shared `Gamekit.gridKeys` gives each board one Tab stop, arrow-key movement (by on-screen position, so sparse boards like hashi work; dots-and-boxes walks its line lattice), Enter/Space to play, and F/X for flag/mark. Board buttons use `aria-disabled` instead of `disabled` so focus survives AI turns.
-5. **CI checks** ✅ — `.github/workflows/checks.yml` runs `node --check`, ESLint, html-validate, and a headless-Chrome pass (page errors, manpage auto-open, axe-core) on every push and PR. Tools install only in CI; the site stays dependency-free.
+5. **CI checks** ✅ — `.github/workflows/checks.yml` runs `node --check`, ESLint, html-validate, a headless-Chrome pass (page errors, manpage auto-open, axe-core), and logic checks on every push and PR. Tools install only in CI; the site stays dependency-free.
+6. **Logic checks in CI** ✅ — `.github/checks/logic.mjs` loads each game in headless Chrome with a test-only hook that exposes its internals, then checks (fixed seeds): every generated board of the 11 generated puzzles has exactly one solution, graded puzzles still meet their grade, checkers matches perft 1–7, mancala matches an independent Kalah model, and the checkers/mancala/battleships AIs only play legal moves. It caught that queens boards were almost never unique; queens now repairs regions until one answer remains (150/150 confirmed by CP-SAT).
 
 ## Code-quality audit (latest)
 
@@ -62,6 +63,7 @@ npm install --prefix .github/checks --no-save eslint @eslint/js globals html-val
 .github/checks/node_modules/.bin/eslint --config .github/checks/eslint.config.mjs .
 .github/checks/node_modules/.bin/html-validate --config .github/checks/htmlvalidate.json index.html */index.html
 node .github/checks/browser.mjs   # set CHROME_PATH if Chrome isn't in a standard location
+node .github/checks/logic.mjs     # puzzle uniqueness/grades, checkers perft, mancala vs. reference, AI legality
 ```
 
 ```bash

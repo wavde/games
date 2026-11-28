@@ -119,13 +119,14 @@
 
   // Count solutions to the region puzzle. `regions` is array of length N*N.
   // Uses bitmasks for column/region usage — faster than arrays at N=7/8.
-  function countSolutions(regions, limit) {
+  // Solutions found (as column-per-row arrays) are pushed to `out` when given.
+  function countSolutions(regions, limit, out) {
     let colMask = 0, regMask = 0;
     const chosen = new Array(N).fill(-1);
     let count = 0;
     function step(r) {
       if (count >= limit) return;
-      if (r === N) { count++; return; }
+      if (r === N) { count++; if (out) out.push(chosen.slice()); return; }
       const prev = r > 0 ? chosen[r - 1] : -2;
       for (let c = 0; c < N; c++) {
         const cb = 1 << c;
@@ -144,6 +145,46 @@
     return count;
   }
 
+  function regionConnectedWithout(reg, rid, without) {
+    const cells = [];
+    for (let i = 0; i < N * N; i++) if (reg[i] === rid && i !== without) cells.push(i);
+    if (!cells.length) return false;
+    const seen = new Set([cells[0]]), stack = [cells[0]];
+    while (stack.length) {
+      const x = stack.pop(), r = Math.floor(x / N), c = x % N;
+      for (const [nr, nc] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
+        if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+        const y = idx(nr, nc);
+        if (y !== without && reg[y] === rid && !seen.has(y)) { seen.add(y); stack.push(y); }
+      }
+    }
+    return seen.size === cells.length;
+  }
+
+  // Random regions almost always allow several answers. While a rival answer exists, hand one
+  // of its queen cells (never one of ours) to a neighbouring region: that region now holds two
+  // rival queens and the old one none, so that rival is gone and ours is untouched.
+  function makeUnique(qCols, reg, rng) {
+    for (let move = 0; move < 80; move++) {
+      const sols = [];
+      if (countSolutions(reg, 2, sols) === 1) return true;
+      const rival = sols.find((s) => s.some((c, r) => c !== qCols[r]));
+      const cands = [];
+      for (let r = 0; r < N; r++) {
+        if (rival[r] === qCols[r]) continue;
+        const i = idx(r, rival[r]);
+        for (const [nr, nc] of [[r - 1, rival[r]], [r + 1, rival[r]], [r, rival[r] - 1], [r, rival[r] + 1]]) {
+          if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+          if (reg[idx(nr, nc)] !== reg[i]) cands.push([i, reg[idx(nr, nc)]]);
+        }
+      }
+      const pick = Gamekit.shuffle(cands, rng).find(([i]) => regionConnectedWithout(reg, reg[i], i));
+      if (!pick) return false;
+      reg[pick[0]] = pick[1];
+    }
+    return false;
+  }
+
   function generate(seed) {
     const rng = Gamekit.mulberry32(seed);
     for (let attempt = 0; attempt < 60; attempt++) {
@@ -151,8 +192,7 @@
       if (!qCols) continue;
       const reg = growRegions(qCols, rng);
       if (!reg) continue;
-      const n = countSolutions(reg, 2);
-      if (n === 1) {
+      if (makeUnique(qCols, reg, rng)) {
         return { regions: reg, solution: qCols };
       }
     }
