@@ -37,6 +37,7 @@ const EXPOSE = {
   mancala:       { names: ["initialBoard", "legalMoves", "applyMove", "pickMove"] },
   battleships:   { names: ["placeFleet", "fire", "aiShot"] },
   sokoban:       { names: ["generate"] },
+  snake:         { names: ["createGame", "step"] },
 };
 
 function hook(game) {
@@ -260,6 +261,51 @@ const CHECKS = {
     }
     return { fails, note: levels.length * seeds + " rooms, par checked" };
   },
+  snake: () => {
+    const t = window.__t, fails = [], never = () => 0.999;
+    const expect = (cond, msg) => { if (!cond) fails.push(msg); };
+    let g = t.createGame(7, false, never);
+    g.food = 48;
+    let ticks = 0, ev;
+    do { ev = t.step(g, 1, never); ticks++; } while (ev === "move" && ticks < 20);
+    expect(ev === "dead" && ticks === 4, "wall: died after " + ticks + " ticks");
+    g = t.createGame(5, true, never);
+    const head = g.body[0];
+    g.food = 0;
+    for (let k = 0; k < 5; k++) t.step(g, 1, never);
+    expect(g.alive && g.body[0] === head, "wrap: head did not come round");
+    g = t.createGame(7, false, never);
+    g.food = g.body[0] + 1;
+    ev = t.step(g, 1, never);
+    expect(ev === "eat" && g.body.length === 4 && g.score === 1 && !g.body.includes(g.food), "eating did not grow the snake");
+    g = t.createGame(7, false, never);
+    g.food = 48;
+    const before = g.body[0];
+    t.step(g, 3, never);
+    expect(g.body[0] === before + 1, "reversal was not ignored");
+    g = t.createGame(7, false, never);
+    g.body = [24, 23, 22, 21, 20];
+    g.dir = 1;
+    g.food = 48;
+    t.step(g, 2, never); t.step(g, 3, never);
+    expect(t.step(g, 0, never) === "dead", "self-collision not detected");
+    g = t.createGame(7, false, never);
+    g.body = [0, 1, 8, 7];
+    g.dir = 3;
+    g.food = 48;
+    expect(t.step(g, 2, never) === "move", "moving into the vacating tail was refused");
+    let seed = 1;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let k = 0; k < 300 && fails.length < 5; k++) {
+      g = t.createGame(9, k % 2 === 0, rand);
+      for (let s = 0; s < 500 && g.alive && !g.won; s++) {
+        t.step(g, Math.floor(rand() * 4), rand);
+        if (!g.alive) break;
+        if (new Set(g.body).size !== g.body.length || g.body.length !== 3 + g.score || g.body.includes(g.food)) { fails.push("invariant broken in random game " + k); break; }
+      }
+    }
+    return { fails, note: "rules + 300 random games" };
+  },
   battleships: () => {
     const t = window.__t, fails = [];
     for (let k = 0; k < 500; k++) {
@@ -300,6 +346,7 @@ const PLAN = [
   ["mancala", "mancala", []],
   ["battleships", "battleships", []],
   ["sokoban", "sokoban", [LEVELS, 4]],
+  ["snake", "snake", []],
 ];
 
 const failures = [];

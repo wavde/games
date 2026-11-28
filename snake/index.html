@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>snake · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Snake — steer, eat, grow, and don't bite yourself. Three speeds, best score per level; keys, swipe, or on-screen pad.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .sn-board {
+    display: block;
+    width: min(420px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    border-radius: 8px;
+    touch-action: none;
+    user-select: none;
+  }
+  .sn-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 56px);
+    grid-template-rows: repeat(2, 48px);
+    gap: 6px;
+    justify-content: center;
+    margin: 6px auto 2px;
+  }
+  body.g-snake .panel .sn-pad .btn { min-width: 0; padding: 0; font-size: 1.2rem; }
+  .sn-pad [data-dir="0"] { grid-column: 2; grid-row: 1; }
+  .sn-pad [data-dir="3"] { grid-column: 1; grid-row: 2; }
+  .sn-pad [data-dir="2"] { grid-column: 2; grid-row: 2; }
+  .sn-pad [data-dir="1"] { grid-column: 3; grid-row: 2; }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-snake">
+<main class="wrap">
+  <div class="topbar">
+    <h1>snake</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Press an arrow key, swipe, or ▶ to start.</p>
+      <p class="status">Score: <span id="score">0</span> · Best: <span id="best">0</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="snake" data-man-title="SNAKE(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Speed">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="play-btn" class="btn ghost tool-btn" type="button">▶ play</button>
+    </div>
+    <canvas class="sn-board" id="board" role="img" aria-label="Snake board"></canvas>
+    <div class="sn-pad" id="pad" role="group" aria-label="Steer">
+      <button class="btn" type="button" data-dir="0" aria-label="Up">▲</button>
+      <button class="btn" type="button" data-dir="3" aria-label="Left">◀</button>
+      <button class="btn" type="button" data-dir="2" aria-label="Down">▼</button>
+      <button class="btn" type="button" data-dir="1" aria-label="Right">▶</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-snake">
+  <h2>Name</h2>
+  <p>snake — the classic: steer, eat, grow.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>The snake moves on its own. Steer it onto the red food; each bite scores a point and makes it one longer.</li>
+    <li>The game ends if the head runs into the snake's own body — or, on medium and hard, into a wall.</li>
+    <li>Fill the whole board to win outright.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Arrow keys</strong> or <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> steer; <span class="kbd">Space</span> or <span class="kbd">P</span> pauses.</li>
+    <li><strong>Swipe</strong> on the board to steer, or tap it to pause. The arrow pad below the board works too.</li>
+    <li>Quick double turns are remembered, so you can U-turn in two taps. The game pauses itself if you switch tabs.</li>
+    <li>Your best score per speed is kept on this device.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 15×15, slow, and the edges wrap around. <strong>Medium</strong> — 17×17, walls, speeds up a little with each bite. <strong>Hard</strong> — 19×19, walls, starts fast and speeds up more.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Stay near the edges and sweep in lanes rather than chasing the food in a straight line, and always leave yourself a way out of the space you're entering.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

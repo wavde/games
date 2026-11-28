@@ -5,7 +5,7 @@
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 [![checks](https://github.com/wavde/games/actions/workflows/checks.yml/badge.svg)](https://github.com/wavde/games/actions/workflows/checks.yml)
 
-Thirty classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Thirty-one classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -35,6 +35,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 | ◎ | **[mancala](mancala/)** | Kalah: sow seeds, chain extra turns, capture across the board. Local 2P or alpha-beta AI, W–L–D record. |
 | ⚓ | **[battleships](battleships/)** | Hunt the AI's hidden fleet before it sinks yours. Hunt/target, checkerboard, or heat-map AI; W–L record and fewest shots. |
 | 📦 | **[sokoban](sokoban/)** | Push every box onto a goal. Generated rooms, always solvable, with a solver-computed par. Keys, swipe, or tap. |
+| 🐍 | **[snake](snake/)** | The arcade classic on a canvas. Wrap-around easy, walls and speed-ups on medium/hard; keys, swipe, or on-screen pad; best score per speed. |
 
 ### Logic puzzles
 
@@ -110,6 +111,7 @@ games/
 ├── mancala/
 ├── battleships/
 ├── sokoban/
+├── snake/
 ├── mini-sudoku/
 ├── tango/
 ├── queens/
