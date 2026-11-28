@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>spider · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Spider solitaire — two decks, ten columns; build king-to-ace runs of one suit to clear them. One, two, or four suits, tap or drag, unlimited undo, a daily deal.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .sp-board { --cw: 40px; --gap: clamp(2px, 0.8vw, 6px); width: min(600px, 100%); margin: 8px auto; user-select: none; -webkit-user-select: none; }
+  .sp-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: calc(var(--cw) * 0.24); }
+  .sp-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: var(--gap); align-items: start; min-height: calc(var(--cw) * 3); }
+  .sp-pile, .sp-done, .sp-stockwrap { position: relative; height: calc(var(--cw) * 1.4); }
+  .sp-done { width: calc(var(--cw) * 2.6); }
+  .sp-stockwrap { width: var(--cw); }
+  .sp-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.4);
+    margin: 0;
+    padding: 0;
+    border: 1px solid #b9b1a6;
+    border-radius: calc(var(--cw) * 0.1);
+    background: #fdfbf7;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-family: inherit;
+  }
+  .sp-card.red { color: #b3261e; }
+  .sp-card.black { color: #141210; }
+  .sp-card::before {
+    content: attr(data-r) attr(data-s);
+    position: absolute;
+    top: 3%;
+    left: 5%;
+    font-size: max(9px, calc(var(--cw) * 0.3));
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.08em;
+  }
+  .sp-card::after {
+    content: attr(data-s);
+    position: absolute;
+    right: 8%;
+    bottom: 5%;
+    font-size: calc(var(--cw) * 0.5);
+    line-height: 1;
+  }
+  .sp-card.down { background: repeating-linear-gradient(45deg, #6a3d7a 0 4px, #57306a 4px 8px); border-color: #3c1f4a; }
+  .sp-card.down::before, .sp-card.down::after { content: none; }
+  body.g-spider .panel .sp-card {
+    min-height: 0;
+    border: 1px solid #b9b1a6;
+    border-radius: calc(var(--cw) * 0.1);
+    background: #fdfbf7;
+    cursor: pointer;
+    touch-action: none;
+    transition: none;
+  }
+  body.g-spider .panel .sp-card.down { background: repeating-linear-gradient(45deg, #6a3d7a 0 4px, #57306a 4px 8px); border-color: #3c1f4a; cursor: default; }
+  body.g-spider .panel .sp-card.red { color: #b3261e; }
+  body.g-spider .panel .sp-card.black { color: #141210; }
+  body.g-spider .panel .sp-card:hover { background: #fffdf8; transform: none; }
+  body.g-spider .panel .sp-card:active { transform: none; }
+  body.g-spider .panel .sp-card.picked { box-shadow: 0 0 0 3px #f2b705; }
+  body.g-spider .panel .sp-card.lifted { opacity: 0.3; }
+  body.g-spider .panel .sp-card:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  body.g-spider .panel .sp-slot, body.g-spider .panel .sp-stock {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.4);
+    min-height: 0;
+    padding: 0;
+    border: 2px dashed var(--border-hi);
+    border-radius: calc(var(--cw) * 0.1);
+    background: transparent;
+  }
+  body.g-spider .panel .sp-stock {
+    border: 1px solid #3c1f4a;
+    background: repeating-linear-gradient(45deg, #6a3d7a 0 4px, #57306a 4px 8px);
+    color: #fdfbf7;
+    font-size: calc(var(--cw) * 0.36);
+    font-weight: 700;
+  }
+  body.g-spider .panel .sp-stock::before { content: attr(data-n); }
+  body.g-spider .panel .sp-stock:disabled { opacity: 0.35; }
+  .sp-float { position: fixed; z-index: 1000; pointer-events: none; width: var(--cw); }
+  .sp-float .sp-card { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-spider">
+<main class="wrap">
+  <div class="topbar">
+    <h1>spider</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Build runs of one suit from king down to ace.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Moves: <span id="moves">0</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="spider" data-man-title="SPIDER(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Suits">
+        <button class="chip" data-diff="easy" type="button">1 suit</button>
+        <button class="chip" data-diff="medium" type="button">2 suits</button>
+        <button class="chip" data-diff="hard" type="button">4 suits</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="sp-board" id="board" role="group" aria-label="Spider table">
+      <div class="sp-top">
+        <div class="sp-stockwrap" id="stock"></div>
+        <div class="sp-done" id="done" role="img" aria-label="0 of 8 runs complete"></div>
+      </div>
+      <div class="sp-row">
+        <div class="sp-pile" data-drop="0" role="group"></div>
+        <div class="sp-pile" data-drop="1" role="group"></div>
+        <div class="sp-pile" data-drop="2" role="group"></div>
+        <div class="sp-pile" data-drop="3" role="group"></div>
+        <div class="sp-pile" data-drop="4" role="group"></div>
+        <div class="sp-pile" data-drop="5" role="group"></div>
+        <div class="sp-pile" data-drop="6" role="group"></div>
+        <div class="sp-pile" data-drop="7" role="group"></div>
+        <div class="sp-pile" data-drop="8" role="group"></div>
+        <div class="sp-pile" data-drop="9" role="group"></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> restart</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-spider">
+  <h2>Name</h2>
+  <p>spider — two-deck patience with eight runs to build.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>104 cards in ten columns; only the top card of each starts face up. The other 50 wait in the stock (top left).</li>
+    <li>Put a card on any card one rank higher, whatever its suit. Any card or run can go into an empty column.</li>
+    <li>Only a run of <strong>one suit</strong>, counting down, moves together.</li>
+    <li>A full run from king down to ace of one suit leaves the table. Clear all eight to win.</li>
+    <li>Tap the stock to deal one card onto every column. You can't deal while a column is empty. The number on the stock shows the deals left.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a card to move it (and everything on it) to the best spot: onto a card of its own suit one higher, then any card one higher, then an empty column. <strong>Drag</strong> to choose the spot yourself.</li>
+    <li><code>↶ undo</code> takes back one move, as far as you like; <code>↻ restart</code> redeals the same cards. <code>↻ new</code> deals fresh; the daily deal loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the table, arrow keys move between cards, Enter plays a card like a tap, <span class="kbd">X</span> picks it up and Enter on a column puts it there (<span class="kbd">Esc</span> lets go), <span class="kbd">D</span> deals.</li>
+  </ul>
+
+  <h2>Suits</h2>
+  <ul>
+    <li><strong>1 suit</strong> uses only spades, so every run moves; <strong>2 suits</strong> mixes spades and hearts; <strong>4 suits</strong> is the full game and much harder.</li>
+    <li>Deals aren't checked for a win, and not every one can be won, especially with four suits. Undo is unlimited.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Build in suit whenever you can choose. Empty columns are your most valuable tool: use them to untangle runs, and fill them again before dealing. Turn face-down cards over early.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 [![checks](https://github.com/wavde/games/actions/workflows/checks.yml/badge.svg)](https://github.com/wavde/games/actions/workflows/checks.yml)
 
-Forty classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Forty-one classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -41,6 +41,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 | 🃏 | **[freecell](freecell/)** | Every card face up, four free cells, the classic numbered deals #1–32000. Multi-card moves, tap or drag, unlimited undo, a daily deal. |
 | ⊞ | **[morris](morris/)** | Nine men's morris: place, slide, and fly; mills take pieces. Local 2P or alpha-beta AI, W–L–D record. |
 | ⬢ | **[hex](hex/)** | Join your two edges of a hexagon diamond; no draws. 7×7 / 9×9 / 11×11, Monte-Carlo AI or local 2P. |
+| 🕷 | **[spider](spider/)** | Two-deck solitaire: build king-to-ace runs of one suit to clear them. 1 / 2 / 4 suits, tap or drag, unlimited undo, a daily deal. |
 
 ### Logic puzzles
 
@@ -126,6 +127,7 @@ games/
 ├── freecell/
 ├── morris/
 ├── hex/
+├── spider/
 ├── mini-sudoku/
 ├── tango/
 ├── queens/

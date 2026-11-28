@@ -35,6 +35,7 @@ const EXPOSE = {
   freecell:      { names: ["deal", "clone", "legal", "apply", "autoplay", "cardsOf", "capacity"] },
   morris:        { names: ["initial", "clone", "legalMoves", "applyMove", "outcome", "pickMove", "onBoard", "MILLS"] },
   hex:           { names: ["connected", "pickMove"] },
+  spider:        { names: ["dealFrom", "legal", "apply", "cardsOf", "canDeal", "dealRow"] },
   klondike:      { names: ["deal", "solve", "clone", "legal", "apply", "draw", "autoplay", "won", "MODES"] },
   breakout:      { names: ["createGame", "update", "launch", "DIFFS", "W"] },
   zip:           { names: ["generate", "findSolutions"], extra: "setDiff: (d) => { diff = d; }" },
@@ -462,6 +463,36 @@ const CHECKS = {
     if (t.pickMove(b, n, 2, "easy", rand) !== (n - 1) * n + 3) fails.push("AI missed a block");
     return { fails, note: "1000 full boards, win/block" };
   },
+  // Spider: deals hold the right cards; random legal play keeps all 104 and clears finished runs.
+  spider: () => {
+    const t = window.__t, fails = [];
+    let seed = 4;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (const suits of [1, 2, 4]) {
+      const S = t.dealFrom(suits, rand), all = [...S.t.flat(), ...S.s], count = {};
+      for (const c of all) count[c] = (count[c] || 0) + 1;
+      if (all.length !== 104 || Object.keys(count).length !== 13 * suits || Object.values(count).some((n) => n !== 8 / suits)) fails.push(suits + " suits: wrong cards dealt");
+      if (S.t.map((p) => p.length).join() !== "6,6,6,6,5,5,5,5,5,5") fails.push("wrong column sizes");
+    }
+    for (let g = 0; g < 30 && !fails.length; g++) {
+      const S = t.dealFrom(1 + (g % 2), rand);
+      for (let k = 0; k < 300; k++) {
+        const moves = [];
+        for (let a = 0; a < 10; a++) for (let i = S.d[a]; i < S.t[a].length; i++) for (let c = 0; c < 10; c++) if (t.legal(S, { from: { t: a, k: i }, to: { t: c } })) moves.push({ from: { t: a, k: i }, to: { t: c } });
+        if (moves.length && (rand() < 0.9 || !t.canDeal(S))) t.apply(S, moves[Math.floor(rand() * moves.length)]);
+        else if (t.canDeal(S)) t.dealRow(S);
+        else break;
+        if (S.t.flat().length + S.s.length + 13 * S.done.length !== 104) { fails.push("cards lost or duplicated"); break; }
+        if (S.t.some((p, q) => p.length && S.d[q] >= p.length)) { fails.push("top card left face down"); break; }
+      }
+    }
+    // One move finishes a run: K..2 of spades on column 0, the ace on column 1.
+    const R = { t: [[12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1], [0], [], [], [], [], [], [], [], []], d: new Array(10).fill(0), s: [5], done: [] };
+    if (t.canDeal(R)) fails.push("dealt with an empty column");
+    t.apply(R, { from: { t: 1, k: 0 }, to: { t: 0 } });
+    if (R.done.length !== 1 || R.t[0].length) fails.push("finished run not cleared");
+    return { fails, note: "deals + 30 random games + run clearing" };
+  },
   battleships: () => {
     const t = window.__t, fails = [];
     for (let k = 0; k < 500; k++) {
@@ -512,6 +543,7 @@ const PLAN = [
   ["freecell", "freecell", []],
   ["morris", "morris", []],
   ["hex", "hex", []],
+  ["spider", "spider", []],
 ];
 
 const failures = [];
