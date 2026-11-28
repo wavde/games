@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>calcudoku · games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Calcudoku — fill the grid so no digit repeats in a row or column and every cage hits its target with its operation. Daily puzzle, three difficulties, every puzzle has a unique answer.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="../manpage.css">
+<link rel="stylesheet" href="../soft.css">
+<style>
+  .cg-board {
+    display: grid;
+    width: min(440px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto;
+    border: 3px solid #141210;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #ede8e1;
+    user-select: none;
+  }
+  body.g-calcudoku .panel .cg-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 1px solid #c9c2b4;
+    border-radius: 0;
+    background: #ede8e1;
+    color: #141210;
+    cursor: pointer;
+  }
+  body.g-calcudoku .panel .cg-cell:hover { background: #f6f1e8; transform: none; }
+  body.g-calcudoku .panel .cg-cell.sel { background: #f7dd8a; }
+  body.g-calcudoku .panel .cg-cell.br-t { border-top:    2px solid #141210; }
+  body.g-calcudoku .panel .cg-cell.br-b { border-bottom: 2px solid #141210; }
+  body.g-calcudoku .panel .cg-cell.br-l { border-left:   2px solid #141210; }
+  body.g-calcudoku .panel .cg-cell.br-r { border-right:  2px solid #141210; }
+  body.g-calcudoku .panel .cg-board.solved .cg-cell { background: #cfe6c4; cursor: default; }
+  .cg-lab {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    font-size: clamp(0.55rem, 2.4vw, 0.8rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #141210;
+    pointer-events: none;
+  }
+  .cg-lab::before { content: attr(data-t); }
+  .cg-lab.ok { color: #6a6460; }
+  .cg-lab.bad { color: #b3261e; }
+  .cg-v { font-size: clamp(1.1rem, 5.4vw, 1.7rem); font-weight: 700; line-height: 1; pointer-events: none; }
+  .cg-v::before { content: attr(data-d); }
+  body.g-calcudoku .panel .cg-cell.err .cg-v { color: #b3261e; }
+  .cg-notes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 72%;
+    height: 60%;
+    margin-top: 22%;
+    font-size: clamp(0.45rem, 1.8vw, 0.65rem);
+    font-weight: 500;
+    color: #4a4440;
+    pointer-events: none;
+  }
+  .cg-notes span { display: flex; align-items: center; justify-content: center; }
+  .cg-notes span::before { content: attr(data-d); }
+  .cg-pad { display: grid; gap: 6px; width: min(360px, 100%); margin: 8px auto 4px; }
+  body.g-calcudoku .panel .cg-pad .btn { min-width: 0; min-height: var(--tap); padding: 0; font-size: 1.05rem; }
+  body.g-calcudoku .panel #notes-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+</style>
+</head>
+<body class="g-calcudoku">
+<main class="wrap">
+  <div class="topbar">
+    <h1>calcudoku</h1>
+    <a class="back" href="../">← all games</a>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <p class="status" id="status" aria-live="polite">Fill each cage to its target.</p>
+      <p class="status">Time: <span id="time">0:00</span> · Best: <span id="best">—</span></p>
+      <button class="btn ghost tool-btn man-trigger" data-man="calcudoku" data-man-title="CALCUDOKU(1)" type="button">
+        <span class="q">?</span> man
+      </button>
+    </div>
+    <div class="game-controls">
+      <div class="chips" id="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-diff="easy" type="button">Easy</button>
+        <button class="chip" data-diff="medium" type="button">Medium</button>
+        <button class="chip" data-diff="hard" type="button">Hard</button>
+      </div>
+      <button id="new-btn" class="btn ghost tool-btn" type="button"><span class="glyph">↻</span> new</button>
+    </div>
+    <div class="cg-board" id="board" role="group" aria-label="Calcudoku board"></div>
+    <div class="cg-pad" id="pad" role="group" aria-label="Digits"></div>
+    <div class="toolbar">
+      <button class="btn ghost tool-btn" id="notes-btn" type="button" aria-pressed="false"><span class="glyph">✎</span> notes</button>
+      <button class="btn ghost tool-btn" id="undo-btn" type="button"><span class="glyph">↶</span> undo</button>
+      <button class="btn ghost tool-btn" id="reset-btn" type="button"><span class="glyph">↻</span> reset</button>
+    </div>
+  </div>
+</main>
+
+<template id="man-calcudoku">
+  <h2>Name</h2>
+  <p>calcudoku — a Latin square built from arithmetic cages.</p>
+
+  <h2>Rules</h2>
+  <ul>
+    <li>Fill an n×n grid with the digits 1 to n so that no digit repeats in any row or column.</li>
+    <li>Each outlined <strong>cage</strong> shows a target and an operation (+ − × ÷). Its digits must make the target with that operation — for − and ÷, take the larger number first. A cage with no sign is simply that digit.</li>
+    <li>A digit may repeat inside a cage as long as the copies don't share a row or column.</li>
+  </ul>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Tap</strong> a cell, then a digit on the pad (or type it). <code>⌫</code>, Backspace, or 0 clears; entering the same digit again clears it too.</li>
+    <li><code>✎ notes</code> (or <span class="kbd">N</span>) switches to pencil marks.</li>
+    <li>Repeated digits turn red. A cage's label dims when it's full and right, and turns red when it's full and wrong.</li>
+    <li><code>↶ undo</code> takes back one change; <code>↻ reset</code> clears the board. <code>↻ new</code> rolls a fresh puzzle; the daily puzzle loads by default.</li>
+    <li><strong>Keyboard</strong>: Tab to the board, arrow keys move between cells, type digits directly.</li>
+  </ul>
+
+  <h2>Difficulty</h2>
+  <ul>
+    <li><strong>Easy</strong> — 4×4, solvable from the cages and lines alone. <strong>Medium</strong> — 5×5, needs look-ahead ("if this were a 3…"). <strong>Hard</strong> — 6×6 with bigger cages.</li>
+    <li>Every puzzle has exactly one solution.</li>
+  </ul>
+
+  <h2>Strategy</h2>
+  <p class="muted">Start with single cells and tight cages: in a 5×5, 2÷ can only be 1·2 or 2·4, and 4− only 1·5. A product with a 5 in it must hold a 5. Then use the lines: each digit appears once per row and column.</p>
+</template>
+
+<script defer src="../manpage.js"></script>
+<script defer src="../gamekit.js"></script>
+<script defer src="game.js"></script>
+</body>
+</html>
