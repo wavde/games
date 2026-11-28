@@ -14,7 +14,6 @@
   // Solver state: dom[i] = bitmask of digits 1..n still possible for cell i.
 
   const bits = (m) => { let k = 0; for (; m; m &= m - 1) k++; return k; };
-  const digitOf = (m) => 31 - Math.clz32(m);
 
   function holds(op, target, vals) {
     if (op === "=") return vals[0] === target;
