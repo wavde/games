@@ -783,6 +783,11 @@ body[class*="g-"] .panel .c {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Boards sized in vw ignore the panel's padding; keep everything inside the panel. */
+body[class*="g-"] .panel > * { max-width: 100%; box-sizing: border-box; }
+body.g-nonogram .panel > .ng-board { max-width: none; } /* sizes its own cells to fit */
+body.g-mini-sudoku .panel .sk-pad button { min-width: 0; padding-left: 0; padding-right: 0; }
+
 /* ── Mobile polish ──────────────────────────────────────────── */
 @media (max-width: 560px) {
   body[class*="g-"] .wrap { padding: 16px 12px 28px; }
@@ -792,7 +797,16 @@ body[class*="g-"] .panel .c {
     padding: 16px 14px 18px;
     border-radius: 16px;
   }
-  body[class*="g-"] .panel .row { flex-wrap: wrap; gap: 8px; }
+  /* Status lines stack on the left; the man button keeps its place at the top right. */
+  body[class*="g-"] .panel .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 10px;
+    row-gap: 2px;
+    align-items: center;
+  }
+  body[class*="g-"] .panel .row > * { grid-column: 1; margin: 0; }
+  body[class*="g-"] .panel .row > .man-trigger { grid-column: 2; grid-row: 1 / span 2; }
   body[class*="g-"] .panel .toolbar { gap: 8px; flex-wrap: wrap; }
   body[class*="g-"] .panel .toolbar .tool-btn { flex: 1 1 auto; min-width: 0; }
   body[class*="g-"] .panel .chips { gap: 6px; }
