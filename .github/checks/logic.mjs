@@ -4,7 +4,7 @@
 //  - every generated logic puzzle (3 levels × SEEDS boards) has exactly one solution, and the
 //    graded ones still need the technique their level promises
 //  - checkers matches published perft counts; mancala matches an independent Kalah model;
-//    the checkers, battleships, and mancala AIs only ever play legal moves
+//    the checkers, battleships, and mancala AIs only ever play legal moves; sokoban par is exact
 // Usage (repo root): node .github/checks/logic.mjs   (CHROME_PATH overrides the Chrome binary)
 import http from "node:http";
 import fs from "node:fs";
@@ -35,6 +35,7 @@ const EXPOSE = {
   checkers:      { names: ["initialBoard", "legalMoves", "applyMove", "pickMove"] },
   mancala:       { names: ["initialBoard", "legalMoves", "applyMove", "pickMove"] },
   battleships:   { names: ["placeFleet", "fire", "aiShot"] },
+  sokoban:       { names: ["generate"] },
 };
 
 function hook(game) {
@@ -206,6 +207,58 @@ const CHECKS = {
     }
     return { fails, note: moves + " moves vs reference, AI self-play" };
   },
+  // Sokoban par must equal the fewest pushes found by a separate forward search.
+  sokoban: (levels, seeds) => {
+    const t = window.__t, fails = [];
+    const forward = (L) => {
+      const N = L.n * L.n, D = [-L.n, L.n, -1, 1];
+      const reach = (set, from) => {
+        const seen = new Uint8Array(N), st = [from];
+        seen[from] = 1;
+        let min = from;
+        while (st.length) {
+          const x = st.pop();
+          if (x < min) min = x;
+          for (const d of D) if (!seen[x + d] && !L.wall[x + d] && !set[x + d]) { seen[x + d] = 1; st.push(x + d); }
+        }
+        return { seen, min };
+      };
+      const solved = (bs) => bs.every((b) => L.goal[b]);
+      const start = L.boxes.slice().sort((a, b) => a - b);
+      if (solved(start)) return 0;
+      const s0 = new Uint8Array(N);
+      for (const b of start) s0[b] = 1;
+      let front = [[start, reach(s0, L.player).min]];
+      const seen = new Set([start.join() + "|" + front[0][1]]);
+      for (let depth = 1; front.length; depth++) {
+        const next = [];
+        for (const [bs, p] of front) {
+          const set = new Uint8Array(N);
+          for (const b of bs) set[b] = 1;
+          const can = reach(set, p).seen;
+          for (let k = 0; k < bs.length; k++) for (const d of D) {
+            const b = bs[k], to = b + d;
+            if (!can[b - d] || L.wall[to] || set[to]) continue;
+            const nb = bs.slice();
+            nb[k] = to;
+            nb.sort((x, y) => x - y);
+            if (solved(nb)) return depth;
+            set[b] = 0; set[to] = 1;
+            const key = nb.join() + "|" + reach(set, b).min;
+            set[to] = 0; set[b] = 1;
+            if (!seen.has(key)) { seen.add(key); next.push([nb, Number(key.split("|")[1])]); }
+          }
+        }
+        front = next;
+      }
+      return -1;
+    };
+    for (const d of levels) for (let s = 1; s <= seeds; s++) {
+      const L = t.generate(d, s), f = forward(L);
+      if (f !== L.par) fails.push(d + " seed " + s + ": par " + L.par + ", solver says " + f);
+    }
+    return { fails, note: levels.length * seeds + " rooms, par checked" };
+  },
   battleships: () => {
     const t = window.__t, fails = [];
     for (let k = 0; k < 500; k++) {
@@ -244,6 +297,7 @@ const PLAN = [
   ["checkers", "checkers", []],
   ["mancala", "mancala", []],
   ["battleships", "battleships", []],
+  ["sokoban", "sokoban", [LEVELS, 4]],
 ];
 
 const failures = [];

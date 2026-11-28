@@ -5,7 +5,7 @@
 [![No build](https://img.shields.io/badge/build-none-ffd166?style=flat)](#run-locally)
 [![checks](https://github.com/wavde/games/actions/workflows/checks.yml/badge.svg)](https://github.com/wavde/games/actions/workflows/checks.yml)
 
-Twenty-eight classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
+Twenty-nine classics and logic puzzles built with vanilla **HTML, CSS, and JavaScript**. No frameworks, no build step, no npm dependencies — open one file and play. Mobile-first retro-terminal aesthetic.
 
 **▶ Play now: [wavde.github.io/games](https://wavde.github.io/games/)**
 
@@ -34,6 +34,7 @@ What's next: see [ROADMAP.md](ROADMAP.md).
 | ⛀ | **[checkers](checkers/)** | English draughts: forced jumps, multi-jumps, kings. Local 2P or alpha-beta AI (depths 2/4/8), W–L–D record. |
 | ◎ | **[mancala](mancala/)** | Kalah: sow seeds, chain extra turns, capture across the board. Local 2P or alpha-beta AI, W–L–D record. |
 | ⚓ | **[battleships](battleships/)** | Hunt the AI's hidden fleet before it sinks yours. Hunt/target, checkerboard, or heat-map AI; W–L record and fewest shots. |
+| 📦 | **[sokoban](sokoban/)** | Push every box onto a goal. Generated rooms, always solvable, with a solver-computed par. Keys, swipe, or tap. |
 
 ### Logic puzzles
 
@@ -107,6 +108,7 @@ games/
 ├── checkers/
 ├── mancala/
 ├── battleships/
+├── sokoban/
 ├── mini-sudoku/
 ├── tango/
 ├── queens/
@@ -151,10 +153,11 @@ Every logic puzzle generates uniquely-solvable boards in the browser:
 | kakuro | 6×6, runs ≤ 4, sums alone | 7×7, runs ≤ 5, look-ahead | 8×8, runs ≤ 5, look-ahead |
 | hitori | 6×6, opening patterns + direct rules | 8×8, look-ahead | 10×10, look-ahead |
 | nurikabe | 6×6, direct rules | 8×8, look-ahead | 10×10, look-ahead |
+| sokoban | 7×7 room, 2 boxes (par ~10) | 8×8, 3 boxes (par ~18) | 9×9, 4 boxes (par ~27) |
 | code-breaker | 4 pegs, 6 colors, 10 guesses | 4 / 6 / 8 | 5 / 8 / 10 |
 | slide-15 | 3×3 | 4×4 | 5×5 |
 
-Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, star-battle, kakuro, hitori, and nurikabe are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable.
+Logic-puzzle generators check uniqueness against a solver before returning (nonogram requires a full line-by-line solve; hashi, akari, slitherlink, star-battle, kakuro, hitori, and nurikabe are graded by how much look-ahead they need). zip adds numbers and walls until every other path is ruled out. slide-15 scrambles by legal moves, so it is always solvable; sokoban rooms are searched backwards from the solved position, so they are always solvable and the start chosen is the one needing the most pushes.
 
 ## Tech
 
