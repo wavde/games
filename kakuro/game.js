@@ -13,7 +13,7 @@
   // A run is a maximal line of white cells; its clue sits in the black cell just before it.
   // Solver state: dom[i] = bitmask of digits still possible for white cell i.
 
-  const bits = (m) => { let k = 0; for (; m; m &= m - 1) k++; return k; };
+  const bits = Gamekit.bitCount;
   const digitOf = (m) => 31 - Math.clz32(m);
 
   // COMBOS[len][sum]: digit sets (bitmasks) of `len` distinct digits adding to `sum`.
@@ -94,55 +94,7 @@
   }
 
   function fresh(P) { const dom = new Uint16Array(P.n * P.n); for (const i of P.cells) dom[i] = ALL; return dom; }
-  function solved(P, dom) { return P.cells.every((i) => bits(dom[i]) === 1); }
-
-  function basicSolve(P) { const dom = fresh(P); return propagate(P, dom) && solved(P, dom); }
-
-  // Run logic plus single-digit probing ("if this were a 7…"), no guessing.
-  function logicSolve(P) {
-    const dom = fresh(P);
-    if (!propagate(P, dom)) return false;
-    let progress = true;
-    while (progress && !solved(P, dom)) {
-      progress = false;
-      for (const i of P.cells) {
-        if (bits(dom[i]) === 1) continue;
-        for (let m = dom[i]; m; m &= m - 1) {
-          const bit = m & -m, t = dom.slice();
-          t[i] = bit;
-          if (!propagate(P, t)) {
-            dom[i] &= ~bit;
-            if (!propagate(P, dom)) return false;
-            progress = true;
-          }
-        }
-      }
-    }
-    return solved(P, dom);
-  }
-
-  // Up to `limit` solutions; `complete: false` if the node budget ran out first.
-  function findSolutions(P, limit, budget) {
-    const sols = [];
-    let ok = true;
-    (function search(dom) {
-      if (sols.length >= limit || !ok) return;
-      if (--budget < 0) { ok = false; return; }
-      if (!propagate(P, dom)) return;
-      let best = -1, bestK = 10;
-      for (const i of P.cells) {
-        const k = bits(dom[i]);
-        if (k > 1 && k < bestK) { bestK = k; best = i; }
-      }
-      if (best < 0) { sols.push(dom); return; }
-      for (let m = dom[best]; m; m &= m - 1) {
-        const t = dom.slice();
-        t[best] = m & -m;
-        search(t);
-      }
-    })(fresh(P));
-    return { sols, complete: ok };
-  }
+  const { basicSolve, logicSolve, findSolutions } = Gamekit.domainSolver({ propagate, fresh, cells: (P) => P.cells });
 
   // Symmetric black cells, then repair: no run of length 1 or longer than maxRun, all white cells connected.
   function layout(n, density, maxRun, rng) {
@@ -419,21 +371,7 @@
     if (el) select(+el.dataset.i);
   });
 
-  for (let d = 1; d <= 9; d++) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "btn";
-    b.textContent = d;
-    b.addEventListener("click", () => enter(d));
-    padEl.appendChild(b);
-  }
-  const erase = document.createElement("button");
-  erase.type = "button";
-  erase.className = "btn";
-  erase.textContent = "⌫";
-  erase.setAttribute("aria-label", "Erase");
-  erase.addEventListener("click", () => enter(0));
-  padEl.appendChild(erase);
+  Gamekit.numberPad(padEl, 9, enter);
 
   notesBtn.addEventListener("click", () => { noteMode = !noteMode; render(); });
 

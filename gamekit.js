@@ -306,7 +306,113 @@
     dailyStore.setJSON(game, { date: date, diffs: diffs });
   }
 
+  // ---------- Shared by the digit puzzles (calcudoku, kakuro, skyscrapers, futoshiki) ----------
+
+  const bitCount = (m) => { let k = 0; for (; m; m &= m - 1) k++; return k; };
+
+  // Random n×n Latin square of 1..n, filled cell by cell with shuffled candidates.
+  function latinSquare(n, rng) {
+    const g = new Int8Array(n * n);
+    (function fill(i) {
+      if (i === n * n) return true;
+      const r = Math.floor(i / n), c = i % n;
+      for (const d of shuffle(Array.from({ length: n }, (_, k) => k + 1), rng)) {
+        let ok = true;
+        for (let k = 0; k < c && ok; k++) if (g[r * n + k] === d) ok = false;
+        for (let k = 0; k < r && ok; k++) if (g[k * n + c] === d) ok = false;
+        if (!ok) continue;
+        g[i] = d;
+        if (fill(i + 1)) return true;
+      }
+      g[i] = 0;
+      return false;
+    })(0);
+    return g;
+  }
+
+  // Solver over bitmask domains (bit d set = value d still possible), built from a game's
+  // propagate(P, dom) → false on contradiction and fresh(P) → starting domains.
+  // opts.cells(P) lists the cells that take values (default: every index of the domain array).
+  //   basicSolve: propagation alone finishes the board.
+  //   logicSolve: propagation plus single-value probing ("if this were a 4…"), no guessing.
+  //   findSolutions(P, limit, budget): up to `limit` solutions by search on the smallest domain;
+  //     { sols, complete }, complete = false if the node budget ran out first.
+  function domainSolver(opts) {
+    const { propagate, fresh } = opts;
+    const ranges = [];
+    const cellsOf = opts.cells || ((P, dom) => ranges[dom.length] || (ranges[dom.length] = Array.from({ length: dom.length }, (_, i) => i)));
+    const solved = (P, dom) => { for (const i of cellsOf(P, dom)) if (bitCount(dom[i]) !== 1) return false; return true; };
+
+    function basicSolve(P) { const dom = fresh(P); return propagate(P, dom) && solved(P, dom); }
+
+    function logicSolve(P) {
+      const dom = fresh(P);
+      if (!propagate(P, dom)) return false;
+      let progress = true;
+      while (progress && !solved(P, dom)) {
+        progress = false;
+        for (const i of cellsOf(P, dom)) {
+          if (bitCount(dom[i]) === 1) continue;
+          for (let m = dom[i]; m; m &= m - 1) {
+            const bit = m & -m, t = dom.slice();
+            t[i] = bit;
+            if (!propagate(P, t)) {
+              dom[i] &= ~bit;
+              if (!propagate(P, dom)) return false;
+              progress = true;
+            }
+          }
+        }
+      }
+      return solved(P, dom);
+    }
+
+    function findSolutions(P, limit, budget) {
+      const sols = [];
+      let ok = true;
+      (function search(dom) {
+        if (sols.length >= limit || !ok) return;
+        if (--budget < 0) { ok = false; return; }
+        if (!propagate(P, dom)) return;
+        let best = -1, bestK = 99;
+        for (const i of cellsOf(P, dom)) {
+          const k = bitCount(dom[i]);
+          if (k > 1 && k < bestK) { bestK = k; best = i; }
+        }
+        if (best < 0) { sols.push(dom); return; }
+        for (let m = dom[best]; m; m &= m - 1) {
+          const t = dom.slice();
+          t[best] = m & -m;
+          search(t);
+        }
+      })(fresh(P));
+      return { sols, complete: ok };
+    }
+
+    return { solved, basicSolve, logicSolve, findSolutions };
+  }
+
+  // Digit buttons 1..n plus ⌫ (erase, reported as 0); onDigit(d) on every press.
+  function numberPad(padEl, n, onDigit) {
+    padEl.innerHTML = "";
+    padEl.style.gridTemplateColumns = "repeat(" + (n + 1) + ", 1fr)";
+    for (let d = 0; d <= n; d++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn";
+      b.textContent = d ? d : "⌫";
+      if (!d) b.setAttribute("aria-label", "Erase");
+      b.addEventListener("click", () => onDigit(d));
+      padEl.appendChild(b);
+    }
+    padEl.appendChild(padEl.firstChild);
+  }
+
   global.Gamekit = {
+    bitCount,
+    latinSquare,
+    domainSolver,
+    numberPad,
     mulberry32,
     hashStr,
     todayISO,

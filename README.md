@@ -97,7 +97,7 @@ games/
 ├── shared.css          design tokens, buttons, panels, light mode
 ├── manpage.css         shared help-overlay styles
 ├── manpage.js          shared help-overlay controller
-├── gamekit.js          shared helpers (PRNG, daily seed + solved-today record, storage, chips, puzzle clock, keyboard grid)
+├── gamekit.js          shared helpers (PRNG, daily seed + solved-today record, storage, chips, puzzle clock, keyboard grid, digit-puzzle solver)
 ├── manifest.json       PWA manifest (iOS/Android home screen)
 ├── favicon.svg
 ├── tic-tac-toe/        each game: index.html + game.js

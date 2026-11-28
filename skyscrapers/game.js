@@ -12,8 +12,6 @@
   // visible from one edge: k = c top, n + c bottom, 2n + r left, 3n + r right.
   // Solver state: dom[i] = bitmask of heights still possible for cell i.
 
-  const bits = (m) => { let k = 0; for (; m; m &= m - 1) k++; return k; };
-
   function visible(a) {
     let top = 0, k = 0;
     for (const v of a) if (v > top) { top = v; k++; }
@@ -72,74 +70,7 @@
   }
 
   function fresh(P) { return new Uint16Array(P.n * P.n).fill(P.full); }
-  function solved(dom) { return dom.every((m) => bits(m) === 1); }
-
-  function basicSolve(P) { const dom = fresh(P); return propagate(P, dom) && solved(dom); }
-
-  // Line logic plus single-height probing ("if this were a 4…"), no guessing.
-  function logicSolve(P) {
-    const dom = fresh(P);
-    if (!propagate(P, dom)) return false;
-    let progress = true;
-    while (progress && !solved(dom)) {
-      progress = false;
-      for (let i = 0; i < dom.length; i++) {
-        if (bits(dom[i]) === 1) continue;
-        for (let m = dom[i]; m; m &= m - 1) {
-          const bit = m & -m, t = dom.slice();
-          t[i] = bit;
-          if (!propagate(P, t)) {
-            dom[i] &= ~bit;
-            if (!propagate(P, dom)) return false;
-            progress = true;
-          }
-        }
-      }
-    }
-    return solved(dom);
-  }
-
-  // Up to `limit` solutions; `complete: false` if the node budget ran out first.
-  function findSolutions(P, limit, budget) {
-    const sols = [];
-    let ok = true;
-    (function search(dom) {
-      if (sols.length >= limit || !ok) return;
-      if (--budget < 0) { ok = false; return; }
-      if (!propagate(P, dom)) return;
-      let best = -1, bestK = 99;
-      for (let i = 0; i < dom.length; i++) {
-        const k = bits(dom[i]);
-        if (k > 1 && k < bestK) { bestK = k; best = i; }
-      }
-      if (best < 0) { sols.push(dom); return; }
-      for (let m = dom[best]; m; m &= m - 1) {
-        const t = dom.slice();
-        t[best] = m & -m;
-        search(t);
-      }
-    })(fresh(P));
-    return { sols, complete: ok };
-  }
-
-  function latin(n, rng) {
-    const g = new Int8Array(n * n);
-    (function fill(i) {
-      if (i === n * n) return true;
-      const r = Math.floor(i / n), c = i % n;
-      for (const d of Gamekit.shuffle(Array.from({ length: n }, (_, k) => k + 1), rng)) {
-        let ok = true;
-        for (let k = 0; k < c && ok; k++) if (g[r * n + k] === d) ok = false;
-        for (let k = 0; k < r && ok; k++) if (g[k * n + c] === d) ok = false;
-        if (!ok) continue;
-        g[i] = d;
-        if (fill(i + 1)) return true;
-      }
-      g[i] = 0;
-      return false;
-    })(0);
-    return g;
-  }
+  const { basicSolve, logicSolve, findSolutions } = Gamekit.domainSolver({ propagate, fresh });
 
   function unique(P) {
     const r = findSolutions(P, 2, 20000);
@@ -166,7 +97,7 @@
     const rng = Gamekit.mulberry32(seed);
     let fallback = null;
     for (let attempt = 0; attempt < 200; attempt++) {
-      const sol = latin(n, rng), clue = new Int8Array(4 * n);
+      const sol = Gamekit.latinSquare(n, rng), clue = new Int8Array(4 * n);
       for (let c = 0; c < n; c++) {
         const col = Array.from({ length: n }, (_, r) => sol[r * n + c]);
         clue[c] = visible(col);
@@ -260,25 +191,7 @@
     render();
   }
 
-  function buildPad() {
-    padEl.innerHTML = "";
-    padEl.style.gridTemplateColumns = "repeat(" + (P.n + 1) + ", 1fr)";
-    for (let d = 1; d <= P.n; d++) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "btn";
-      b.textContent = d;
-      b.addEventListener("click", () => enter(d));
-      padEl.appendChild(b);
-    }
-    const erase = document.createElement("button");
-    erase.type = "button";
-    erase.className = "btn";
-    erase.textContent = "⌫";
-    erase.setAttribute("aria-label", "Erase");
-    erase.addEventListener("click", () => enter(0));
-    padEl.appendChild(erase);
-  }
+  function buildPad() { Gamekit.numberPad(padEl, P.n, enter); }
 
   // Repeated heights in a line, and each clue's state: 0 open, 1 full and right, 2 wrong.
   function check() {
